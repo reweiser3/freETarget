@@ -5,6 +5,9 @@
  * Nonvol storage managment
  * 
  * ----------------------------------------------------*/
+#include "freETarget.h"
+#include "nonvol.h"
+#include "diag_tools.h"
 
 /*----------------------------------------------------------------
  * 

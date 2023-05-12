@@ -6,7 +6,6 @@
  * 
  * ----------------------------------------------------*/
 #include "freETarget.h"
-#include <EEPROM.h>
 
 static char input_JSON[256];
 
