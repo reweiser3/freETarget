@@ -10,14 +10,30 @@
 #include "compute_hit.h"
 #include "analog_io.h"
 #include "json.h"
-#include "EEPROM.h"
 #include "nonvol.h"
 #include "mechanical.h"
 #include "diag_tools.h"
 #include "esp-01.h"
 #include "timer.h"
 #include "token.h"
+#include "stdio.h"
 
+/*
+ *  Function Prototypes
+ */
+static void   bye(void);                // Say good night Gracie
+static long   tabata(bool_t reset_time);// Tabata state machine
+static bool_t discard_tabata(void);     // TRUE if the shot should be discarded 
+static unsigned int set_mode(void);     // Set the target running mode
+static unsigned int arm(void);          // Arm the circuit for a shot
+static unsigned int wait(void);         // Wait for the shot to arrive
+static unsigned int reduce(void);       // Reduce the shot data
+static unsigned int finish(void);       // Finish uip and start over
+static void send_keep_alive(void);      // Send out at TCPIP message    
+
+/*
+ *  Variables
+ */
 shot_record_t record[SHOT_STRING];      //Array of shot records
 unsigned int this_shot;                 // Index into the shot array
 unsigned int last_shot;                 // Last shot processed.
@@ -45,17 +61,8 @@ const char* names[] = { "TARGET",                                               
                         "ODIN",   "WODEN",   "THOR",   "BALDAR",                                                            // 26
                         0};
                   
-const char nesw[]   = "NESW";                  // Cardinal Points
-const char to_hex[] = "0123456789ABCDEF";      // Quick Hex to ASCII
-static void bye(void);                         // Say good night Gracie
-static long tabata(bool reset_time);           // Tabata state machine
-static bool discard_tabata(void);              // TRUE if the shot should be discarded 
-
-#define TABATA_OFF          0         // No tabata cycles at all
-#define TABATA_REST         1         // Tabata is doing nothing (typically 60 seconds)
-#define TABATA_WARNING      2         // Time the warning LED is on (typically 2 seconds)
-#define TABATA_DARK         3         // Time the warning LED is off before the shot (typically 2 seconds)
-#define TABATA_ON           4         // Time the TABATA lED is on (typically 5 seconds)
+const char    nesw[]   = "NESW";                  // Cardinal Points
+const char    to_hex[] = "0123456789ABCDEF";      // Quick Hex to ASCII
 
 /*----------------------------------------------------------------
  * 
@@ -74,7 +81,6 @@ void setup(void)
  */
   Serial.begin(115200, SERIAL_8N1);
   AUX_SERIAL.begin(115200, SERIAL_8N1); 
-  DISPLAY_SERIAL.begin(115200, SERIAL_8N1); 
   POST_version();                         // Show the version string on all ports
   
   read_nonvol();
@@ -95,8 +101,6 @@ void setup(void)
   timer_new(&power_save,    (unsigned long)(json_power_save) * (long)ONE_SECOND * 60L);// Power save timer
   timer_new(&token_tick,    5 * ONE_SECOND);                              // Token ring watchdog
   
-  randomSeed( analogRead(V_REFERENCE));   // Seed the random number generator
-  
 /*
  * Initialize variables
  */
@@ -108,9 +112,9 @@ void setup(void)
  */
   set_LED('*', '.', '*');                 // Hello World
   while ( (POST_counters() == false)      // If the timers fail
-              && !DLT(DLT_CRITICAL))          // and not in trace mode (DIAG jumper installed)
+              && !DLT(DLT_CRITICAL))      // and not in trace mode (DIAG jumper installed)
   {
-    Serial.print(T("POST_2 Failed\r\n"));// Blink the LEDs
+    printf("POST_2 Failed\r\n");          // Failed the test
     blink_fault(POST_COUNT_FAILED);       // and try again
   }
   
@@ -121,7 +125,7 @@ void setup(void)
 
   if ( DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("Starting timers"));
+    printf("Starting timers");
   }
 
   enable_timer_interrupt();
@@ -146,7 +150,7 @@ void setup(void)
   }
   
   DLT(DLT_CRITICAL); 
-  Serial.print(T("Finished startup\n\r"));
+  Serial.print("Finished startup\n\r");
   show_echo();
   return;
 }
@@ -177,9 +181,6 @@ char* loop_name[] = {"SET_MODE", "ARM", "WAIT", "AQUIRE", "REDUCE", "FINISH" };
 
 void loop() 
 {
-  unsigned int i, j;              // Iteration Counter
-
-  
 /*
  * First thing, handle polled devices
  */
@@ -247,7 +248,7 @@ void loop()
   if ( (state != old_state) 
       && DLT(DLT_APPLICATION) )
   {
-    Serial.print(T("Loop State: ")); Serial.print(loop_name[state]);;
+    printf("Loop State: %s", loop_name[state]);;
   } 
   old_state = state;
   
@@ -369,7 +370,7 @@ unsigned int arm(void)
   { 
     if ( DLT(DLT_APPLICATION) )
     {
-      Serial.print(T("Waiting..."));
+      printf("Waiting...");
     }  
     return WAIT;                   // Fall through to WAIT
   }
@@ -379,25 +380,25 @@ unsigned int arm(void)
  */
   if ( sensor_status & TRIP_EAST  )
   {
-    Serial.print(T("\r\n{ \"Fault\": \"NORTH\" }"));
+    printf("\r\n{ \"Fault\": \"NORTH\" }");
     set_LED(NORTH_FAILED);           // Fault code North
     delay(ONE_SECOND);
   }
   if ( sensor_status & TRIP_EAST  )
   {
-    Serial.print(T("\r\n{ \"Fault\": \"EAST\" }"));
+    printf("\r\n{ \"Fault\": \"EAST\" }");
     set_LED(EAST_FAILED);           // Fault code East
     delay(ONE_SECOND);
   }
   if ( sensor_status & TRIP_SOUTH )
   {
-    Serial.print(T("\r\n{ \"Fault\": \"SOUTH\" }"));
+    printf("\n\r{ \"Fault\": \"SOUTH\" }");
     set_LED(SOUTH_FAILED);         // Fault code South
     delay(ONE_SECOND);
   }
   if ( sensor_status & TRIP_WEST )
   {
-    Serial.print(T("\r\n{ \"Fault\": \"WEST\" }"));
+    printf("\r\n{ \"Fault\": \"WEST\" }");
     set_LED(WEST_FAILED);         // Fault code West
     delay(ONE_SECOND);
   }
@@ -460,7 +461,7 @@ unsigned int wait(void)
 
       if ( DLT(DLT_APPLICATION) )
       {
-        Serial.print(T("Rapid fire complete"));
+        printf("Rapid fire complete");
       }
       return FINISH;                   // Finish this rapid fire cycle
     }
@@ -523,7 +524,7 @@ unsigned int reduce(void)
   {   
     if ( DLT(DLT_APPLICATION) )
     {
-      Serial.print(T("Reducing shot: ")); Serial.print(last_shot); Serial.print(T("\r\nTrigger: ")); 
+      printf("Reducing shot: %d \n\rTrigger: ", last_shot) 
       show_sensor_status(record[last_shot].sensor_status, 0);
     }
 
@@ -629,7 +630,13 @@ unsigned int finish(void)
  * {"TABATA_WARN_ON": 2, "TABATA_WARN_OFF":2, "TABATA_ON":7, "TABATA_REST":45, "TABATA_ENABLE":1}
  * {"TABATA_ENABLE":0}
  *--------------------------------------------------------------*/
- 
+
+#define TABATA_OFF          0         // No tabata cycles at all
+#define TABATA_REST         1         // Tabata is doing nothing (typically 60 seconds)
+#define TABATA_WARNING      2         // Time the warning LED is on (typically 2 seconds)
+#define TABATA_DARK         3         // Time the warning LED is off before the shot (typically 2 seconds)
+#define TABATA_ON           4         // Time the TABATA lED is on (typically 5 seconds)
+
  void tabata_enable
   (
     unsigned int enable     // Rapid fire enable state
@@ -1072,7 +1079,7 @@ void hello(void)
  * It is sent out to the USB port as a diagnostic check 
  * 
  *--------------------------------------------------------------*/
-void send_keep_alive(void)
+static void send_keep_alive(void)
 {
   char str[32];
   static int keep_alive_count = 0;

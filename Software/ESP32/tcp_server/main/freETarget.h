@@ -10,24 +10,8 @@
  */
 #ifndef _FREETARget_H
 #define _FREETARget_H
-#include "esp-01.h"
-#include "json.h"
-#include "token.h"
 
-#define RESCUE     (1==0)
-#define CLOCK_TEST (1==0)
-
-#if ( RESCUE )
-#define SOFTWARE_VERSION "\"RESCUE March 1, 2023\""
-#endif
-
-#if ( CLOCK_TEST )
-#define SOFTWARE_VERSION "\"CLOCK_TEST April 13, 2023\""
-#endif
-
-#if ( !CLOCK_TEST && !RESCUE )
-#define SOFTWARE_VERSION "\"4.2.0 RC29 May 9, 2023\""
-#endif
+#define SOFTWARE_VERSION "\"0.0.0 May 12, 2023\""
 
 #define REV_100    100
 #define REV_210    210
@@ -36,10 +20,11 @@
 #define REV_300    300   // Third Generation
 #define REV_310    310   // Onboard Hi Pass Filter
 #define REV_320    320   // No USB adapter
+#define REV_400    400   // ESP32
 
 #define INIT_DONE       0xabcd                    // Initialization complete signature
-#define T(s)            F(s)                      // Move text string to the flash segment
-
+#define true        (1==1)
+#define false       (0==1)
 /*
  * Options
  */
@@ -59,7 +44,6 @@
  * Three way Serial Port
  */
 #define AUX_SERIAL         Serial3    // Auxilary Connector
-#define DISPLAY_SERIAL     Serial2    // Serial port for slave display
 
 /*
  * Oscillator Features

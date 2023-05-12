@@ -61,20 +61,20 @@
 // Blinking fault message
 #define POST_COUNT_FAILED  0b001            // LED fault code
 #define VREF_OVER_UNDER    0b010            // Trip point over or under spec
-#define UNUSED_2           0b100
+#define UNUSED_3           0b100
 #define SHOT_MISS          0b000            // Shot missed
 
 /*
  * Function Prototypes
  */
-void self_test(uint16_t test);
-void show_sensor_status(unsigned int sensor_status);  // Display the sensor status as text
-void blink_fault(unsigned int fault_code);            // Blink a fault
-void POST_version(void);        // Show the version string
-void POST_LEDs(void);           // Verify the LED operation
-bool POST_counters(void);       // Verify the counter operation
-void POST_trip_point(void);     // Display the set point
-void set_trip_point(int v);     // Calibrate the trip point
-bool do_dlt(unsigned int level);// Diagnostics Log and Trace
+void    self_test(uint16_t test);
+void    show_sensor_status(unsigned int sensor_status); // Display the sensor status as text
+void    blink_fault(unsigned int fault_code);           // Blink a fault
+void    POST_version(void);                             // Show the version string
+void    POST_LEDs(void);                                // Verify the LED operation
+bool_t  POST_counters(void);                            // Verify the counter operation
+void    POST_trip_point(void);                          // Display the set point
+void    set_trip_point(int v);                          // Calibrate the trip point
+bool_t  do_dlt(unsigned int level);                     // Diagnostics Log and Trace
 
 #endif
