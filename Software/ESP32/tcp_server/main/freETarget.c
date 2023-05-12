@@ -17,6 +17,8 @@
 #include "timer.h"
 #include "token.h"
 #include "stdio.h"
+#include "math.h"
+#include "esp_random.h"
 
 /*
  *  Function Prototypes
@@ -210,6 +212,7 @@ void loop()
           token_tick = ONE_SECOND * 60; // Just check
         }
       }
+      break;
 
     case TOKEN_SLAVE:
       token_poll();                     // Check the token ring
@@ -552,7 +555,7 @@ unsigned int reduce(void)
     {
       if ( DLT(DLT_APPLICATION) )
       {
-        Serial.print(T("Shot miss...\r\n"));
+        printf("Shot miss...\r\n");
       }
       blink_fault(SHOT_MISS);
       send_miss(&record[last_shot]);
@@ -642,9 +645,6 @@ unsigned int finish(void)
     unsigned int enable     // Rapid fire enable state
   )
  {
-  char str[32];
-  long random_wait;
-
 /*
  * If enabled, set up the timers
  */
@@ -664,11 +664,11 @@ unsigned int finish(void)
   {
     if ( enable )
     {
-      Serial.print(T("Starting Tabata.  Time: "));Serial.print(json_tabata_on);
+      printf("Starting Tabata.  Time: &d", json_tabata_on);
     }
     else
     {
-      Serial.print(T("Tabata disabled"));
+      prinf("Tabata disabled");
     }
   }
   
@@ -708,7 +708,7 @@ static uint16_t old_tabata_state = ~TABATA_OFF;
 
 static long tabata
   (
-  bool reset_time                     // TRUE if starting timer
+  bool_t reset_time                   // TRUE if starting timer
   )
 {
   char s[32];
@@ -820,7 +820,7 @@ static long tabata
  *  
  *--------------------------------------------------------------*/
 
-bool discard_shot(void)
+bool_t discard_shot(void)
 {
   if ( (json_rapid_enable != 0)                 // Rapid Fire
       &&  (rapid_count == 0) )                  // No shots remaining
@@ -866,7 +866,7 @@ bool discard_shot(void)
   {
     if ( enable )
     {
-      Serial.print(T("\Rapid Fire armed")); 
+      Serial.print(T("Rapid Fire armed")); 
     }
     else
     {
@@ -923,7 +923,7 @@ bool discard_shot(void)
     {      
       if  ( json_rapid_wait >= RANDOM_INTERVAL )                  // > Random Interval
       {
-        random_wait = random(5, json_rapid_wait % 100);           // Use bottom two digits for the time
+        random_wait = esp_random() % (json_rapid_wait % 100);     // Use bottom two digits for the time
         sprintf(str, "\r\n{\"RAPID_WAIT\":%d}", random_wait);
         output_to_all(str);
         delay(random_wait * ONE_SECOND);

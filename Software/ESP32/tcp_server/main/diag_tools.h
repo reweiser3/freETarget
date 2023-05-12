@@ -8,6 +8,19 @@
 #ifndef _DIAG_TOOLS_H_
 #define _DIAG_TOOLS_H_
 
+/*
+ * Function Prototypes
+ */
+void    self_test(unsigned int test);
+void    show_sensor_status(unsigned int sensor_status); // Display the sensor status as text
+void    blink_fault(unsigned int fault_code);           // Blink a fault
+void    POST_version(void);                             // Show the version string
+void    POST_LEDs(void);                                // Verify the LED operation
+bool_t  POST_counters(void);                            // Verify the counter operation
+void    POST_trip_point(void);                          // Display the set point
+void    set_trip_point(int v);                          // Calibrate the trip point
+bool_t  do_dlt(unsigned int level);                     // Diagnostics Log and Trace
+
 #define T_HELP         0       // Help test
 #define T_DIGITAL      1       // Digital test
 #define T_TRIGGER      2       // Test microphone trigger
@@ -65,16 +78,13 @@
 #define SHOT_MISS          0b000            // Shot missed
 
 /*
- * Function Prototypes
+ * Tracing 
  */
-void    self_test(uint16_t test);
-void    show_sensor_status(unsigned int sensor_status); // Display the sensor status as text
-void    blink_fault(unsigned int fault_code);           // Blink a fault
-void    POST_version(void);                             // Show the version string
-void    POST_LEDs(void);                                // Verify the LED operation
-bool_t  POST_counters(void);                            // Verify the counter operation
-void    POST_trip_point(void);                          // Display the set point
-void    set_trip_point(int v);                          // Calibrate the trip point
-bool_t  do_dlt(unsigned int level);                     // Diagnostics Log and Trace
+#define DLT(level)      ( do_dlt(level) )
+#define DLT_NONE          0                       // No DLT messages displayed
+#define DLT_CRITICAL      0x80                    // Display messages that will compromise the target
+#define DLT_APPLICATION   0x01                    // Application level messages displayed
+#define DLT_DIAG          0x02                    // Diagnostics messages displayed
+#define DLT_INFO          0x04                    // Informational messages
 
 #endif

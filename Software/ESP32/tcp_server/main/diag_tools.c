@@ -8,9 +8,13 @@
  *---------------------------------------------------------------*/
 
 #include "freETarget.h"
+#include "diag_tools.h"
 #include "gpio.h"
+#include "analog_io.h"
 #include "token.h"            // Time provided by the token ring
 #include "json.h"
+#include "stdio.h"
+#include "esp_random.h"
 
 const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 
@@ -19,11 +23,11 @@ const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 #define GRID_SIDE 25                              // Should be an odd number
 #define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
 
-static void show_analog_on_PC(int v);
-static void unit_test(unsigned int mode);
-static bool sample_calculations(unsigned int mode, unsigned int sample);
-static void log_sensor(int sensor);
-extern int  json_clock[4];
+static void  show_analog_on_PC(int v);
+static void  unit_test(unsigned int mode);
+static bool_t sample_calculations(unsigned int mode, unsigned int sample);
+static void  log_sensor(int sensor);
+extern int   json_clock[4];
 
 /*----------------------------------------------------------------
  *
@@ -39,7 +43,7 @@ extern int  json_clock[4];
  *   of the case statement 
  *--------------------------------------------------------------*/
 unsigned int tick;
-void self_test(uint16_t test)
+void self_test(unsigned int test)
 {
   double       volts;               // Reference Voltage
   unsigned int i;
@@ -47,7 +51,7 @@ void self_test(uint16_t test)
   unsigned int sensor_status;       // Sensor running inputs
   unsigned long sample;             // Sample used for comparison
   unsigned int random_delay;        // Random sampe time
-  bool         pass;
+  bool_t       pass;
   unsigned long start_time;         // Running time
   shot_record_t shot;               // Shot history
   unsigned char s[128];             // Text buffer
@@ -128,7 +132,7 @@ void self_test(uint16_t test)
       {
         if ( revision() >= REV_220 )  
         {
-          random_delay = random(1, 6000);   // Pick a random delay time in us
+          random_delay = esp_random() % 6000;   // Pick a random delay time in us
           Serial.print(T("\r\nRandom clock test: ")); Serial.print(random_delay); Serial.print(T("us. All outputs must be the same. "));
           trip_timers();
           delayMicroseconds(random_delay);  // Delay a random time
@@ -452,7 +456,6 @@ void self_test(uint16_t test)
  *--------------------------------------------------------------*/
  void POST_version(void)
  {
-  int i;
   char str[64];
   sprintf(str, "\r\nfreETarget %s\r\n", SOFTWARE_VERSION);
   output_to_all(str);
@@ -481,7 +484,7 @@ void self_test(uint16_t test)
  {
   if ( DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("POST LEDs"));
+    printf("POST LEDs");
   }
 
   set_LED(L('*', '.', '.'));
@@ -521,13 +524,13 @@ void self_test(uint16_t test)
  #define POST_counteres_cycles 10 // Repeat the test 10x
  #define CLOCK_TEST_LIMIT 500    // Clock should be within 500 ticks
  
- bool POST_counters(void)
+ bool_t POST_counters(void)
  {
    unsigned int i, j;            // Iteration counter
    unsigned int random_delay;    // Delay duration
    unsigned int sensor_status;   // Sensor status
    int          x;               // Time difference (signed)
-   bool         test_passed;     // Record if the test failed
+   bool_t       test_passed;     // Record if the test failed
    long         now;             // Current time
    
 /*
@@ -584,13 +587,13 @@ void self_test(uint16_t test)
  /*
   * Test 3: Trigger the counter and make sure that all sensors are triggered
   */
-    stop_timers();                  // Get the circuit ready
+    stop_timers();                      // Get the circuit ready
     arm_timers();
     delay(1);  
-    random_delay = random(1, 6000);   // Pick a random delay time in us
-    now = micros();                   // Grab the current time
+    random_delay = esp_random() % 6000; // Pick a random delay time in us
+    now = micros();                     // Grab the current time
     trip_timers();
-    sensor_status = is_running();     // Remember all of the running timers
+    sensor_status = is_running();       // Remember all of the running timers
 
     while ( micros() < (now + random_delay ) )
     {
@@ -657,7 +660,7 @@ void self_test(uint16_t test)
  {
    if ( DLT(DLT_APPLICATION) )
    {
-    Serial.print(T("POST trip point"));
+    printf("POST trip point");
    }
    
    set_trip_point(20);              // Show the trip point once (20 cycles used for blinking values)
@@ -700,9 +703,9 @@ void set_trip_point
   int pass_count                                            // Number of passes to allow before exiting (0==infinite)
   )
 {
-  bool          stay_forever;                               // Stay forever if called with pass_count == 0;
+  bool_t        stay_forever;                               // Stay forever if called with pass_count == 0;
   unsigned int  sensor_status;                              // OR of the sensor bits that have tripped
-  bool          pause;                                      // Stop the test
+  bool_t        pause;                                      // Stop the test
   unsigned int  i, j;                                       // Iteration Counter
   
   Serial.print(T("Setting trip point. Type ! of cycle power to exit\r\n"));

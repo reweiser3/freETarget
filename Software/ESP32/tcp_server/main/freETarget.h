@@ -30,15 +30,6 @@
  */
 #define SAMPLE_CALCULATIONS false                 // Trace the COUNTER values
 
-/*
- * Tracing 
- */
-#define DLT(level)      ( do_dlt(level) )
-#define DLT_NONE          0                       // No DLT messages displayed
-#define DLT_CRITICAL      0x80                    // Display messages that will compromise the target
-#define DLT_APPLICATION   0x01                    // Application level messages displayed
-#define DLT_DIAG          0x02                    // Diagnostics messages displayed
-#define DLT_INFO          0x04                    // Informational messages
 
 /*
  * Three way Serial Port
