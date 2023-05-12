@@ -8,12 +8,27 @@
  *
  *
  */
-#ifndef _FREETARGET_H
-#define _FREETARGET_H
+#ifndef _FREETARget_H
+#define _FREETARget_H
 #include "esp-01.h"
 #include "json.h"
+#include "token.h"
 
-#define SOFTWARE_VERSION "\"4.1.3 April 11, 2023\""
+#define RESCUE     (1==0)
+#define CLOCK_TEST (1==0)
+
+#if ( RESCUE )
+#define SOFTWARE_VERSION "\"RESCUE March 1, 2023\""
+#endif
+
+#if ( CLOCK_TEST )
+#define SOFTWARE_VERSION "\"CLOCK_TEST April 13, 2023\""
+#endif
+
+#if ( !CLOCK_TEST && !RESCUE )
+#define SOFTWARE_VERSION "\"4.2.0 RC29 May 9, 2023\""
+#endif
+
 #define REV_100    100
 #define REV_210    210
 #define REV_220    220
@@ -33,39 +48,18 @@
 /*
  * Tracing 
  */
-#define INIT_TRACE        DLT_CRITICAL            // Trace level during initiailization
 #define DLT(level)      ( do_dlt(level) )
 #define DLT_NONE          0                       // No DLT messages displayed
-#define DLT_CRITICAL      1                       // Critical operational messages displayed
-#define DLT_APPLICATION   3                       // Application level messages displayed
-#define DLT_DIAG          5                       // Diagnostics messages displayed
-#define DLT_INFO          10                      // Informational messges
+#define DLT_CRITICAL      0x80                    // Display messages that will compromise the target
+#define DLT_APPLICATION   0x01                    // Application level messages displayed
+#define DLT_DIAG          0x02                    // Diagnostics messages displayed
+#define DLT_INFO          0x04                    // Informational messages
 
 /*
  * Three way Serial Port
  */
 #define AUX_SERIAL         Serial3    // Auxilary Connector
-#define WIFI_SERIAL        Serial3    // WiFi Port
 #define DISPLAY_SERIAL     Serial2    // Serial port for slave display
-
-char GET (void) 
-{
-  if ( Serial.available() )
-  {
-    return Serial.read(); 
-  }
-  if ( esp01_available() )
-  {
-    return esp01_read();
-  }
-  if ( DISPLAY_SERIAL.available() )
-  {
-    return DISPLAY_SERIAL.read();
-  }
-  return 0;
-}
-                   
-#define AVAILABLE ( Serial.available() | esp01_available() | DISPLAY_SERIAL.available() )
 
 /*
  * Oscillator Features
@@ -75,6 +69,8 @@ char GET (void)
 #define ONE_SECOND      1000L                         // 1000 ms delay 
 #define ONE_SECOND_US   1000000u                      // One second in us
 #define SECONDS       (millis()/1000)                 // Elapsed time in seconds
+#define FULL_SCALE      0xffffffff                    // Full scale timer
+
 
 #define SHOT_TIME     ((int)(json_sensor_dia / 0.33)) // Worst case delay (microseconds) = sensor diameter / speed of sound)
 #define SHOT_STRING   20                              // Allow a maximum of SHOT_STRING for rapid fire
@@ -93,6 +89,12 @@ char GET (void)
 #define W       3                                     // Index to West Timer
 #define MISS    4                                     // Timer was a miss
 
+/*
+ *  Types
+ */
+typedef unsigned int bool_t;
+typedef unsigned char byte_t;
+
 struct shot_r
 {
   unsigned int shot_number;     // Current shot number
@@ -107,17 +109,19 @@ struct shot_r
 typedef struct shot_r shot_record_t;
 
 struct GPIO {
-  byte port;
+  byte_t port;
   char* gpio_name;
-  byte in_or_out;
-  byte value;
+  byte_t in_or_out;
+  byte_t value;
 };
 
 typedef struct GPIO GPIO_t;
-extern const GPIO init_table[];
 
+
+/*
+ *  Global Variables
+ */
 extern double  s_of_sound;
-
 extern const char* names[];
 extern const char to_hex[];
 extern unsigned int face_strike;

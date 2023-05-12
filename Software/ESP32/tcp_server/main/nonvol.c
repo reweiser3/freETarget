@@ -25,7 +25,7 @@ void check_nonvol(void)
   
   if ( DLT(DLT_DIAG) )
   {
-    Serial.print(T("Checking NONVOL"));
+    Serial.print(T("check_nonvol()"));
   }
   
 /*
@@ -78,11 +78,6 @@ void factory_nonvol
   unsigned int x;                         // Temporary Value
   double       dx;                        // Temporarty Value
   unsigned int i, j;                      // Iteration Counter
-  
-  EEPROM.get(NONVOL_SERIAL_NO, serial_number); // record the staring serial number
-  Serial.print(serial_number);
-  Serial.print(new_serial_number);
-  delay(5);
   
 /*
  * Fill up all of memory with a known (bogus) value
@@ -313,11 +308,6 @@ void read_nonvol(void)
   if ( DLT(DLT_CRITICAL) )
   {
     Serial.print(T("read_nonvol()"));
-  }
-  
-  if ( DLT(DLT_DIAG) )
-  {
-    Serial.print(T("Reading NONVOL"));
   }
   
 /*
@@ -607,7 +597,22 @@ void update_nonvol
     current_version = 14;
     EEPROM.put(NONVOL_PS_VERSION, current_version);
   }
+
+  if ( current_version == 14 )                            // Correction for Doppler Inverse Square
+  {
+    x = 0;                      
+    EEPROM.put(NONVOL_TOKEN, x);                          //  Adjust to 7 us per 700 us delay
+    current_version = 15;
+    EEPROM.put(NONVOL_PS_VERSION, current_version);
+  }
   
+  if ( current_version == 15 )                            // Rapid fire button override
+  {
+    x = 0;                      
+    EEPROM.put(NONVOL_MFS2, x);                          //  leave as the default
+    current_version = 16;
+    EEPROM.put(NONVOL_PS_VERSION, current_version);
+  }
 /*
  * Up to date, return
  */
@@ -759,7 +764,11 @@ void backup_nonvol(void)
   int i;
   char x;
 
-  Serial.print(T("\r\nStarting backup"));
+  if ( DLT(DLT_DIAG) )
+  {
+    Serial.print(T("\r\nStarting backup"));
+  }
+  
 /*
  * Loop and print out the nonvol
  */
@@ -769,8 +778,6 @@ void backup_nonvol(void)
       EEPROM.put(i + NONVOL_SIZE/2, x);
   }
   
- Serial.print(T(" - done"));
-   
  /* 
   *  All done, return
   */
@@ -797,7 +804,11 @@ void restore_nonvol(void)
   int i;
   char x;
 
-  Serial.print(T("\r\nStarting restore"));
+  if( DLT(DLT_DIAG))
+  {
+    Serial.print(T("\r\nStarting restore"));
+  }
+  
 /*
  * Loop and print out the nonvol
  */

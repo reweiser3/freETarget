@@ -6,6 +6,7 @@
  *
  *---------------------------------------------------------------*/
 #include "freETarget.h"
+#include "json.h"
 
 #define THRESHOLD (0.001)
 
@@ -18,6 +19,7 @@
  *  Variables
  */
 extern const char* which_one[4];
+extern int json_clock[4];
 
 static sensor_t s[4];
 
@@ -104,8 +106,7 @@ void init_sensors(void)
 
 unsigned int compute_hit
   (
-  shot_record_t* shot,             // Storing the results
-  bool         test_mode           // Fake counters in test mode
+  shot_record_t* shot              // Storing the results
   )
 {
   double        reference;         // Time of reference counter
@@ -185,13 +186,18 @@ unsigned int compute_hit
  */
   for (i=N; i <= W; i++)
   {
+#if ( !CLOCK_TEST )
     s[i].count = reference - shot->timer_count[i];
+#else 
+    s[i].count = json_clock[i];
+#endif
     s[i].is_valid = true;
     if ( shot->timer_count[i] == 0 )
     {
       s[i].is_valid = false;
     }
   }
+
 
   if ( DLT(DLT_DIAG) )
   {
@@ -533,12 +539,31 @@ void send_score
   int    z;
   double score;
   char   str[256], str_c[10];  // String holding buffers
+  unsigned long now;
   
   if ( DLT(DLT_DIAG) )
   {
     Serial.print(T("Sending the score"));
   }
 
+/*
+ * Grab the token ring if needed
+ */
+  if ( json_token != TOKEN_WIFI )
+  {
+     while(my_ring != whos_ring)
+    {
+      token_take();                              // Grab the token ring
+      now = millis();
+      while ( ((millis() - now) <= (ONE_SECOND*2))  // Wait a second
+        && (whos_ring != my_ring) )             // Or we own the ring
+      { 
+        token_poll();
+      }
+    }
+    set_LED(LED_WIFI_SEND);
+  }
+  
  /* 
   *  Work out the hole in perfect coordinates
   */
@@ -564,65 +589,84 @@ void send_score
   output_to_all(str);
   
 #if ( S_SHOT )
-  sprintf(str, "\"shot\":%d, \"miss\":0, \"name\":\"%s\", ", shot->shot_number,  names[json_name_id]);
+  if ( (json_token == TOKEN_WIFI) || (my_ring == TOKEN_UNDEF))
+  {
+    sprintf(str, "\"shot\":%d, \"miss\":0, \"name\":\"%s\"", shot->shot_number,  names[json_name_id]);
+  }
+  else
+  {
+    sprintf(str, "\"shot\":%d, \"name\":\"%d\"", shot->shot_number,  my_ring);
+  }
   output_to_all(str);
   dtostrf((float)shot->shot_time/(float)(ONE_SECOND), 2, 2, str_c );
-  sprintf(str, "\"time\":%s, ", str_c);
+  sprintf(str, ", \"time\":%s ", str_c);
   output_to_all(str);
 #endif
 
 #if ( S_SCORE )
-  coeff = 9.9 / (((double)json_1_ring_x10 + (double)json_calibre_x10) / 20.0d);
-  score = 10.9 - (coeff * radius);
-  z = 360 - (((int)angle - 90) % 360);
-  clock_face = (double)z / 30.0;
-  sprintf(str, "\"score\": %d, "\"clock\":\"%d:%d, \"  ", score,(int)clock_face, (int)(60*(clock_face-((int)clock_face))) ;
-  output_to_all(str);
+  if ( json_token == TOKEN_WIFI )
+  {
+    coeff = 9.9 / (((double)json_1_ring_x10 + (double)json_calibre_x10) / 20.0d);
+    score = 10.9 - (coeff * radius);
+    z = 360 - (((int)angle - 90) % 360);
+    clock_face = (double)z / 30.0;
+    sprintf(str, ", \"score\": %d, "\"clock\":\"%d:%d, \"  ", score,(int)clock_face, (int)(60*(clock_face-((int)clock_face))) ;
+    output_to_all(str);
+  }
 #endif
 
 #if ( S_XY )
   dtostrf(x, 2, 2, str_c );
-  sprintf(str, "\"x\":%s, ", str_c);
+  sprintf(str, ",\"x\":%s", str_c);
   output_to_all(str);
   dtostrf(y, 2, 2, str_c );
-  sprintf(str, "\"y\":%s, ", str_c);
+  sprintf(str, ", \"y\":%s ", str_c);
   output_to_all(str);
   
   if ( json_target_type > 1 )
   {
     dtostrf(real_x, 2, 2, str_c );
-    sprintf(str, "\"real_x\":%s, ", str_c);
+    sprintf(str, ", \"real_x\":%s ", str_c);
     output_to_all(str);
     dtostrf(real_y, 2, 2, str_c );
-    sprintf(str, "\"real_y\":%s, ", str_c);
+    sprintf(str, ", \"real_y\":%s ", str_c);
     output_to_all(str);
   }
 #endif
 
 #if ( S_POLAR )
-  dtostrf(radius, 4, 2, str_c );
-  sprintf(str, " \"r\":%s, ", str_c);
-  output_to_all(str);
-  dtostrf(angle, 4, 2, str_c );
-  sprintf(str, "\"a\":%s, ", str_c);
-  output_to_all(str);
+  if ( json_token == TOKEN_WIFI )
+  {
+    dtostrf(radius, 4, 2, str_c );
+    sprintf(str, ", \"r\":%s, ", str_c);
+    output_to_all(str);
+    dtostrf(angle, 4, 2, str_c );
+    sprintf(str, ", \"a\":%s, ", str_c);
+    output_to_all(str);
+  }
 #endif
 
 #if ( S_TIMERS )
-  sprintf(str, "\"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d, ", (int)s[N].count, (int)s[E].count, (int)s[S].count, (int)s[W].count);
-  output_to_all(str);
+  if ( json_token == TOKEN_WIFI )
+  {
+    sprintf(str, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)s[N].count, (int)s[E].count, (int)s[S].count, (int)s[W].count);
+    output_to_all(str);
+  }
 #endif
 
 #if ( S_MISC ) 
-  volts = analogRead(V_REFERENCE);
-  dtostrf(TO_VOLTS(volts), 2, 2, str_c );
-  sprintf(str, "\"V_REF\":%s, ", str_c);
-  output_to_all(str);
-  dtostrf(temperature_C(), 2, 2, str_c );
-  sprintf(str, "\"T\":%s, ", str_c);
-  output_to_all(str);
-  sprintf(str, "\"VERSION\":%s ", SOFTWARE_VERSION);
-  output_to_all(str);
+  if ( json_token == TOKEN_WIFI )
+  {
+    volts = analogRead(V_REFERENCE);
+    dtostrf(TO_VOLTS(volts), 2, 2, str_c );
+    sprintf(str, ", \"V_REF\":%s, ", str_c);
+      output_to_all(str);
+    dtostrf(temperature_C(), 2, 2, str_c );
+    sprintf(str, ", \"T\":%s, ", str_c);
+    output_to_all(str);
+    sprintf(str, ", \"VERSION\":%s ", SOFTWARE_VERSION);
+    output_to_all(str);
+  }
 #endif
 
   sprintf(str, "}\r\n");
@@ -631,7 +675,11 @@ void send_score
 /*
  * All done, return
  */
-  
+  if ( json_token != TOKEN_WIFI )
+  {
+    token_give();                            // Give up the token ring
+    set_LED(LED_READY);
+  }
   return;
 }
  
@@ -654,12 +702,32 @@ void send_miss
   shot_record_t* shot                    // record record
   )
 {
-  char str[256];    // String holding buffer
-
+  char str[256];                        // String holding buffer
+  unsigned long now;                    // Starting timer
+  
   if ( json_send_miss != 0)               // If send_miss not enabled
   {
     return;                               // Do nothing
   }
+
+/*
+ * Grab the token ring if needed
+ */
+  if ( json_token != TOKEN_WIFI )
+  {
+     while(my_ring != whos_ring)
+    {
+      token_take();                              // Grab the token ring
+      now = millis();
+      while ( ((millis() - now) <= (ONE_SECOND))
+        && ( my_ring == whos_ring) )
+      { 
+        token_poll();
+      }
+      set_LED(LED_WIFI_SEND);
+    }
+  }
+  
 /* 
  *  Display the results
  */
@@ -667,22 +735,38 @@ void send_miss
   output_to_all(str);
   
  #if ( S_SHOT )
-  sprintf(str, "\"shot\":%d, \"miss\":1, \"name\":\"%s\" ", shot->shot_number, names[json_name_id], shot->shot_time) ;
+   if ( (json_token == TOKEN_WIFI) || (my_ring == TOKEN_UNDEF))
+  {
+    sprintf(str, "\"shot\":%d, \"miss\":0, \"name\":\"%s\"", shot->shot_number,  names[json_name_id]);
+  }
+  else
+  {
+    sprintf(str, "\"shot\":%d, \"miss\":1, \"name\":\"%d\"", shot->shot_number,  my_ring);
+  }
   output_to_all(str);
   dtostrf((float)shot->shot_time/(float)(ONE_SECOND), 2, 2, str );
-  sprintf(str, ",\"time\":%s ", str);
+  sprintf(str, ", \"time\":%s ", str);
 #endif
 
 #if ( S_XY )
-  sprintf(str, ", \"x\":0, \"y\":0 ");
-  output_to_all(str);
+  if ( json_token == TOKEN_WIFI )
+  { 
+    sprintf(str, ", \"x\":0, \"y\":0 ");
+    output_to_all(str);
+  }
+
+
+  
 #endif
 
 #if ( S_TIMERS )
-  sprintf(str, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)shot->timer_count[N], (int)shot->timer_count[E], (int)shot->timer_count[S], (int)shot->timer_count[W]);
-  output_to_all(str);
-  sprintf(str, ", \"face\":%d ", shot->face_strike);
-  output_to_all(str);
+  if ( json_token == TOKEN_WIFI )
+  {
+    sprintf(str, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)shot->timer_count[N], (int)shot->timer_count[E], (int)shot->timer_count[S], (int)shot->timer_count[W]);
+    output_to_all(str);
+    sprintf(str, ", \"face\":%d ", shot->face_strike);
+    output_to_all(str);
+  }
 #endif
 
   sprintf(str, "}\n\r");
@@ -691,6 +775,8 @@ void send_miss
 /*
  * All done, go home
  */
+  token_give();
+  set_LED(LED_READY);
   return;
 }
 
@@ -725,11 +811,14 @@ struct new_target
 };
 
 typedef new_target new_target_t;
+
 #define LAST_BULL (-1000.0)
 #define D5_74 (74/2)                   // Five bull air rifle is 74mm centre-centre
 new_target_t five_bull_air_rifle_74mm[] = { {-D5_74, D5_74}, {D5_74, D5_74}, {0,0}, {-D5_74, -D5_74}, {D5_74, -D5_74}, {LAST_BULL, LAST_BULL}};
+
 #define D5_79 (79/2)                   // Five bull air rifle is 79mm centre-centre
 new_target_t five_bull_air_rifle_79mm[] = { {-D5_79, D5_79}, {D5_79, D5_79}, {0,0}, {-D5_79, -D5_79}, {D5_79, -D5_79}, {LAST_BULL, LAST_BULL}};
+
 #define D12_H (191.0/2.0)              // Twelve bull air rifle 95mm Horizontal
 #define D12_V (195.0/3.0)              // Twelve bull air rifle 84mm Vertical
 new_target_t twelve_bull_air_rifle[]    = { {-D12_H,   D12_V + D12_V/2},  {0,   D12_V + D12_V/2},  {D12_H,   D12_V + D12_V/2},
@@ -737,8 +826,17 @@ new_target_t twelve_bull_air_rifle[]    = { {-D12_H,   D12_V + D12_V/2},  {0,   
                                             {-D12_H,         - D12_V/2},  {0,         - D12_V/2},  {D12_H,          -D12_V/2},
                                             {-D12_H, -(D12_V + D12_V/2)}, {0, -(D12_V + D12_V/2)}, {D12_H, -(D12_V + D12_V/2)},
                                             {LAST_BULL, LAST_BULL}};
-//                           0  1  2  3              4                        5              6  7  8  9  10  11          12
-new_target_t* ptr_list[] = { 0, 0, 0, 0, five_bull_air_rifle_74mm, five_bull_air_rifle_79mm, 0, 0, 0, 0, 0 , 0 , twelve_bull_air_rifle};
+
+#define O12_H (144.0/2.0)              // Twelve bull air rifle Orion
+#define O12_V (190.0/3.0)              // Twelve bull air rifle Orion
+new_target_t orion_bull_air_rifle[]    =  { {-O12_H,   O12_V + O12_V/2},  {0,   O12_V + O12_V/2},  {O12_H,   O12_V + O12_V/2},
+                                            {-O12_H,           O12_V/2},  {0,           O12_V/2},  {O12_H,           O12_V/2},
+                                            {-O12_H,         - O12_V/2},  {0,         - O12_V/2},  {O12_H,          -O12_V/2},
+                                            {-O12_H, -(O12_V + O12_V/2)}, {0, -(O12_V + O12_V/2)}, {O12_H, -(O12_V + O12_V/2)},
+                                            {LAST_BULL, LAST_BULL}};
+                                            
+//                           0  1  2  3              4                        5              6  7  8  9  10           11                     12
+new_target_t* ptr_list[] = { 0, 0, 0, 0, five_bull_air_rifle_74mm, five_bull_air_rifle_79mm, 0, 0, 0, 0, 0 , orion_bull_air_rifle , twelve_bull_air_rifle};
 
 static void remap_target
   (

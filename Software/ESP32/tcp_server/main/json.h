@@ -12,7 +12,7 @@ typedef struct  {
   char*             token;    // JSON token string, ex "RADIUS": 
   int*              value;    // Where value is stored 
   double*         d_value;    // Where value is stored 
-  byte            convert;    // Conversion type
+  byte_t          convert;    // Conversion type
   void         (*f)(int x);   // Function to execute with message
   unsigned int    non_vol;    // Storage in NON-VOL
   unsigned int init_value;    // Initial Value
@@ -27,7 +27,7 @@ typedef struct  {
 #define IS_FIXED      6       // The value cannot be changed
 
 void reset_JSON(void);            // Clear the JSON input buffer
-bool read_JSON(void);             // Scan the serial port looking for JSON input
+bool_t read_JSON(void);           // Scan the serial port looking for JSON input
 void show_echo(void);             // Display the settings
 
 extern int    json_dip_switch;    // DIP switch overwritten by JSON message
@@ -84,5 +84,10 @@ extern char   json_wifi_ip[];     // Text of IP address
 extern int    json_rh;            // Relative Humidity, 0-100%
 extern int    json_min_ring_time; // Time to wait for ringing to stop
 extern double json_doppler;       // Adjutment for inverse square
+extern int    json_token;         // Token ring setting
+extern int    json_multifunction2;// Multifunction Switch 2
+#if (CLOCK_TEST)
+extern int    json_clock[4];      // Test clock
+#endif
 
-#endif _JSON_H_
+#endif

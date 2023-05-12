@@ -16,6 +16,7 @@
 #include "diag_tools.h"
 #include "esp-01.h"
 #include "timer.h"
+#include "token.h"
 
 shot_record_t record[SHOT_STRING];      //Array of shot records
 unsigned int this_shot;                 // Index into the shot array
@@ -26,11 +27,16 @@ unsigned int  shot = 0;                 // Shot counter
 unsigned int  face_strike = 0;          // Miss Face Strike interrupt count
 unsigned int  is_trace = 0;             // Turn off tracing
 unsigned long rapid_on = 0;             // Duration of rapid fire event
+
+
 unsigned int  rapid_count = 0;          // Number of shots to be expected in Rapid Fire
 unsigned int  tabata_state;             // Tabata state
 unsigned int  shot_number;              // Shot Identifier
-static  long  keep_alive;               // Keep alive timer
-
+static volatile unsigned long  keep_alive;      // Keep alive timer
+static volatile unsigned long  state_timer;     // Free running state timer
+static volatile unsigned long  in_shot_timer;   // Time inside of the shot window
+static volatile unsigned long  power_save;      // Power save timer
+static volatile unsigned long  token_tick;      // Token ring watchdog
 
 const char* names[] = { "TARGET",                                                                                           //  0
                         "1",      "2",        "3",     "4",      "5",       "6",       "7",     "8",     "9",      "10",    //  1
@@ -66,36 +72,30 @@ void setup(void)
 /*
  *  Setup the serial port
  */
-  Serial.begin(115200);
-  AUX_SERIAL.begin(115200); 
-  DISPLAY_SERIAL.begin(115200); 
+  Serial.begin(115200, SERIAL_8N1);
+  AUX_SERIAL.begin(115200, SERIAL_8N1); 
+  DISPLAY_SERIAL.begin(115200, SERIAL_8N1); 
   POST_version();                         // Show the version string on all ports
-  is_trace = INIT_TRACE;
-
   
+  read_nonvol();
+  is_trace = DLT_CRITICAL;                // Turn on tracing
+
 /*
  *  Set up the port pins
  */
   init_gpio();  
   set_LED('*', '.', '.');                 // Hello World
-  
+
   init_sensors();
   init_analog_io();
   init_timer();
+  timer_new(&keep_alive,    (unsigned long)json_keep_alive * ONE_SECOND); // Keep alive timer
+  timer_new(&state_timer,   0);                                           // Free running state timer
+  timer_new(&in_shot_timer, FULL_SCALE);                                  // Time inside of the shot window
+  timer_new(&power_save,    (unsigned long)(json_power_save) * (long)ONE_SECOND * 60L);// Power save timer
+  timer_new(&token_tick,    5 * ONE_SECOND);                              // Token ring watchdog
   
   randomSeed( analogRead(V_REFERENCE));   // Seed the random number generator
-    
-  if ( CALIBRATE )
-  {
-    set_trip_point(0);                    // Are we calibrating?
-  }
-  
-/* 
- *  Read the persistent storage
- */
-  set_LED('.', '*', '.');                 // Hello World
-  read_nonvol();
-  keep_alive = millis();
   
 /*
  * Initialize variables
@@ -108,40 +108,46 @@ void setup(void)
  */
   set_LED('*', '.', '*');                 // Hello World
   while ( (POST_counters() == false)      // If the timers fail
-              && !DLT(DLT_CRITICAL))      // and not in trace mode (DIAG jumper installed)
+              && !DLT(DLT_CRITICAL))          // and not in trace mode (DIAG jumper installed)
   {
     Serial.print(T("POST_2 Failed\r\n"));// Blink the LEDs
     blink_fault(POST_COUNT_FAILED);       // and try again
   }
   
-/*
- * Initialize the WiFi if available
+/* 
+ *  Setup the timer
  */
+  set_LED('.', '*', '.');                 // Hello World
+
+  if ( DLT(DLT_CRITICAL) )
+  {
+    Serial.print(T("Starting timers"));
+  }
+
+  enable_timer_interrupt();
+     
+/*
+ * Initialize the WiFi or token ring if available
+ */
+
    set_LED('*', '*', '.');                 // Hello World
-   esp01_init();                           // Prepare the WiFi channel if installed
+   esp01_init();                         // Prepare the WiFi channel if installed
    
 /*
  * Ready to go
  */ 
-  show_echo();
   set_LED('*', '*', '*');                 // Hello World
-  
-  if ( VERBOSE_TRACE )                    
-  {
-    is_trace = DLT_INFO;
-  }
-  else
-  {
-    is_trace = DLT_NONE;
-  }
-  
   set_LED_PWM(json_LED_PWM);
   POST_LEDs();                            // Cycle the LEDs
   set_LED(LED_READY);                     // to a client, then the RDY light is steady on
-  while ( AVAILABLE )
+  while ( available_all() )
   {
-    GET();                                // Flush any garbage before we start up
+    get_all();                                // Flush any garbage before we start up
   }
+  
+  DLT(DLT_CRITICAL); 
+  Serial.print(T("Finished startup\n\r"));
+  show_echo();
   return;
 }
 
@@ -164,59 +170,82 @@ void setup(void)
 unsigned int state = SET_MODE;
 unsigned int old_state = ~SET_MODE;
 
-unsigned long timer;                  // Interval timer
-unsigned long power_save;             // Power save timer
-unsigned int sensor_status;           // Record which sensors contain valid data
-unsigned int location;                // Sensor location 
+unsigned int  sensor_status;          // Record which sensors contain valid data
+unsigned int  location;               // Sensor location 
 
-int ch;
 char* loop_name[] = {"SET_MODE", "ARM", "WAIT", "AQUIRE", "REDUCE", "FINISH" };
 
 void loop() 
 {
   unsigned int i, j;              // Iteration Counter
 
+  
 /*
  * First thing, handle polled devices
  */
-  esp01_receive();                // Accumulate input from the IP port.
   multifunction_switch();         // Read the switches
   tabata(false);                  // Update the Tabata state
   
 /*
  * Take care of any commands coming through
  */
+
+  switch (json_token )
+  {
+    case TOKEN_WIFI:
+      esp01_receive();
+      break;
+
+    case TOKEN_MASTER:
+      if ( token_tick == 0)             // Time to check the token ring?
+      {
+        token_init();                   // Request an enumeration
+        if ( my_ring == TOKEN_UNDEF )
+        {
+          token_tick = ONE_SECOND * 5;  //  Waiting to start up
+        }
+        else
+        {
+          token_tick = ONE_SECOND * 60; // Just check
+        }
+      }
+
+    case TOKEN_SLAVE:
+      token_poll();                     // Check the token ring
+      break;
+  }
+    
   if ( read_JSON() )
   {
-    power_save = millis();        // Reset the power down timer if something comes in
+    power_save = (long)json_power_save * 60L * (long)ONE_SECOND;        // Reset the power down timer if something comes in
   }
 
 /*
  * Take care of the TCPIP keep alive
  */
  if ( (json_keep_alive != 0)
-    && ((millis()- keep_alive)/ 1000) > json_keep_alive )           // Time in seconds
+    && (keep_alive == 0) )              // Time in seconds
  {
     send_keep_alive();
-    keep_alive = millis();
+    keep_alive = json_keep_alive * ONE_SECOND;
  }
 
 /*
  * Take care of the low power mode
  */
   if ( (json_power_save != 0 ) 
-       && (((millis()-power_save) / 1000 / 60) >= json_power_save) )  // Time in minutes
+       && (power_save == 0) )                         // Time in minutes
   {
-    bye();                              // Dim the lights
-    power_save = millis();              // Came back. 
-    state = SET_MODE;                   // Reset everything just in case
+    bye();                                            // Dim the lights
+    power_save = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L;   // Came back. 
+    state = SET_MODE;                                 // Reset everything just in case
   }
 
 /*
  * Cycle through the state machine
  */
   if ( (state != old_state) 
-      && DLT(DLT_CRITICAL) )
+      && DLT(DLT_APPLICATION) )
   {
     Serial.print(T("Loop State: ")); Serial.print(loop_name[state]);;
   } 
@@ -282,7 +311,6 @@ void loop()
     is_trace = DLT_DIAG;
   }
   rapid_on  = 0;                    // Turn off the timer
-  power_save = millis();            // Start the power saver time
     
   for (i=0; i != SHOT_STRING; i++)
   {
@@ -339,11 +367,10 @@ unsigned int arm(void)
   sensor_status = is_running();     // and immediatly read the status
   if ( sensor_status == 0 )         // After arming, the sensor status should be zero
   { 
-    if ( DLT(DLT_CRITICAL) )
+    if ( DLT(DLT_APPLICATION) )
     {
       Serial.print(T("Waiting..."));
     }  
-    enable_timer_interrupt();
     return WAIT;                   // Fall through to WAIT
   }
 
@@ -404,8 +431,8 @@ unsigned int wait(void)
  * Monitor the WiFi and blink if WiFi is present but not connected
  * Set RDY to solid red if there is a connection to the PC client
  */
-  if ( (esp01_is_present() == false) 
-          || esp01_connected() )        // If the esp01 is not present, or connected
+  if ( ((json_token == TOKEN_WIFI) && ((esp01_is_present() == false) || esp01_connected() ))         // If the esp01 is not present, or connected
+          || ((json_token != TOKEN_WIFI) && (my_ring != TOKEN_UNDEF)) )
   {
     set_LED(LED_READY);                 // to a client, then the RDY light is steady on
   }
@@ -431,7 +458,7 @@ unsigned int wait(void)
     {
       set_LED_PWM_now(0);
 
-      if ( DLT(DLT_CRITICAL) )
+      if ( DLT(DLT_APPLICATION) )
       {
         Serial.print(T("Rapid fire complete"));
       }
@@ -494,13 +521,13 @@ unsigned int reduce(void)
  */
   while (last_shot != this_shot )
   {   
-    if ( DLT(DLT_CRITICAL) )
+    if ( DLT(DLT_APPLICATION) )
     {
       Serial.print(T("Reducing shot: ")); Serial.print(last_shot); Serial.print(T("\r\nTrigger: ")); 
-      show_sensor_status(record[last_shot].sensor_status, &record[last_shot]);
+      show_sensor_status(record[last_shot].sensor_status, 0);
     }
 
-    location = compute_hit(&record[last_shot], false);          // Compute the score
+    location = compute_hit(&record[last_shot]);                 // Compute the score
     if ( location != MISS )                                     // Was it a miss or face strike?
     {
       if ( (json_rapid_enable == 0) && (json_tabata_enable = 0))// If in a regular session, hold off for the follow through time
@@ -508,6 +535,8 @@ unsigned int reduce(void)
         delay(ONE_SECOND * json_follow_through);
       }
       send_score(&record[last_shot]);
+      rapid_red(0);
+      rapid_green(1);                                           // Turn off the RED and turn on the GREEN
 
       if ( (json_paper_time + json_step_time) != 0 )            // Has the witness paper been enabled?
       {
@@ -520,12 +549,14 @@ unsigned int reduce(void)
     }
     else
     {
-      if ( DLT(DLT_CRITICAL) )
+      if ( DLT(DLT_APPLICATION) )
       {
         Serial.print(T("Shot miss...\r\n"));
       }
       blink_fault(SHOT_MISS);
       send_miss(&record[last_shot]);
+      rapid_green(0);
+      rapid_red(1);                                             // Show a miss
     }
 
 /* 
@@ -554,7 +585,7 @@ unsigned int reduce(void)
 /*
  * All done, Exit to FINISH if the timer has expired
  */
-  if ( millis() >= rapid_on )
+  if ( state_timer == 0 )
   {
     return FINISH;
   } 
@@ -666,9 +697,6 @@ unsigned int finish(void)
  * 
  *-------------------------------------------------------------*/
 
-static unsigned long tabata_start;             // Time from start of the tabata timer
-static unsigned long time_end;                 // Time when timer expires
-
 static uint16_t old_tabata_state = ~TABATA_OFF;
 
 static long tabata
@@ -677,9 +705,7 @@ static long tabata
   )
 {
   char s[32];
-  unsigned int ms50;                 //50 ms timer
-  
-  ms50 = millis() / 50;
+
   
 /*
  * Reset the variables based on the arguements
@@ -694,7 +720,7 @@ static long tabata
  */
   if ( (old_tabata_state != tabata_state ) && DLT(DLT_APPLICATION) )
   {
-    Serial.print(T("Tabata State: ")); Serial.print(tabata_state); Serial.print(T("  Duration:")); Serial.print(time_end / ONE_SECOND);
+    Serial.print(T("Tabata State: ")); Serial.print(tabata_state); Serial.print(T("  Duration:")); Serial.print(state_timer / ONE_SECOND);
   }
   
   switch (tabata_state)
@@ -702,7 +728,7 @@ static long tabata
       case (TABATA_OFF):                  // The tabata is not enabled
         if ( json_tabata_enable != 0 )    // Just switched to enable. 
         {
-          time_end = millis() + (30 * ONE_SECOND);
+          state_timer = 30 * ONE_SECOND;
           set_LED_PWM_now(0);             // Turn off the lights
           sprintf(s, "{\"TABATA_STARTING\":%d}\r\n", (30));
           output_to_all(s);
@@ -711,9 +737,9 @@ static long tabata
         break;
         
       case (TABATA_REST):                // OFF, wait for the time to expire
-        if (millis() >= time_end)        // Don't do anything unless the time expires
+        if (state_timer == 0)             // Don't do anything unless the time expires
         {
-          time_end = millis() + (json_tabata_warn_on * ONE_SECOND);
+          state_timer = json_tabata_warn_on * ONE_SECOND;
           set_LED_PWM_now(json_LED_PWM);  //     Turn on the lights
           sprintf(s, "{\"TABATA_WARN\":%d}\r\n", json_tabata_warn_on);
           output_to_all(s);
@@ -722,9 +748,9 @@ static long tabata
         break;
         
    case (TABATA_WARNING):                 // Warning time in seconds
-        if ( (ms50 & 1) == 0 )
+        if ( (state_timer % 50) == 0 )
         {
-          if ( (ms50 & 2) == 0 )
+          if ( ((state_timer / 50) & 1) == 0 )
           {
             set_LED_PWM_now(0);
           }
@@ -733,9 +759,9 @@ static long tabata
           set_LED_PWM_now(json_LED_PWM);
           }
         }
-        if (millis() >= time_end)         // Don't do anything unless the time expires
+        if (state_timer == 0)         // Don't do anything unless the time expires
         {
-          time_end = millis() + (json_tabata_warn_off * ONE_SECOND);
+          state_timer = json_tabata_warn_off * ONE_SECOND;
           set_LED_PWM_now(0);             // Turn off the lights
           sprintf(s, "{\"TABATA_DARK\":%d}\r\n", json_tabata_warn_off);
           output_to_all(s);
@@ -744,10 +770,10 @@ static long tabata
         break;
       
     case (TABATA_DARK):                   // Dark time in seconds
-        if (millis() >= time_end)         // Don't do anything unless the time expires
+        if (state_timer == 0 )            // Don't do anything unless the time expires
         {
-          tabata_start = millis();
-          time_end = millis() + (json_tabata_on * ONE_SECOND);
+          in_shot_timer = FULL_SCALE;     // Set the timer on
+          state_timer = json_tabata_on * ONE_SECOND;
           set_LED_PWM_now(json_LED_PWM);           // Turn on the lights
           sprintf(s, "{\"TABATA_ON\":%d}\r\n", json_tabata_on);
           output_to_all(s);
@@ -756,9 +782,9 @@ static long tabata
         break;
       
     case (TABATA_ON):                     // Keep the LEDs on for the tabata time
-        if (millis() >= time_end)           // Don't do anything unless the time expires
+        if ( state_timer == 0 )           // Don't do anything unless the time expires
         {
-          time_end = millis() + ((long)(json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off) * ONE_SECOND);
+          state_timer = ((long)(json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off) * ONE_SECOND);
           sprintf(s, "{\"TABATA_OFF\":%d}\r\n", (json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off));
           output_to_all(s);
           set_LED_PWM_now(0);             // Turn off the LEDs
@@ -773,33 +799,6 @@ static long tabata
     old_tabata_state = tabata_state;
     return 0;
  }
-
-
-/*----------------------------------------------------------------
- * 
- * function: tabata_time
- * 
- * brief:    Return the time from tabata on until now
- * 
- * return:  Tabata time
- * 
- *----------------------------------------------------------------
- *
- *  If the tabata timer is on, then return the time from the
- *  start of the tabata cycle until the present.
- *  
- *  If the tabata timer is off, then return the current time
- *  
- *--------------------------------------------------------------*/
-
-unsigned long tabata_time(void)
-{
-  if ( tabata_state == TABATA_ON )
-  {
-    return millis()-tabata_start;                               // Bail out now
-  }
-  return millis();
-}
 
 
 /*----------------------------------------------------------------
@@ -910,34 +909,34 @@ bool discard_shot(void)
   if ( enable != 0 )
   {
     set_LED_PWM_now(0);                                           // Turn off the LEDs (maybe turn them on later)
-     
+    rapid_red(1);                                                 // Turn on the RED light
+    rapid_green(0);                                               // Turn off the green light
+    
     if ( json_rapid_wait != 0 )
     {      
       if  ( json_rapid_wait >= RANDOM_INTERVAL )                  // > Random Interval
       {
-        random_wait = random(5, json_rapid_wait % 100);           // Use bottom two digits for the time  
-        if ( DLT(DLT_APPLICATION) )
-        {
-          Serial.print(T("RAPID_RANDOM:")); Serial.print(random_wait);
-        }
+        random_wait = random(5, json_rapid_wait % 100);           // Use bottom two digits for the time
+        sprintf(str, "\r\n{\"RAPID_WAIT\":%d}", random_wait);
+        output_to_all(str);
         delay(random_wait * ONE_SECOND);
       }
       else
       {
-        if ( DLT(DLT_APPLICATION) )
-        {
-          Serial.print(T("RAPID_WAIT:")); Serial.print(random_wait);
-        }
+        sprintf(str, "\r\n{\"RAPID_WAIT\":%d}", json_rapid_wait); // Use this time 
+        output_to_all(str);
         delay(json_rapid_wait * ONE_SECOND);
       }
     }
-    rapid_on = millis() + ((long)json_rapid_time * 1000L);        // Duration of the event in ms
+    state_timer = (long)json_rapid_time * 1000L;                  // Duration of the event in ms
+    in_shot_timer = FULL_SCALE;                                   // Set the shot timer
     rapid_count = json_rapid_count;                               // Number of expected shots
     shot_number = 1;
   }
   else
   {
     rapid_on = 0;
+    rapid_red(0);                                                 // Turn off the RED light
   }
    
   set_LED_PWM_now(json_LED_PWM);                                  // Turn on the LED to start the cycle
@@ -948,11 +947,11 @@ bool discard_shot(void)
   {
     if ( enable )
     {
-      Serial.print(T("RAPID_START: ")); Serial.print(json_rapid_time);
+      Serial.print(T("Starting Rapid Fire.  Time: "));Serial.print(json_rapid_time);
     }
     else
     {
-      Serial.print(T("RAPID_END"));
+      Serial.print(T("Rapid Fire disabled"));
     }
   }
   
@@ -979,6 +978,15 @@ bool discard_shot(void)
 void bye(void)
 {
   char str[32];
+
+/*
+ * The BYE function does not work if we are a token ring.
+ */
+  if ( json_token != TOKEN_WIFI )
+  {
+    return;
+  }
+  
 /*
  * Say Good Night Gracie!
  */
@@ -992,14 +1000,14 @@ void bye(void)
 /*
  * Loop waiting for something to happen
  */ 
-  while ( AVAILABLE )               // Purge the com port
+  while ( available_all() )         // Purge the com port
   {
-    GET();
+    get_all();
   }
   
   while( (DIP_SW_A == 0)            // Wait for the switch to be pressed
         && (DIP_SW_B == 0)          // Or the switch to be pressed
-        && ( AVAILABLE == 0)        // Or a character to arrive
+        && ( available_all() == 0)  // Or a character to arrive
         && ( is_running() == 0) )   // Or a shot arrives
   {
     esp01_receive();                // Keep polling the WiFi to see if anything 
@@ -1043,7 +1051,7 @@ void hello(void)
  * Woken up again
  */  
   set_LED_PWM_now(json_LED_PWM);
-  power_save = millis();                            // Reset the on time
+  power_save = json_power_save * ONE_SECOND * 60L;
   EEPROM.get(NONVOL_POWER_SAVE, json_power_save);   // and reset the power save time
   
   return;
