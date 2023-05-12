@@ -109,7 +109,7 @@ void token_init(void)
  */
   if ( json_token == TOKEN_MASTER )
   {
-    AUX_SERIAL.print((char)(TOKEN_BYTE | TOKEN_ENUM | 1 + 1) );                           // Master, send out an enum
+    AUX_SERIAL.print((char)(TOKEN_BYTE | TOKEN_ENUM | (1 + 1)) );                           // Master, send out an enum
   }
   else
   {
@@ -390,7 +390,7 @@ int token_give(void)
   
   else if ( DLT(DLT_INFO) ) 
   {
-    Serial.print(T("token_give()"));  
+    printf("token_give()");  
   }
 
 /*

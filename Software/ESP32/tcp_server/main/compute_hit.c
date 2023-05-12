@@ -10,9 +10,6 @@
 
 #define THRESHOLD (0.001)
 
-#define PI_ON_4 (PI / 4.0d)
-#define PI_ON_2 (PI / 2.0d)
-
 #define R(x)  (((x)+location) % 4)    // Rotate the target by location points
 
 /*

@@ -6,8 +6,11 @@
  * 
  * ----------------------------------------------------*/
 #include "freETarget.h"
+#include "json.h"
 #include "nonvol.h"
+#include "gpio.h"
 #include "diag_tools.h"
+#include "stdio.h"
 
 /*----------------------------------------------------------------
  * 
@@ -28,7 +31,7 @@ void check_nonvol(void)
   
   if ( DLT(DLT_DIAG) )
   {
-    Serial.print(T("check_nonvol()"));
+    printf("check_nonvol()");
   }
   
 /*
@@ -72,7 +75,7 @@ void check_nonvol(void)
  *------------------------------------------------------------*/
 void factory_nonvol
   (
-   bool new_serial_number
+   bool_t new_serial_number
   )
 {
   unsigned int nonvol_init;               // Initialization token
@@ -80,12 +83,12 @@ void factory_nonvol
   char         ch;
   unsigned int x;                         // Temporary Value
   double       dx;                        // Temporarty Value
-  unsigned int i, j;                      // Iteration Counter
+  unsigned int i;                         // Iteration Counter
   
 /*
  * Fill up all of memory with a known (bogus) value
  */
-  Serial.print(T("\r\nReset to factory defaults. This may take a while\r\n"));
+  printf("\r\nReset to factory defaults. This may take a while\r\n");
   ch = 0xAB;
   for ( i=0; i != NONVOL_SIZE; i++)
   {
@@ -94,7 +97,7 @@ void factory_nonvol
       EEPROM.put(i, ch);                    // Fill up with a bogus value
       if ( (i % 64) == 0 )
       {
-        Serial.print(T("."));
+        printf(".");
       }
     }
   }
@@ -121,7 +124,7 @@ void factory_nonvol
        
        case IS_TEXT:
        case IS_SECRET:
-        Serial.print(T("\r\n")); Serial.print(JSON[i].token); Serial.print(T(" \"\""));
+        printf("\r\n"); Serial.print(JSON[i].token); printf(" \"\"");
         if ( JSON[i].non_vol != 0 )
         {
           EEPROM.put(JSON[i].non_vol, 0);                    // Zero out the text
@@ -130,7 +133,7 @@ void factory_nonvol
         
       case IS_INT16:
         x = JSON[i].init_value;                            // Read in the value 
-        Serial.print(T("\r\n")); Serial.print(JSON[i].token); Serial.print(T(" ")); Serial.print(x);
+        printf("\r\n"); Serial.print(JSON[i].token); printf(" "); Serial.print(x);
         if ( JSON[i].non_vol != 0 )
         {
           EEPROM.put(JSON[i].non_vol, x);                    // Read in the value
@@ -140,13 +143,13 @@ void factory_nonvol
       case IS_FLOAT:
       case IS_DOUBLE:
         dx = (double)JSON[i].init_value;
-        Serial.print(T("\r\n")); Serial.print(JSON[i].token); Serial.print(T(" ")); Serial.print(dx);
+        printf("\r\n"); Serial.print(JSON[i].token); printf(" "); Serial.print(dx);
         EEPROM.put(JSON[i].non_vol, dx);                    // Read in the value
         break;
     }
    i++;
  }
-  Serial.print(T("\r\nDone\r\n"));
+  printf("\r\nDone\r\n");
   
 /*    
  *      Make a backup of the settings
@@ -157,17 +160,17 @@ void factory_nonvol
  */
   if ( new_serial_number )
   {
-    Serial.print(T("\r\n Testing motor drive "));
+    printf("\r\n Testing motor drive ");
     for (x=10; x != 0; x--)
     {
-      Serial.print(x); Serial.print(T("+ "));
+      Serial.print(x); printf("+ ");
       paper_on_off(true);
       delay(ONE_SECOND/4);
-      Serial.print(T("- "));
+      printf("- ");
       paper_on_off(false);
       delay(ONE_SECOND/4);
     }
-    Serial.print(T(" Test Complete\r\n"));
+    printf(" Test Complete\r\n");
   }
 /*
  * Set the trip point
@@ -186,7 +189,7 @@ void factory_nonvol
       Serial.read();
     }
   
-    Serial.print(T("\r\nSerial Number? (ex 223! or x))"));
+    printf("\r\nSerial Number? (ex 223! or x))");
     while (i)
     {
       if ( Serial.available() != 0 )
@@ -195,7 +198,7 @@ void factory_nonvol
         if ( ch == '!' )
         {  
           EEPROM.put(NONVOL_SERIAL_NO, serial_number);
-          Serial.print(T(" Setting Serial Number to: ")); Serial.print(serial_number);
+          printf(" Setting Serial Number to: "); Serial.print(serial_number);
           break;
         }
         if ( ch == 'x' )
@@ -260,18 +263,12 @@ void init_nonvol
     int verify                            // Verification code entered by user
   )
 {
-  unsigned int nonvol_init;               // Initialization token
-           int serial_number;             // Board serial number
-  char         ch;
-  unsigned int x;                         // Temporary Value
-  double       dx;                        // Temporarty Value
-
 /*
  * Ensure that the user wants to init the unit
  */
   if ( (verify != INIT_ALLOWED) && (verify != INIT_SERIAL_NUMBER) )
   {
-    Serial.print(T("\r\nUse {\"INIT\":1234}\r\n"));
+    printf("\r\nUse {\"INIT\":1234}\r\n");
     return;
   }
 
@@ -310,7 +307,7 @@ void read_nonvol(void)
 
   if ( DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("read_nonvol()"));
+    printf("read_nonvol()");
   }
   
 /*
@@ -433,7 +430,7 @@ void update_nonvol
   
   if ( DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("update_nonvol(")); Serial.print(current_version); Serial.print(T(")")); 
+    printf("update_nonvol("); Serial.print(current_version); printf(")"); 
   }
   
 /*
@@ -441,7 +438,7 @@ void update_nonvol
  */
   if ( PS_UNINIT(current_version) )
   {
-    Serial.print(T("\n\rUpdating legacy persistent storage"));
+    printf("\n\rUpdating legacy persistent storage");
     i=0;
     while ( JSON[i].token != 0 )
     { 
@@ -462,7 +459,7 @@ void update_nonvol
    }
    current_version = PS_VERSION;                            // Initialized, force in the current version
    EEPROM.put(NONVOL_PS_VERSION, current_version);
-   Serial.print(T("\r\nDone\r\n"));
+   printf("\r\nDone\r\n");
   }
 
 /*
@@ -729,7 +726,7 @@ void dump_nonvol(void)
       }
       else
       {
-        Serial.print(T("."));
+        printf(".");
       }
       if ( ((j+1) % 4) == 0 )
       {
@@ -769,7 +766,7 @@ void backup_nonvol(void)
 
   if ( DLT(DLT_DIAG) )
   {
-    Serial.print(T("\r\nStarting backup"));
+    printf("\r\nStarting backup");
   }
   
 /*
@@ -809,7 +806,7 @@ void restore_nonvol(void)
 
   if( DLT(DLT_DIAG))
   {
-    Serial.print(T("\r\nStarting restore"));
+    printf("\r\nStarting restore");
   }
   
 /*
@@ -821,7 +818,7 @@ void restore_nonvol(void)
       EEPROM.put(i, x);
   }
   
- Serial.print(T(" - done"));
+ printf(" - done");
    
  /* 
   *  All done, return

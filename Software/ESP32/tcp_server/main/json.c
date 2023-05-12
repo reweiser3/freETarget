@@ -6,6 +6,9 @@
  * 
  * ----------------------------------------------------*/
 #include "freETarget.h"
+#include "json.h"
+#include "ctype.h"
+#include "stdio.h"
 
 static char input_JSON[256];
 
@@ -178,10 +181,10 @@ static void diag_delay(int x) { Serial.print(T("\r\n\"DELAY\":")); Serial.print(
  * corresponding memory location
  * 
  *-----------------------------------------------------*/
-static uint16_t in_JSON = 0;
-static int16_t got_right = false;
-static bool not_found;
-static bool keep_space;   // Set to 1 if keeping spaces
+static unsigned int in_JSON = 0;
+static bold_t got_right = false;
+static bool_t not_found;
+static bool_t keep_space;   // Set to 1 if keeping spaces
 
 static int to_int(char h)
 {

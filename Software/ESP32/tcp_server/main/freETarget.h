@@ -64,6 +64,10 @@
 #define W       3                                     // Index to West Timer
 #define MISS    4                                     // Timer was a miss
 
+#define PI 3.14159269
+#define PI_ON_4 (PI / 4.0d)
+#define PI_ON_2 (PI / 2.0d)
+
 /*
  *  Types
  */

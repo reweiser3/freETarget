@@ -1,15 +1,16 @@
 
 /*----------------------------------------------------------------
  *
- * diag_tools.ino
+ * diag_tools.c
  *
  * Debug and test tools 
  *
  *---------------------------------------------------------------*/
 
 #include "freETarget.h"
-#include "diag_tools.h"
 #include "gpio.h"
+#include "diag_tools.h"
+#include "nonvol.h"
 #include "analog_io.h"
 #include "token.h"            // Time provided by the token ring
 #include "json.h"
@@ -72,42 +73,42 @@ void self_test(unsigned int test)
  */
     default:                // Undefined, show the tests
     case T_HELP:                
-      Serial.print(T("\r\n 1 - Digital inputs"));
-      Serial.print(T("\r\n 2 - Counter values (external trigger)"));
+      printf("\r\n 1 - Digital inputs");
+      printf("\r\n 2 - Counter values (external trigger)");
       if ( revision() >= REV_220 )
       {
-        Serial.print(T("\r\n 3 - Counter values (internal trigger)"));
+        printf("\r\n 3 - Counter values (internal trigger)");
       }
-      Serial.print(T("\r\n 4 - Oscilloscope"));
-      Serial.print(T("\r\n 5 - Oscilloscope (PC)"));
-      Serial.print(T("\r\n 6 - Advance paper backer"));
-      Serial.print(T("\r\n 7 - Spiral Unit Test"));
-      Serial.print(T("\r\n 8 - Grid calibration pattern"));
-      Serial.print(T("\r\n 9 - One time calibration pattern"));
-      Serial.print(T("\r\n 8 - Grid calibration pattern"));
+      printf("\r\n 4 - Oscilloscope");
+      printf("\r\n 5 - Oscilloscope (PC)");
+      printf("\r\n 6 - Advance paper backer");
+      printf("\r\n 7 - Spiral Unit Test");
+      printf("\r\n 8 - Grid calibration pattern");
+      printf("\r\n 9 - One time calibration pattern");
+      printf("\r\n 8 - Grid calibration pattern");
       if ( revision() >= REV_220 )
       {
-        Serial.print(T("\r\n10 - Aux port passthrough"));
+        printf("\r\n10 - Aux port passthrough");
       }
-      Serial.print(T("\r\n11 - Calibrate")); 
-      Serial.print(T("\r\n12 - Transfer loopback"));
-      Serial.print(T("\r\n13 - Serial port test"));
-      Serial.print(T("\r\n14 - LED brightness test"));
-      Serial.print(T("\r\n15 - Face strike test"));
-      Serial.print(T("\r\n16 - WiFi test"));
-      Serial.print(T("\r\n17 - Dump NonVol"));
-      Serial.print(T("\r\n18 - Send sample shot record"));
-      Serial.print(T("\r\n19 - Show WiFi status"));
-      Serial.print(T("\r\n20 - Send clock out of all serial ports"));
-      Serial.print(T("\r\n21 - Log North Sensor"));
-      Serial.print(T("\r\n22 - Log East Sensor"));
-      Serial.print(T("\r\n23 - Log South Sensor"));
-      Serial.print(T("\r\n24 - Log West Sensor"));
-      Serial.print(T("\r\n25 - Test Push Buttons"));
-      Serial.print(T("\r\n26 - Unit Test speed_of_sound()"));
-      Serial.print(T("\r\n27 - Token Ring Test()"));
-      Serial.print(T("\r\n28 - Count on the LEDs"));
-      Serial.print(T("\r\n"));
+      printf("\r\n11 - Calibrate"); 
+      printf("\r\n12 - Transfer loopback");
+      printf("\r\n13 - Serial port test");
+      printf("\r\n14 - LED brightness test");
+      printf("\r\n15 - Face strike test");
+      printf("\r\n16 - WiFi test");
+      printf("\r\n17 - Dump NonVol");
+      printf("\r\n18 - Send sample shot record");
+      printf("\r\n19 - Show WiFi status");
+      printf("\r\n20 - Send clock out of all serial ports");
+      printf("\r\n21 - Log North Sensor");
+      printf("\r\n22 - Log East Sensor");
+      printf("\r\n23 - Log South Sensor");
+      printf("\r\n24 - Log West Sensor");
+      printf("\r\n25 - Test Push Buttons");
+      printf("\r\n26 - Unit Test speed_of_sound()");
+      printf("\r\n27 - Token Ring Test()");
+      printf("\r\n28 - Count on the LEDs");
+      printf("\r\n");
       break;
 
 /*
@@ -121,7 +122,7 @@ void self_test(unsigned int test)
  * Test 2, 3, Test the timing circuit
  */
     case T_TRIGGER:                       // Show the timer values (Wait for analog input)
-      Serial.print(T("\r\nWaiting for Trigger\r\n"));
+      printf("\r\nWaiting for Trigger\r\n");
     case T_CLOCK:                        // Show the timer values (Trigger input)
       stop_timers();
       arm_timers();
@@ -133,13 +134,13 @@ void self_test(unsigned int test)
         if ( revision() >= REV_220 )  
         {
           random_delay = esp_random() % 6000;   // Pick a random delay time in us
-          Serial.print(T("\r\nRandom clock test: ")); Serial.print(random_delay); Serial.print(T("us. All outputs must be the same. "));
+          printf("\r\nRandom clock test: "); Serial.print(random_delay); printf("us. All outputs must be the same. ");
           trip_timers();
           delayMicroseconds(random_delay);  // Delay a random time
         }
         else
         {
-          Serial.print(T("\r\nThis test not supported on this hardware revision"));
+          printf("\r\nThis test not supported on this hardware revision");
           break;
         }
       }
@@ -167,11 +168,11 @@ void self_test(unsigned int test)
 
         if ( pass == true )
         {
-          Serial.print(T(" PASS\r\n"));
+          printf(" PASS\r\n");
         }
         else
         {
-          Serial.print(T(" FAIL\r\n"));
+          printf(" FAIL\r\n");
         }
       }
       send_timer(sensor_status);
@@ -195,26 +196,26 @@ void self_test(unsigned int test)
  * Test 6, Advance the paper
  */
     case T_PAPER: 
-      Serial.print(T("\r\nAdvancing backer paper ")); Serial.print(((json_paper_time) + (json_step_time)) * 10); Serial.print(T(" ms  ")); Serial.print(json_step_count); Serial.print(T(" steps"));
+      printf("\r\nAdvancing backer paper "); Serial.print(((json_paper_time) + (json_step_time)) * 10); printf(" ms  "); Serial.print(json_step_count); printf(" steps");
       drive_paper();
-      Serial.print(T("\r\nDone"));
+      printf("\r\nDone");
       break;
 
 /*
  * Test 7, 8, 9, Generate test pattern for diagnosing software problems
  */
     case T_SPIRAL: 
-      Serial.print(T("\r\nSpiral Calculation\r\n"));
+      printf("\r\nSpiral Calculation\r\n");
       unit_test( T_SPIRAL );            // Generate a spiral
       break;
 
     case T_GRID:
-      Serial.print(T("\r\nGrid Calculation\r\n"));
+      printf("\r\nGrid Calculation\r\n");
       unit_test( T_GRID);               // Generate a grid
       break;  
       
     case T_ONCE:
-      Serial.print(T("\r\nSingle Calculation\r\n"));
+      printf("\r\nSingle Calculation\r\n");
       unit_test( T_ONCE);               // Generate a SINGLE calculation
       break;
 
@@ -222,7 +223,7 @@ void self_test(unsigned int test)
  * Test 10, Test the pass through connector
  */
     case T_PASS_THRU:
-      Serial.print(T("\r\nPass through active.  Cycle power to exit\r\n"));
+      printf("\r\nPass through active.  Cycle power to exit\r\n");
       while (1)
       {
         if ( Serial.available() )
@@ -247,16 +248,15 @@ void self_test(unsigned int test)
  * Test 13
  */
     case T_SERIAL_PORT:
-      Serial.print(T("\r\nArduino Serial Port: Hello World\r\n"));
-      AUX_SERIAL.print(T("\r\nAux Serial Port: Hello World\r\n"));
-      DISPLAY_SERIAL.print(T("\r\nDisplay Serial Port: Hello World\r\n"));
+      printf("\r\nArduino Serial Port: Hello World\r\n");
+      AUX_printf("\r\nAux Serial Port: Hello World\r\n");
       break;
 
 /* 
  *  Test 14
  */
     case T_LED:
-      Serial.print(T("\r\nRamping the LED"));
+      printf("\r\nRamping the LED");
       for (i=0; i != 256; i++)
       {
         analogWrite(LED_PWM, i);
@@ -268,14 +268,14 @@ void self_test(unsigned int test)
         delay(ONE_SECOND/50);
       }
       analogWrite(LED_PWM, 0);
-      Serial.print(T(" Done\r\n"));
+      printf(" Done\r\n");
       break;
 
  /*
   * Test 15
   */
     case T_FACE:
-      Serial.print(T("\r\nFace strike test\n\r"));
+      printf("\r\nFace strike test\n\r");
       face_strike = 0;                        // Reset the interrupt count
       sample = 0;
       enable_face_interrupt();
@@ -296,15 +296,15 @@ void self_test(unsigned int test)
         {
           if ( (face_strike % 20) == 0 )
           {
-            Serial.print(T("\r\n"));
+            printf("\r\n");
           }
-          Serial.print(T(" S:")); Serial.print(face_strike);
+          printf(" S:"); Serial.print(face_strike);
           sample = face_strike;        
         }
         esp01_receive();                // Accumulate input from the IP port.
         ch = get_all();
     }
-    Serial.print(T("\r\nDone\n\r"));
+    printf("\r\nDone\n\r");
     break;
 
  /*
@@ -327,7 +327,7 @@ void self_test(unsigned int test)
  */
   case T_SHOT:
 #if ( CLOCK_TEST )
-    Serial.print(T(" Shot Test using entered values")); // {"NC":30, "EC":0, "SC":80, "WC":83, "TEST":18} 
+    printf(" Shot Test using entered values"); // {"NC":30, "EC":0, "SC":80, "WC":83, "TEST":18} 
     is_trace = 0x255;       // Turn on all tracing
     shot.face_strike = 0;
     shot.timer_count[N] = 4096 - json_clock[N];
@@ -363,12 +363,12 @@ void self_test(unsigned int test)
       i = millis() / 1000;
       if ( (i % 60) == 0 )
       {
-        sprintf(s, "\r\n%d:%d ", i/60, i % 60);
+        sprintf(&s, "\r\n%d:%d ", i/60, i % 60);
         output_to_all(s);
       }
       else
       {
-      sprintf(s, " %d:%d ", i/60, i % 60);
+      sprintf(&s, " %d:%d ", i/60, i % 60);
       output_to_all(s);
       }
       esp01_receive();                // Accumulate input from the IP port.
@@ -399,7 +399,7 @@ void self_test(unsigned int test)
       esp01_receive();                    // Accumulate input from the IP port.
       ch = get_all();
     }
-    Serial.print(T("\n\rDone"));
+    printf("\n\rDone");
     break;
 
 /*
@@ -407,7 +407,7 @@ void self_test(unsigned int test)
  */
   case T_S_OF_SOUND:
     sound_test();
-    Serial.print(T("\n\rDone"));
+    printf("\n\rDone");
     break;
 
 /*
@@ -415,7 +415,7 @@ void self_test(unsigned int test)
  */
   case T_TOKEN:
     token_init();
-    Serial.print(T("\n\rDone"));
+    printf("\n\rDone");
     break;
 
 /*
@@ -430,7 +430,7 @@ void self_test(unsigned int test)
       i++;
       token_poll();                                       // Until something arrives
     }
-    Serial.print(T("\n\rDone"));
+    printf("\n\rDone");
     break;
   }
  
@@ -544,7 +544,7 @@ void self_test(unsigned int test)
   
   if ( DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("POST_counters()"));
+    printf("POST_counters()");
   }
 
   test_passed = true;                 // And assume that it will pass
@@ -558,7 +558,7 @@ void self_test(unsigned int test)
   sensor_status = is_running();       // Remember all of the running timers
   if ( (sensor_status != 0) && DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("\r\nFailed Clock Test. Spurious trigger:")); show_sensor_status(sensor_status, 0);
+    printf("\r\nFailed Clock Test. Spurious trigger:"); show_sensor_status(sensor_status, 0);
     return false;                     // No point in any more tests
   }
   
@@ -579,7 +579,7 @@ void self_test(unsigned int test)
     {
       if ( (read_counter(j) != 0) && DLT(DLT_CRITICAL) )     // Make sure they stay at zero
       {
-        Serial.print(T("Failed Clock Test. Counter free running:")); Serial.print(nesw[j]);
+        printf("Failed Clock Test. Counter free running:"); Serial.print(nesw[j]);
         test_passed =  false;         // return a failed test
       }   
     }
@@ -603,7 +603,7 @@ void self_test(unsigned int test)
     stop_timers();
     if ( (sensor_status != 0x0F) && DLT(DLT_CRITICAL) )      // The circuit was triggered but not all
     {                                 // FFs latched
-      Serial.print(T("Failed Clock Test. sensor_status:")); show_sensor_status(sensor_status, 0);
+      printf("Failed Clock Test. sensor_status:"); show_sensor_status(sensor_status, 0);
       test_passed = false;
     }
 
@@ -616,7 +616,7 @@ void self_test(unsigned int test)
       x  = read_counter(j);
       if ( (read_counter(j) != x) && DLT(DLT_CRITICAL) )
       {
-        Serial.print(T("Failed Clock Test. Counter did not stop:")); Serial.print(nesw[j]); show_sensor_status(sensor_status, 0);
+        printf("Failed Clock Test. Counter did not stop:"); Serial.print(nesw[j]); show_sensor_status(sensor_status, 0);
         test_passed = false;          // since there is delay  in
       }                               // Turning off the counters
  
@@ -631,7 +631,7 @@ void self_test(unsigned int test)
       
       if ( (x > CLOCK_TEST_LIMIT) && DLT(DLT_CRITICAL) )     // The time should be positive and within limits
       { 
-        Serial.print(T("Failed Clock Test. Counter:")); Serial.print(nesw[j]); Serial.print(T(" Is:")); Serial.print(read_counter(j)); Serial.print(T(" Should be:")); Serial.print(random_delay); Serial.print(T(" Delta:")); Serial.print(x);
+        printf("Failed Clock Test. Counter:"); Serial.print(nesw[j]); printf(" Is:"); Serial.print(read_counter(j)); printf(" Should be:"); Serial.print(random_delay); printf(" Delta:"); Serial.print(x);
         test_passed = false;          // since there is delay  in
       }                               // Turning off the counters
     }
@@ -708,7 +708,7 @@ void set_trip_point
   bool_t        pause;                                      // Stop the test
   unsigned int  i, j;                                       // Iteration Counter
   
-  Serial.print(T("Setting trip point. Type ! of cycle power to exit\r\n"));
+  printf("Setting trip point. Type ! of cycle power to exit\r\n");
 
   sensor_status = 0;                                        // No sensors have tripped
   stay_forever = false;
@@ -741,12 +741,12 @@ void set_trip_point
     switch (Serial.read())
     {
       case '!':                       // ! waiting in the serial port
-        Serial.print(T("\r\nExiting calibration\r\n"));
+        printf("\r\nExiting calibration\r\n");
         return;
 
       case 'B':
       case 'b':                       // Blink the Motor Drive
-        Serial.print(T("\r\nBlink Motor Drive\r\n"));
+        printf("\r\nBlink Motor Drive\r\n");
         paper_on_off(1);
         delay(ONE_SECOND);
         paper_on_off(0);
@@ -754,7 +754,7 @@ void set_trip_point
       
       case 'W':
       case 'w':                      // Test the WiFI
-        Serial.print(T("\r\nTest WiFi"));
+        printf("\r\nTest WiFi");
         esp01_test();
         break;
         
@@ -771,7 +771,7 @@ void set_trip_point
     
 
    show_sensor_status(is_running(), 0);
-   Serial.print(T("\n\r"));
+   printf("\n\r");
    if ( stay_forever )
    {
       if ( (is_running() == 0x0f) && (face_strike != 0) )
@@ -882,7 +882,7 @@ void show_analog(int v)
     o_scope[max_input[i]] = nesw[i];
    }
   
-  Serial.print(T("{\"OSCOPE\": ")); Serial.print(o_scope);  Serial.print(T("\"}\r\n"));     // Display the trace as JSON
+  printf("{\"OSCOPE\": "); Serial.print(o_scope);  printf("\"}\r\n");     // Display the trace as JSON
 
  /*
   * All done.
@@ -911,7 +911,7 @@ static void show_analog_on_PC(int v)
 /*
  * Output as a scope trace
  */
-  Serial.print(T("\n{Ref:")); Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); Serial.print(T("  "));
+  printf("\n{Ref:"); Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); printf("  ");
   
   for (i=N; i != W + 1; i++)
   {
@@ -942,7 +942,7 @@ static void show_analog_on_PC(int v)
     
     Serial.print(o_scope);                        // Display this channel
   }
-  Serial.print(T("}"));
+  printf("}");
 
  /*
   * All done.
@@ -1053,7 +1053,7 @@ static bool sample_calculations
     shot.timer_count[W] = RX(W, x, y);
     shot.timer_count[W] -= 200;              // Inject an error into the West sensor
 
-    Serial.print(T("\r\nResult should be: "));   Serial.print(T("x:")); Serial.print(x); Serial.print(T(" y:")); Serial.print(y); Serial.print(T(" radius:")); Serial.print(radius); Serial.print(T(" angle:")); Serial.print(angle * 180.0d / PI);
+    printf("\r\nResult should be: ");   printf("x:"); Serial.print(x); printf(" y:"); Serial.print(y); printf(" radius:"); Serial.print(radius); printf(" angle:"); Serial.print(angle * 180.0d / PI);
     break;
 
  /*
@@ -1130,12 +1130,12 @@ void show_sensor_status
 {
   unsigned int i;
   
-  Serial.print(T(" Latch:"));
+  printf(" Latch:");
 
   for (i=N; i<=W; i++)
   {
     if ( sensor_status & (1<<i) )   Serial.print(nesw[i]);
-    else                            Serial.print(T("."));
+    else                            printf(".");
   }
 
   if ( shot != 0 )
@@ -1144,42 +1144,42 @@ void show_sensor_status
 
     for (i=N; i<=W; i++)
     {
-      Serial.print(T(" "));  Serial.print(nesw[i]); Serial.print(T(":")); Serial.print(shot->timer_count[i]); 
+      printf(" ");  Serial.print(nesw[i]); printf(":"); Serial.print(shot->timer_count[i]); 
     }
   }
   
-  Serial.print(T("  Face Strike:")); Serial.print(face_strike);
+  printf("  Face Strike:"); Serial.print(face_strike);
   
-  Serial.print(T("  V_Ref:")); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
+  printf("  V_Ref:"); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
   
-  Serial.print(T("  Temperature:")); Serial.print(temperature_C());
+  printf("  Temperature:"); Serial.print(temperature_C());
   
-  Serial.print(T("  WiFi:")); Serial.print(esp01_is_present());                           // TRUE if WiFi is available
+  printf("  WiFi:"); Serial.print(esp01_is_present());                           // TRUE if WiFi is available
 
-  Serial.print(T("  Switch:"));
+  printf("  Switch:");
   
   if ( DIP_SW_A == 0 )
   {
-    Serial.print(T("--"));
+    printf("--");
   }
   else
   {
-    Serial.print(T("A1"));
+    printf("A1");
   }
-  Serial.print(T(" "));
+  printf(" ");
   if ( DIP_SW_B == 0 )
   {
-    Serial.print(T("--"));
+    printf("--");
   }
   else
   {
-    Serial.print(T("B2"));
+    printf("B2");
   }
 
   if ( ((sensor_status & 0x0f) == 0x0f)
     && (face_strike != 0) )
   {
-    Serial.print(T(" PASS"));
+    printf(" PASS");
     delay(ONE_SECOND);                // Wait for click to go away
   }    
 

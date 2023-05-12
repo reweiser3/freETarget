@@ -527,8 +527,8 @@ unsigned int reduce(void)
   {   
     if ( DLT(DLT_APPLICATION) )
     {
-      printf("Reducing shot: %d \n\rTrigger: ", last_shot) 
-      show_sensor_status(record[last_shot].sensor_status, 0);
+      printf("Reducing shot: %d \n\rTrigger: ", last_shot);
+      show_sensor_status(record[last_shot].sensor_status);
     }
 
     location = compute_hit(&record[last_shot]);                 // Compute the score
@@ -668,7 +668,7 @@ unsigned int finish(void)
     }
     else
     {
-      prinf("Tabata disabled");
+      printf("Tabata disabled");
     }
   }
   
@@ -727,7 +727,7 @@ static long tabata
  */
   if ( (old_tabata_state != tabata_state ) && DLT(DLT_APPLICATION) )
   {
-    Serial.print(T("Tabata State: ")); Serial.print(tabata_state); Serial.print(T("  Duration:")); Serial.print(state_timer / ONE_SECOND);
+    printf("Tabata State: %d Duration: %d ", tabata_state, state_timer / ONE_SECOND);
   }
   
   switch (tabata_state)
@@ -908,7 +908,7 @@ bool_t discard_shot(void)
   )
  {
   char str[32];
-  long random_wait;
+  unsigned int random_wait;
 
 /*
  * If enabled, set up the timers

@@ -9,6 +9,7 @@
  * ----------------------------------------------------*/
 
 #include "freETarget.h"
+#include "gpio.h"
 #include "diag_tools.h"
 
 #define TO_MM 1000.0d                  // Convert Metres to mm
