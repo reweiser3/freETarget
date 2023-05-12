@@ -11,6 +11,7 @@
 #include "diag_tools.h"
 #include "stdio.h"
 #include "json.h"
+#include "token.h"
 
 const GPIO_t init_table[] = {
   {D0,          "\"D0\":",       INPUT_PULLUP, 0 },
@@ -67,7 +68,7 @@ void sensor_ISR(void);                    // Begin recording times for a target 
 
 static bool_t fcn_DIP_SW_A(void);         // Function to read DIP_SW_A
 static bool_t fcn_DIP_SW_B(void);         // Function to read DIP_SW_B
-static void sw_state (bool_t* (fcn_state)(void), unsigned long*  which_timer, void* (fcn_action)(void)); // Do something with the switches
+static void sw_state(unsigned int action);// Do something with the switches
 static void send_fake_score(void);        // Send a fake score to the PC
 
 static unsigned int dip_mask;             // Used if the MFS2 uses the DIP_0 or DIP_3

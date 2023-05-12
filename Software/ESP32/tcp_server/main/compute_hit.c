@@ -9,6 +9,10 @@
 #include "json.h"
 #include "compute_hit.h"
 #include "math.h"
+#include "diag_tools.h"
+#include "token.h"
+#include "math.h"
+#include "analog_io.h"
 
 #define THRESHOLD (0.001)
 
@@ -110,7 +114,7 @@ unsigned int compute_hit
 {
   double        reference;         // Time of reference counter
   int           location;          // Sensor chosen for reference location
-  int           i, j, count;
+  int           i, count;
   double        x;                 // Floating point value
   double        estimate;          // Estimated position
   double        last_estimate, error; // Location error
@@ -306,7 +310,7 @@ unsigned int compute_hit
     y_avg /= 4.0d;
     
     estimate = sqrt(sq(s[location].x - x_avg) + sq(s[location].y - y_avg));
-    error = abs(last_estimate - estimate);
+    error = fabs(last_estimate - estimate);
 
     if ( DLT(DLT_DIAG) )
     {
@@ -525,16 +529,11 @@ void send_score
   shot_record_t* shot             //  record
   )
 {
-  int    i;                       // Iteration Counter
   double x, y;                    // Shot location in mm X, Y
   double real_x, real_y;          // Shot location in mm X, Y before remap
   double radius;
   double angle;
   unsigned int volts;
-  double clock_face;
-  double coeff;                   // From Alex Bird
-  int    z;
-  double score;
   char   str[256], str_c[10];  // String holding buffers
   unsigned long now;
   
@@ -807,7 +806,7 @@ struct new_target
   double       y;       // Y location of Bull
 };
 
-typedef new_target new_target_t;
+typedef struct new_target new_target_t;
 
 #define LAST_BULL (-1000.0)
 #define D5_74 (74/2)                   // Five bull air rifle is 74mm centre-centre
