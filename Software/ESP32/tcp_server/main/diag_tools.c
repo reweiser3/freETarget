@@ -16,6 +16,8 @@
 #include "json.h"
 #include "stdio.h"
 #include "esp_random.h"
+#include "compute_hit.h"
+#include "math.h"
 
 const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 
@@ -46,16 +48,14 @@ extern int   json_clock[4];
 unsigned int tick;
 void self_test(unsigned int test)
 {
-  double       volts;               // Reference Voltage
   unsigned int i;
   char         ch;
   unsigned int sensor_status;       // Sensor running inputs
   unsigned long sample;             // Sample used for comparison
   unsigned int random_delay;        // Random sampe time
   bool_t       pass;
-  unsigned long start_time;         // Running time
   shot_record_t shot;               // Shot history
-  unsigned char s[128];             // Text buffer
+  char s[128];             // Text buffer
   
 /*
  *  Update the timer
@@ -134,7 +134,7 @@ void self_test(unsigned int test)
         if ( revision() >= REV_220 )  
         {
           random_delay = esp_random() % 6000;   // Pick a random delay time in us
-          printf("\r\nRandom clock test: "); Serial.print(random_delay); printf("us. All outputs must be the same. ");
+          printf("\r\nRandom clock test: %dus. All outputs must be the same. ", random_delay);
           trip_timers();
           delayMicroseconds(random_delay);  // Delay a random time
         }
@@ -196,7 +196,7 @@ void self_test(unsigned int test)
  * Test 6, Advance the paper
  */
     case T_PAPER: 
-      printf("\r\nAdvancing backer paper "); Serial.print(((json_paper_time) + (json_step_time)) * 10); printf(" ms  "); Serial.print(json_step_count); printf(" steps");
+      printf("\r\nAdvancing backer paper %dms  %d steps", ((json_paper_time) + (json_step_time)) * 10, json_step_count);
       drive_paper();
       printf("\r\nDone");
       break;
@@ -558,7 +558,7 @@ void self_test(unsigned int test)
   sensor_status = is_running();       // Remember all of the running timers
   if ( (sensor_status != 0) && DLT(DLT_CRITICAL) )
   {
-    printf("\r\nFailed Clock Test. Spurious trigger:"); show_sensor_status(sensor_status, 0);
+    printf("\r\nFailed Clock Test. Spurious trigger:"); show_sensor_status(sensor_status);
     return false;                     // No point in any more tests
   }
   
@@ -603,7 +603,7 @@ void self_test(unsigned int test)
     stop_timers();
     if ( (sensor_status != 0x0F) && DLT(DLT_CRITICAL) )      // The circuit was triggered but not all
     {                                 // FFs latched
-      printf("Failed Clock Test. sensor_status:"); show_sensor_status(sensor_status, 0);
+      printf("Failed Clock Test. sensor_status:"); show_sensor_status(sensor_status);
       test_passed = false;
     }
 
@@ -616,7 +616,7 @@ void self_test(unsigned int test)
       x  = read_counter(j);
       if ( (read_counter(j) != x) && DLT(DLT_CRITICAL) )
       {
-        printf("Failed Clock Test. Counter did not stop:"); Serial.print(nesw[j]); show_sensor_status(sensor_status, 0);
+        printf("Failed Clock Test. Counter did not stop: %c", nesw[j]); show_sensor_status(sensor_status);
         test_passed = false;          // since there is delay  in
       }                               // Turning off the counters
  
@@ -704,9 +704,6 @@ void set_trip_point
   )
 {
   bool_t        stay_forever;                               // Stay forever if called with pass_count == 0;
-  unsigned int  sensor_status;                              // OR of the sensor bits that have tripped
-  bool_t        pause;                                      // Stop the test
-  unsigned int  i, j;                                       // Iteration Counter
   
   printf("Setting trip point. Type ! of cycle power to exit\r\n");
 
@@ -770,7 +767,7 @@ void set_trip_point
     }
     
 
-   show_sensor_status(is_running(), 0);
+   show_sensor_status(is_running());
    printf("\n\r");
    if ( stay_forever )
    {
@@ -974,7 +971,6 @@ static void show_analog_on_PC(int v)
 static void unit_test(unsigned int mode)
 {
   unsigned int i;
-  unsigned int location;
   unsigned int shot_number;
   
  /*
@@ -1032,7 +1028,6 @@ static bool sample_calculations
   double radius;
   double polar;
   int    ix, iy;
-  double step_size;             // Rectangular coordinates
   double grid_step;
   shot_record_t shot;
   
@@ -1221,7 +1216,7 @@ void log_sensor
   unsigned int sensor_status;     // Sensor running latch
   char         s[128];            // String Holder
   char         ch;                // Input character
-  bool         is_new;            // TRUE if a change was found
+  bool_t       is_new;            // TRUE if a change was found
 
   sprintf(s, "\r\nLogging %s Use X to reset,  ! to exit\r\n", which_one[sensor]);
   output_to_all(s);
@@ -1312,7 +1307,7 @@ void log_sensor
  * DLT_CRItiCAL levels are always printed
  *   
  *--------------------------------------------------------------*/
-bool do_dlt
+bool_t do_dlt
   (
   unsigned int level
   )

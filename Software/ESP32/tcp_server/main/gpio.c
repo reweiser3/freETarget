@@ -5,10 +5,14 @@
  * General purpose GPIO driver
  * 
  * ----------------------------------------------------*/
-
+#include "freETarget.h"
+#include "gpio.h"
 #include "timer.h"
+#include "diag_tools.h"
+#include "stdio.h"
+#include "json.h"
 
-const GPIO init_table[] = {
+const GPIO_t init_table[] = {
   {D0,          "\"D0\":",       INPUT_PULLUP, 0 },
   {D1,          "\"D1\":",       INPUT_PULLUP, 0 },
   {D2,          "\"D2\":",       INPUT_PULLUP, 0 },
@@ -61,9 +65,9 @@ const GPIO init_table[] = {
 void face_ISR(void);                      // Acknowledge a face strike
 void sensor_ISR(void);                    // Begin recording times for a target shot
 
-static bool fcn_DIP_SW_A(void);           // Function to read DIP_SW_A
-static bool fcn_DIP_SW_B(void);           // Function to read DIP_SW_B
-static void sw_state (bool* (fcn_state)(void), unsigned long*  which_timer, void* (fcn_action)(void)); // Do something with the switches
+static bool_t fcn_DIP_SW_A(void);         // Function to read DIP_SW_A
+static bool_t fcn_DIP_SW_B(void);         // Function to read DIP_SW_B
+static void sw_state (bool_t* (fcn_state)(void), unsigned long*  which_timer, void* (fcn_action)(void)); // Do something with the switches
 static void send_fake_score(void);        // Send a fake score to the PC
 
 static unsigned int dip_mask;             // Used if the MFS2 uses the DIP_0 or DIP_3
@@ -92,7 +96,7 @@ void init_gpio(void)
 
   if ( DLT(DLT_CRITICAL) ) 
   {
-    Serial.print(T("init_gpio()"));  
+    printf("init_gpio()");  
   }
   
   i = 0;
@@ -442,7 +446,7 @@ void set_LED
 /* 
  *  HAL Discrete IN
  */
-bool read_in(unsigned int port)
+bool_t read_in(unsigned int port)
 {
   return digitalRead(port);
 }
@@ -536,7 +540,7 @@ void drive_paper(void)
   
   if ( DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("Advancing paper:")); Serial.print(s_time);
+    printf("Advancing paper:"); Serial.print(s_time);
   }
 
 /*
@@ -590,7 +594,7 @@ void drive_paper(void)
 
 static void paper_on_off                        // Function to turn the motor on and off
   (
-  bool on                                       // on == true, turn on motor drive
+  bool_t on                                       // on == true, turn on motor drive
   )
 {
   if ( on == true )
@@ -648,7 +652,7 @@ static void paper_on_off                        // Function to turn the motor on
 
   if ( DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("\r\nface_ISR():")); Serial.print(face_strike);
+    printf("\r\nface_ISR():"); Serial.print(face_strike);
   }
 
   return;
@@ -925,7 +929,7 @@ static void sw_state
 
   if ( DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("Switch action: ")); Serial.print(action);
+    printf("Switch action: "); Serial.print(action);
   }
 
   switch (action)
@@ -1320,16 +1324,16 @@ void digital_test(void)
 /*
  * Read in the fixed digital inputs
  */
-  Serial.print(T("\r\nTime:"));                      Serial.print(micros()/1000000); Serial.print("."); Serial.print(micros()%1000000); Serial.print(T("s"));
-  Serial.print(T("\r\nBD Rev:"));                    Serial.print(revision());       
-  Serial.print(T("\r\nDIP: 0x"));                    Serial.print(read_DIP(0), HEX); 
+  printf("\r\nTime:");                      Serial.print(micros()/1000000); Serial.print("."); Serial.print(micros()%1000000); printf("s");
+  printf("\r\nBD Rev:");                    Serial.print(revision());       
+  printf("\r\nDIP: 0x");                    Serial.print(read_DIP(0), HEX); 
   digitalWrite(STOP_N, 0);
   digitalWrite(STOP_N, 1);                        // Reset the fun flip flop
-  Serial.print(T("\r\nRUN FlipFlop: 0x"));           Serial.print(is_running(), HEX);   
-  Serial.print(T("\r\nTemperature: "));              Serial.print(temperature_C());  Serial.print(T("'C "));
-  Serial.print(speed_of_sound(temperature_C(), json_rh));  Serial.print(T("mm/us"));
-  Serial.print(T("\r\nV_REF: "));                    Serial.print(volts); Serial.print(T(" Volts"));
-  Serial.print(T("\r\n"));
+  printf("\r\nRUN FlipFlop: 0x");           Serial.print(is_running(), HEX);   
+  printf("\r\nTemperature: ");              Serial.print(temperature_C());  printf("'C ");
+  Serial.print(speed_of_sound(temperature_C(), json_rh));  printf("mm/us");
+  printf("\r\nV_REF: ");                    Serial.print(volts); printf(" Volts");
+  printf("\r\n");
 
 /*
  * Read the port pins and report
@@ -1339,11 +1343,11 @@ void digital_test(void)
   {
     if ( init_table[i].in_or_out == OUTPUT )
     {
-      Serial.print(T("\r\n OUT >> "));
+      printf("\r\n OUT >> ");
     }
     else
     {
-      Serial.print(T("\r\n IN  << "));
+      printf("\r\n IN  << ");
     }
     Serial.print(init_table[i].gpio_name); Serial.print(digitalRead(init_table[i].port));
     i++;
@@ -1379,7 +1383,7 @@ void aquire(void)
  */
   if ( DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("Aquiring shot:")); Serial.print(this_shot);
+    printf("Aquiring shot:"); Serial.print(this_shot);
   }
   stop_timers();                                    // Stop the counters
   read_timers(&record[this_shot].timer_count[0]);   // Record this count

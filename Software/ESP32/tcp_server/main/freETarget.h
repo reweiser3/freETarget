@@ -67,7 +67,7 @@
 #define PI 3.14159269
 #define PI_ON_4 (PI / 4.0d)
 #define PI_ON_2 (PI / 2.0d)
-
+#define sq(x) ((x)*(x))
 /*
  *  Types
  */
@@ -105,6 +105,7 @@ extern const char* names[];
 extern const char to_hex[];
 extern unsigned int face_strike;
 extern const char nesw[];             // Cardinal Points
+extern unsigned int is_trace;         // Tracing level(s)
 
 /*
  *  Factory settings via Arduino monitor

@@ -11,6 +11,8 @@
 #include "stdio.h"
 #include "json.h"
 #include "math.h"
+#include "gpio.h"
+#include "analog_io.h"
 
 void set_vset_PWM(unsigned int pwm);
 
@@ -249,7 +251,6 @@ double temperature_C(void)
 {
   double return_value;
   int raw;                // Allow for negative temperatures
-  int i;
 
   raw = 0xffff;
    
@@ -257,7 +258,7 @@ double temperature_C(void)
  *  Point to the temperature register
  */
   Wire.beginTransmission(TEMP_IC);
-  Wire.write(0),
+  Wire.write(0);
   Wire.endTransmission();
 
 /*
