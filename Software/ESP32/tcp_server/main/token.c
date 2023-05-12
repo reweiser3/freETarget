@@ -62,6 +62,9 @@
 #include "freETarget.h"
 #include "token.h"
 #include "esp-01.h"
+#include "diag_tools.h"
+#include "json.h"
+#include "stdio.h"
 
 int my_ring = TOKEN_UNDEF;          // Token ring address
 int whos_ring = TOKEN_UNDEF;        // Who owns the ring right now?
@@ -93,12 +96,12 @@ void token_init(void)
   if ( (json_token == TOKEN_WIFI)                 // Not in token ring mode
     || (esp01_is_present() == 1) )                // In WiFi mode
   {
-    return 0;
+    return;
   }
   
   if ( DLT(DLT_CRITICAL) ) 
   {
-    Serial.print(T("token_init()"));  
+    printf("token_init()");  
   }
   
 /*
@@ -172,7 +175,7 @@ void token_poll(void)
       token = aux_spool_read();
       if (DLT(DLT_INFO) )                             // and not in trace mode (DIAG jumper installed)
       {
-        Serial.print("Master Rx: 0x"); Serial.print((char)token, HEX); Serial.print(T(" ")); Serial.print((char)token);
+        printf("Master Rx: 0x%2X  %d", token, token);
       }
 
       if ( token & TOKEN_BYTE )
@@ -180,10 +183,10 @@ void token_poll(void)
         switch ( token & (TOKEN_CONTROL) )                  // Yes, act on it
         {
           case (TOKEN_ENUM_REQUEST):                          // A new device has requested an enum
-            AUX_SERIAL.print((char)(TOKEN_BYTE | TOKEN_ENUM | 1 + 1) ); // Yes, start the enumeration at 2 
+            AUX_SERIAL.print((char)(TOKEN_BYTE | TOKEN_ENUM | (1 + 1)) ); // Yes, start the enumeration at 2 
             if (DLT(DLT_INFO) )                              // and not in trace mode (DIAG jumper installed)
             {
-              Serial.print(T("{\"TOKEN_ENUM\":")); Serial.print((int)(token & TOKEN_RING)); Serial.print(T("}"));
+              printf("{\"TOKEN_ENUM\":%d }", (int)(token & TOKEN_RING));
             }
             break;
           
@@ -192,7 +195,7 @@ void token_poll(void)
             whos_ring = TOKEN_UNDEF;                          // Nobody owns the ring right now
             if (DLT(DLT_INFO) )
             {
-              Serial.print(T("{\"TOKEN\":")); Serial.print(millis()); Serial.print(T("}"));
+              printf("{\"TOKEN\": %d}", millis());
             }
             break;
         
@@ -247,7 +250,7 @@ void token_poll(void)
       token = aux_spool_read();
       if (DLT(DLT_INFO) )                                   // and not in trace mode (DIAG jumper installed)
       {
-        Serial.print("Slave Rx: 0x"); Serial.print((char)token, HEX); Serial.print(T(" ")); Serial.print((char)token);
+        printf("Slave Rx: 0x%02X %d", token, token);
       }
 
       if ( token & TOKEN_BYTE )
@@ -265,7 +268,7 @@ void token_poll(void)
               whos_ring = TOKEN_UNDEF;                      // Nobody owns the ring right now?
               if (DLT(DLT_INFO) )                           // and not in trace mode (DIAG jumper installed)
               { 
-                Serial.print(T("{\"TOKEN\":")); Serial.print(millis()); Serial.print(T("}"));
+                printf("{\"TOKEN\": %d}", millis());
               }
               AUX_SERIAL.print((char)(TOKEN_BYTE | TOKEN_ENUM | (my_ring+1)) ); // Add 1 and send it along
               break;
@@ -338,7 +341,7 @@ int token_take(void)
   
   else if ( DLT(DLT_INFO) ) 
   {
-    Serial.print(T("token_take()"));  
+    printf("token_take()");  
   }
 
 /*
