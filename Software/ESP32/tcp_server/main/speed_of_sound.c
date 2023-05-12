@@ -1,6 +1,6 @@
 /*-------------------------------------------------------
  * 
- * speed_of_sound.ino
+ * speed_of_sound.c
  * 
  * Compute the speed of sound based on Temp & Humidity
  * 

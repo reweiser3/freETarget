@@ -1,6 +1,6 @@
 /*-------------------------------------------------------
  * 
- * nonvol.ino
+ * nonvol.c
  * 
  * Nonvol storage managment
  * 

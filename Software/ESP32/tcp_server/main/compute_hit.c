@@ -1,6 +1,6 @@
 /*----------------------------------------------------------------
  *
- * Compute_hit.ino
+ * Compute_hit.c
  *
  * Determine the score
  *

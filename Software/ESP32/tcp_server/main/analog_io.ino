@@ -1,6 +1,6 @@
 /*-------------------------------------------------------
  * 
- * analog_io.ino
+ * analog_io.c
  * 
  * General purpose Analog driver
  * 

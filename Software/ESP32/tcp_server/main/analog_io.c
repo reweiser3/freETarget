@@ -1,13 +1,16 @@
 /*-------------------------------------------------------
  * 
- * analog_io.ino
+ * analog_io.c
  * 
  * General purpose Analog driver
  * 
  * ----------------------------------------------------*/
 
 #include "freETarget.h"
-#include "Wire.h"
+#include "diag_tools.h"
+#include "stdio.h"
+#include "json.h"
+#include "math.h"
 
 void set_vset_PWM(unsigned int pwm);
 
@@ -24,7 +27,7 @@ void init_analog_io(void)
 {
   if ( DLT(DLT_CRITICAL) )                  // and not in trace mode (DIAG jumper installed)
   {
-    Serial.print(T("init_analog_io()"));// Blink the LEDs
+    printf("init_analog_io()");// Blink the LEDs
   }
   
   pinMode(LED_PWM, OUTPUT);
@@ -70,7 +73,7 @@ void set_LED_PWM_now
   
   if ( DLT(DLT_INFO) )
   {
-    Serial.print(T("new_LED_percent:")); Serial.print(new_LED_percent); Serial.print(T("  old_LED_percent:")); Serial.print(old_LED_percent);
+    printf("new_LED_percent:"); Serial.print(new_LED_percent); printf("  old_LED_percent:"); Serial.print(old_LED_percent);
   }
 
   old_LED_percent = new_LED_percent;
@@ -87,7 +90,7 @@ void set_LED_PWM                                  // Theatre lighting
 {
   if ( DLT(DLT_INFO) )
   {
-    Serial.print(T("new_LED_percent:")); Serial.print(new_LED_percent); Serial.print(T("  old_LED_percent:")); Serial.print(old_LED_percent);
+    printf("new_LED_percent:"); Serial.print(new_LED_percent); printf("  old_LED_percent:"); Serial.print(old_LED_percent);
   }
 
 /*
@@ -206,9 +209,9 @@ unsigned int revision(void)
  * return: Largest analog voltage from the sensor channels
  * 
  *--------------------------------------------------------------*/
-uint16_t max_analog(void)
+unsigned int max_analog(void)
 {
-  uint16_t return_value;
+  unsigned int return_value;
 
   return_value = analogRead(NORTH_ANA);
 

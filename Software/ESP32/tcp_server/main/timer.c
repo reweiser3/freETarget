@@ -1,6 +1,6 @@
 /*-------------------------------------------------------
  * 
- * timer_ISR.ino
+ * timer_ISR.c
  * 
  * Timer interrupt file
  * 

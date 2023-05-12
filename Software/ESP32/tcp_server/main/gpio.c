@@ -1,6 +1,6 @@
 /*-------------------------------------------------------
  * 
- * gpio.ino
+ * gpio.c
  * 
  * General purpose GPIO driver
  * 
