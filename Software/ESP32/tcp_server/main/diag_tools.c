@@ -1017,8 +1017,7 @@ static void unit_test(unsigned int mode)
 /*
  * Fill up counters with sample values.  Return false if the sample does not exist
  */
-static bool sample_calculations
-  (
+static bool_t
   unsigned int mode,            // What test mode are we generating
   unsigned int sample           // Current sample number
   )

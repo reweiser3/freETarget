@@ -7,6 +7,8 @@
  *---------------------------------------------------------------*/
 #include "freETarget.h"
 #include "json.h"
+#include "compute_hit.h"
+#include "math.h"
 
 #define THRESHOLD (0.001)
 
@@ -112,11 +114,9 @@ unsigned int compute_hit
   double        x;                 // Floating point value
   double        estimate;          // Estimated position
   double        last_estimate, error; // Location error
-  double        r1, r2;            // Distance between points
   double        x_avg, y_avg;      // Running average location
   double        smallest;          // Smallest non-zero value measured
   double        z_offset_clock;    // Time offset between paper and sensor plane
-  unsigned long now;               // Estimate time
 
   now = millis();
       

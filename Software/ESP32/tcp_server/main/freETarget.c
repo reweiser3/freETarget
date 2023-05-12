@@ -664,7 +664,7 @@ unsigned int finish(void)
   {
     if ( enable )
     {
-      printf("Starting Tabata.  Time: &d", json_tabata_on);
+      printf("Starting Tabata.  Time: %d", json_tabata_on);
     }
     else
     {
@@ -866,11 +866,11 @@ bool_t discard_shot(void)
   {
     if ( enable )
     {
-      Serial.print(T("Rapid Fire armed")); 
+      printf("Rapid Fire armed"); 
     }
     else
     {
-      Serial.print(T("Rapid Fire dis-armed")); 
+      printf("Rapid Fire dis-armed"); 
     }
   }
   
@@ -954,11 +954,11 @@ bool_t discard_shot(void)
   {
     if ( enable )
     {
-      Serial.print(T("Starting Rapid Fire.  Time: "));Serial.print(json_rapid_time);
+      printf("Starting Rapid Fire.  Time: ");Serial.print(json_rapid_time);
     }
     else
     {
-      Serial.print(T("Rapid Fire disabled"));
+      printf("Rapid Fire disabled");
     }
   }
   

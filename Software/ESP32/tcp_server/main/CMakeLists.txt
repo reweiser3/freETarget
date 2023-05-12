@@ -6,4 +6,5 @@ idf_component_register(SRCS "tcp_server.c"
                     "json.c"
                     "analog_io.c"
                     "gpio.c"
+                    "compute_hit.c"
                     INCLUDE_DIRS ".")
