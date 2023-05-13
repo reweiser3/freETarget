@@ -36,29 +36,37 @@
  * transmission.
  * 
  *---------------------------------------------------------------*/
+#include "freETarget.h"
+#include "esp-01.h"
 #include "json.h"
 #include "token.h"
+#include "diag_tools.h"
+#include "stdio.h"
+#include "timer.h"
 
 /*
  * Function Prototypes
  */
-static bool esp01_esp01_waitOK(unsigned int trace_on,unsigned int max_wait);   // Wait for an OK to come back
+static bool_t esp01_waitOK(unsigned int trace_on, unsigned int max_wait);   // Wait for an OK to come back
 static void esp01_flush(void);          // Flush any pending messages
+static bool_t esp01_reset();              // Reset the part
+static void  esp01_flush();             // Empty any pending junk
 
 /*
  * Local Variables
  */
 static volatile unsigned long wdt_tick; // Watchdog timer tick
-static bool esp01_present = false;      // TRUE if the esp 01 is installed
-static bool esp01_known = false;        // The state of the ESP is not known
-static bool esp01_first = true;         // Start the first time through
+static bool_t esp01_present = false;    // TRUE if the esp 01 is installed
+static bool_t esp01_known = false;      // The state of the ESP is not known
+static bool_t esp01_first = true;       // Start the first time through
 
 static char esp01_in_queue[32];         // Place to store incoming characters
 static int  esp01_in_ptr;               // Queue in pointer
 static int  esp01_out_ptr;              // Queue out pointer
 
-static bool esp01_connect[esp01_N_CONNECT]; // Set to true when a client (0-3) connects
+static bool_t esp01_connect[esp01_N_CONNECT]; // Set to true when a client (0-3) connects
 #define esp01_MAX_WAITOK  (ONE_SECOND * 2)  // 2000 milliseconds
+
 /*----------------------------------------------------------------
  *
  * function: void esp01_init
@@ -101,7 +109,7 @@ void esp01_init(void)
 {  
   if ( DLT(DLT_CRITICAL) ) 
   {
-    Serial.print(T("esp01_init()"));
+    printf("esp01_init()");
   }
   
   timer_new(&wdt_tick, 0);                    // Setup the timers in-case it is needed for diagnostics later
@@ -110,7 +118,7 @@ void esp01_init(void)
   {
     if ( DLT(DLT_CRITICAL) ) 
     {
-      Serial.print(T("In Token Ring mode. esp01 not available"));
+      printf("In Token Ring mode. esp01 not available");
     }
     return;
   }
@@ -127,31 +135,31 @@ void esp01_init(void)
   {
     if ( DLT(DLT_CRITICAL) ) 
     {
-      Serial.print(T("esp01: Not Found"));
+      printf("esp01: Not Found");
     }
     return;                                     // No hardware installed, nothing to do
   }
 
   if ( DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("esp01: Present"));
+    printf("esp01: Present");
   }
   
-  json_token == TOKEN_WIFI;                     // If WiFi is present, then the TOKEN ring is disabled
+  json_token = TOKEN_WIFI;                      // If WiFi is present, then the TOKEN ring is disabled
   
 /*
  * There is an esp01 on the freETarget.  We need to program it
  */
-  AUX_SERIAL.print(T("ATE0\r\n"));                   // Turn off echo (don't use it)
+  AUX_SERIAL.print("ATE0\r\n");                   // Turn off echo (don't use it)
   if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("esp01: Failed ATE0"));
+    printf("esp01: Failed ATE0");
   }
 
-  AUX_SERIAL.print(T("AT+RFPOWER=80\r\n"));          // Set max power
+  AUX_SERIAL.print("AT+RFPOWER=80\r\n");          // Set max power
   if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(DLT_CRITICAL))
   {
-    Serial.print(T("esp01: Failed AT+RFPOWER=80"));  
+    printf("esp01: Failed AT+RFPOWER=80");  
   } 
 
   esp01_flush();
@@ -162,31 +170,31 @@ void esp01_init(void)
   {                                                     // ******************************
     if ( DLT(DLT_CRITICAL) )
     {
-      Serial.print(T("esp01: Configuring as an SSID"));
+      printf("esp01: Configuring as an SSID");
     }
       
-    AUX_SERIAL.print(T("AT+CWMODE_DEF=2\r\n"));        // We want to be a soft access point
+    AUX_SERIAL.print("AT+CWMODE_DEF=2\r\n");        // We want to be a soft access point
     if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(DLT_CRITICAL) )
     {
-      Serial.print(T("esp01: Failed AT+CWMODE_DEF=2"));
+      printf("esp01: Failed AT+CWMODE_DEF=2");
     }
     
-    AUX_SERIAL.print(T("AT+CWSAP_DEF=\"FET-")); AUX_SERIAL.print(names[json_name_id]); AUX_SERIAL.print(T("\",\"NA\",")); AUX_SERIAL.print(json_wifi_channel); AUX_SERIAL.print(T(",0\r\n"));
+    AUX_SERIAL.print("AT+CWSAP_DEF=\"FET-"); AUX_SERIAL.print(names[json_name_id]); AUX_SERIAL.print("\",\"NA\","); AUX_SERIAL.print(json_wifi_channel); AUX_SERIAL.print(",0\r\n");
     if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(DLT_CRITICAL) )
     {
-      Serial.print(T("esp01: Failed AT+CWSAP_DEF=\"FET-")); Serial.print(names[json_name_id]); Serial.print(T("\",\"NA\",")); Serial.print(json_wifi_channel); Serial.print(T(",0\r\n"));
+      printf("esp01: Failed AT+CWSAP_DEF=\"FET-%s\",\"NA\",0\r\n", names[json_name_id], json_wifi_channel);
     }  
     
-    AUX_SERIAL.print(T("AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\"\r\n")); // Set the freETarget IP to 192.168.10.9
+    AUX_SERIAL.print("AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\"\r\n"); // Set the freETarget IP to 192.168.10.9
     if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(DLT_CRITICAL) )
     {
-      Serial.print(T("\r\nesp01: Failed AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\""));
+      printf("\r\nesp01: Failed AT+CIPAP_DEF=\"192.168.10.9\",\"192.168.10.9\"");
     }
       
-    AUX_SERIAL.print(T("AT+CWDHCP_DEF=0,1\r\n"));      // DHCP turned on
+    AUX_SERIAL.print("AT+CWDHCP_DEF=0,1\r\n");      // DHCP turned on
     if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false ) && DLT(DLT_CRITICAL) )
     {
-      Serial.print(T("esp01: Failed AT+CWDHCP_DEF=0,1"));
+      printf("esp01: Failed AT+CWDHCP_DEF=0,1");
     }
 
   }                                                     // ******************************
@@ -194,27 +202,27 @@ void esp01_init(void)
   {
     if ( DLT(DLT_CRITICAL) )
     {
-      Serial.print(T("esp01: Connecting to an access point: ")); Serial.print(json_wifi_ssid); Serial.print(T(",")); Serial.print(json_wifi_pwd);
+      printf("esp01: Connecting to an access point: "); printf(json_wifi_ssid); printf(","); printf(json_wifi_pwd);
     }
     
-    AUX_SERIAL.print(T("AT+CWQAP\r\n"));        // Disconnect
+    AUX_SERIAL.print("AT+CWQAP\r\n");        // Disconnect
     if ( (esp01_waitOK(1,esp01_MAX_WAITOK) == false) && DLT(DLT_CRITICAL) )
     {
-      Serial.print(T("esp01: Failed AT+CWQAP"));
+      printf("esp01: Failed AT+CWQAP");
     } 
     
-    AUX_SERIAL.print(T("AT+CWMODE_DEF=1\r\n"));        // We want to be an in Station Mode
+    AUX_SERIAL.print("AT+CWMODE_DEF=1\r\n");        // We want to be an in Station Mode
     if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(DLT_CRITICAL) )
     {
-      Serial.print(T("esp01: Failed AT+CWMODE_DEF=1"));
+      printf("esp01: Failed AT+CWMODE_DEF=1");
     }
     
-    AUX_SERIAL.print(T("AT+CWJAP_DEF=\"")); AUX_SERIAL.print(json_wifi_ssid); AUX_SERIAL.print(T("\",\"")); AUX_SERIAL.print(json_wifi_pwd); AUX_SERIAL.print(T("\""));
+    AUX_SERIAL.print("AT+CWJAP_DEF=\"%s, \"%s\"", json_wifi_ssid, json_wifi_pwd);
     if ( (esp01_waitOK(1, esp01_MAX_WAITOK*10) == false) )               // Didn't connect to the SSID Try again
     { 
       if ( DLT(DLT_CRITICAL))
       {
-        Serial.print(T("esp01: Failed AT+CWJAP_DEF=\"")); Serial.print(json_wifi_ssid); Serial.print(T("\",\"")); Serial.print(json_wifi_pwd); Serial.print(T("\""));
+        printf("esp01: Failed AT+CWJAP_DEF=\"%s, \"%s\"", json_wifi_ssid, json_wifi_pwd);
       }
     }
   }
@@ -223,28 +231,28 @@ void esp01_init(void)
  * Other operating settings
  */
 /*
-  AUX_SERIAL.print(T("AT+CIPMODE=0\r\n"));           // Normal Transmission Mode
+  AUX_SERIAL.print(T("AT+CIPMODE=0\r\n");           // Normal Transmission Mode
   if ( (esp01_waitOK(1,esp01_MAX_WAITOK) == false ) && DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("esp01: Failed AT+CIPMODE=0"));
+    printf("esp01: Failed AT+CIPMODE=0");
   }
 */  
-  AUX_SERIAL.print(T("AT+CIPMUX=1\r\n"));           // Allow multiple connections
+  AUX_SERIAL.print("AT+CIPMUX=1\r\n");           // Allow multiple connections
   if ( (esp01_waitOK(0,esp01_MAX_WAITOK * 10) == false ) && DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("esp01: Failed AT+CIPMUX=1"));
+    printf("esp01: Failed AT+CIPMUX=1");
   }
 
-  AUX_SERIAL.print(T("AT+CIPSERVER=1,1090\r\n"));   // Turn on the server and listen on port 1090
+  AUX_SERIAL.print("AT+CIPSERVER=1,1090\r\n");   // Turn on the server and listen on port 1090
   if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false ) && DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("esp01: Failed AT+CIPSERVER=1,1090"));
+    printf("esp01: Failed AT+CIPSERVER=1,1090");
   }
   
-  AUX_SERIAL.print(T("AT+CIPSTO=7000\r\n"));        // Set the server time out
+  AUX_SERIAL.print("AT+CIPSTO=7000\r\n");        // Set the server time out
   if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false ) && DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("esp01: Failed AT+CIPSTO=7000"));
+    printf("esp01: Failed AT+CIPSTO=7000");
   }
   
 /*
@@ -252,7 +260,7 @@ void esp01_init(void)
  */
   if ( DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("esp01: Initialization complete"));
+    printf("esp01: Initialization complete");
   }
 
   return;
@@ -274,7 +282,7 @@ void esp01_init(void)
  * factory defaults. 
  *   
  *--------------------------------------------------------------*/
-static bool esp01_reset(void)
+static bool_t esp01_reset(void)
 {
   unsigned int i;
 
@@ -285,19 +293,19 @@ static bool esp01_reset(void)
 
   if ( DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("esp01: Resetting esp01"));
+    printf("esp01: Resetting esp01");
   }
   
 /*
  * Send out the break then restart the module
  */
   esp01_flush();
-  AUX_SERIAL.print(T("+++"));
+  AUX_SERIAL.print("+++");
   delay(ONE_SECOND);
-  AUX_SERIAL.print(T("AT+RST\r\n"));
+  AUX_SERIAL.print("AT+RST\r\n");
   if ( (esp01_waitOK(0,esp01_MAX_WAITOK) == false) && DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("esp01: Failed to reset esp01"));
+    printf("esp01: Failed to reset esp01");
     return false;
   }
 
@@ -321,7 +329,7 @@ static bool esp01_reset(void)
 
 /*----------------------------------------------------------------
  *
- * function: bool esp01_is_present
+ * function: bool_t esp01_is_present
  *
  * brief:    Determines if an esp01 is installed
  * 
@@ -338,7 +346,7 @@ static bool esp01_reset(void)
  *   
  *--------------------------------------------------------------*/
 
-bool esp01_is_present(void)
+bool_t esp01_is_present(void)
 {
   if ( esp01_known == false )             // The ESP is known not to exist
   {
@@ -360,9 +368,9 @@ bool esp01_is_present(void)
   
   esp01_flush();                          // Eat any garbage that might be on the port
 
-  AUX_SERIAL.print(T("+++"));
+  AUX_SERIAL.print("+++");
   delay(ONE_SECOND);
-  AUX_SERIAL.print(T("AT\r\n"));            // Send out an AT command to the port
+  AUX_SERIAL.print("AT\r\n");            // Send out an AT command to the port
   esp01_present = esp01_waitOK(0,esp01_MAX_WAITOK);         // and wait for the OK to come back
 
 /*
@@ -375,7 +383,7 @@ bool esp01_is_present(void)
 
 /*----------------------------------------------------------------
  *
- * function: bool esp01_test
+ * function: bool_t esp01_test
  *
  * brief:    Tests to see if the WiFi responds to ATs
  * 
@@ -403,7 +411,7 @@ void esp01_echo(void)
     if ( aux_spool_available() != 0 ) 
     {
       ch = aux_spool_read();
-      Serial.print(ch);
+      printf("%c", ch);
       wdt_tick = esp01_MAX_WAITOK;
     }
   }
@@ -419,45 +427,45 @@ void esp01_test(void)
 
   if ( esp01_is_present() == false )
   {
-    Serial.print(T("\n\resp01 not present. Continuing test anyway")); 
+    printf("\n\resp01 not present. Continuing test anyway"); 
   }
 
 /*
  * Send out status commands
  */
  
-  Serial.print(T("\n\rResetting esp01\n\r"));
-  AUX_SERIAL.print(T("+++"));
+  printf("\n\rResetting esp01\n\r");
+  AUX_SERIAL.print("+++");
   delay(ONE_SECOND * 1.1);
-  AUX_SERIAL.print(T("AT+RST\r\n"));
+  AUX_SERIAL.print("AT+RST\r\n");
   esp01_echo();
     
-  Serial.print(T("\r\nSoftware Version\r\n"));
-  AUX_SERIAL.print(T("AT+GMR\r\n"));         // Send out an AT command to the port
+  printf("\r\nSoftware Version\r\n");
+  AUX_SERIAL.print("AT+GMR\r\n");         // Send out an AT command to the port
   esp01_echo();
 
-  Serial.print(T("\r\nList of SSIDs\r\n"));
-  AUX_SERIAL.print(T("AT+CWLAP\r\n"));       // Send out an AT command to the port
+  printf("\r\nList of SSIDs\r\n");
+  AUX_SERIAL.print("AT+CWLAP\r\n");       // Send out an AT command to the port
   esp01_echo();
     
 /*
  * Initialize the WiFi if available
  */
    set_LED('*', '*', '.');                 // Hello World
-   Serial.print(T("\r\nReinitializing esp01\r\n")); 
+   printf("\r\nReinitializing esp01\r\n"); 
    esp01_init();                           // Prepare the WiFi channel if installed
    
 /*
  * All done, return the esp01 present state
  */
-  Serial.print(T("\r\nTest Over"));
+  printf("\r\nTest Over");
   return;
 }
 
 
 /*----------------------------------------------------------------
  *
- * function: bool esp01_status
+ * function: bool_t esp01_status
  *
  * brief:    Request and display stauts
  * 
@@ -484,11 +492,11 @@ void esp01_status(void)
 /*
  * Get the status of the connection
  */
-  Serial.print(T("\n\resp01_status\r\n"));
+  printf("\n\resp01_status\r\n");
 
-  AUX_SERIAL.print(T("+++"));
+  AUX_SERIAL.print("+++");
   delay(ONE_SECOND + ONE_SECOND/10);
-  AUX_SERIAL.print(T("AT+CIPSTATUS\r\n"));
+  AUX_SERIAL.print("AT+CIPSTATUS\r\n");
 
   timer_new(&wdt_tick, esp01_MAX_WAITOK);
   while ( wdt_tick  )
@@ -496,7 +504,7 @@ void esp01_status(void)
     if ( aux_spool_available() != 0 ) 
     {
       ch = aux_spool_read();                  // Echo what comes back
-      Serial.print(ch);
+      printf("%c", ch);
       wdt_tick = esp01_MAX_WAITOK;
     }
   }
@@ -507,8 +515,8 @@ void esp01_status(void)
   i=0;
   while (status_list[i] != 0)
   {
-    Serial.print(T("\r\nStatus: ")); Serial.print(status_list[i]); Serial.print(T("\r\n"));
-    AUX_SERIAL.print(T("AT+")); AUX_SERIAL.print(status_list[i]); AUX_SERIAL.print(T("?\r\n"));
+    printf("\r\nStatus: %s\r\n", status_list[i]);
+    AUX_SERIAL.print("AT+"); AUX_SERIAL.print(status_list[i]); AUX_SERIAL.print("?\r\n");
     timer_new(&wdt_tick, esp01_MAX_WAITOK);
     
     while ( wdt_tick )
@@ -516,7 +524,7 @@ void esp01_status(void)
       if ( aux_spool_available() != 0 ) 
       {
         ch = aux_spool_read();                  // Echo what comes back
-        Serial.print(ch);
+        printf("%c", ch);
         wdt_tick = esp01_MAX_WAITOK;
       }
     }
@@ -526,22 +534,22 @@ void esp01_status(void)
 /*
  * Ping and see what comes back
  */
-  Serial.print(T("\n\resp01_ping\r\n"));
+  printf("\n\resp01_ping\r\n");
 
   for (i=0; i != esp01_N_CONNECT; i++)
   {
-    AUX_SERIAL.print(T("+++"));
+    AUX_SERIAL.print("+++");
     delay(ONE_SECOND + ONE_SECOND/10);
     sprintf(str, "AT+PING=\"192.168.10.%d\"\r\n", i);
     AUX_SERIAL.print(str);
-    Serial.print(str);
+    printf(str);
     wdt_tick = esp01_MAX_WAITOK;
     while ( wdt_tick )
     {
       if ( aux_spool_available() != 0 ) 
       {
         ch = aux_spool_read();
-        Serial.print(ch);
+        printf("%c", ch);
         wdt_tick = esp01_MAX_WAITOK;
       }
     }
@@ -550,14 +558,14 @@ void esp01_status(void)
 /*
  * All done, return the esp01 present state
  */
-  Serial.print(T("\r\nDone\r\n"));
+  printf("\r\nDone\r\n");
   return;
 }
 
 
 /*----------------------------------------------------------------
  *
- * function: bool esp01_myIP
+ * function: bool_t esp01_myIP
  *
  * brief:    Obtain the current IP address
  * 
@@ -587,11 +595,11 @@ void esp01_myIP
   
   if ( *json_wifi_ssid == 0 )
   {
-    AUX_SERIAL.print(T("AT+CIPAP_CUR?\r\n"));        // Request the IP address
+    AUX_SERIAL.print("AT+CIPAP_CUR?\r\n");        // Request the IP address
   }
   else
   {
-    AUX_SERIAL.print(T("AT+CIPSTA_CUR?\r\n"));       // Request the IP address
+    AUX_SERIAL.print("AT+CIPSTA_CUR?\r\n");       // Request the IP address
   }
 
   myIP_state = myIP_IDLE;
@@ -667,7 +675,7 @@ void esp01_myIP
 
 /*----------------------------------------------------------------
  *
- * function: bool esp01_waitOK(0,esp01_MAX_WAITOK)
+ * function: bool_t esp01_waitOK(0,esp01_MAX_WAITOK)
  *
  * brief:    Wait for the OK to come back
  * 
@@ -686,7 +694,7 @@ typedef struct
 {
   unsigned int index;           // Where are we in the comparison
   char*        ptr;             // Pointer to the message
-  bool         return_value;    // What to return if a match is made
+  bool_t         return_value;    // What to return if a match is made
 } wait_message_t;
 
 static wait_message_t wait_message[] = {
@@ -698,7 +706,7 @@ static wait_message_t wait_message[] = {
   { 0, 0, 0}
   };
   
-static bool esp01_waitOK
+static bool_t esp01_waitOK
   (
   unsigned int trace_on,                // Force the trace to be on for diagnostics
   unsigned int wait_time                // How long to wait before failing
@@ -706,7 +714,6 @@ static bool esp01_waitOK
 {
   char         ch;                      // Character from port
   unsigned int i;
-  long         start;                   // Timer start
   
   i = 0;                                // Clear the indexes
   while (wait_message[i].ptr != 0 )
@@ -717,7 +724,7 @@ static bool esp01_waitOK
 
   if ( DLT(DLT_DIAG) )
   {
-    Serial.print(T("esp01_waitOK(x,")); Serial.print(wait_time); Serial.print(T(")"));
+    printf("esp01_waitOK(x,%d)", wait_time);
   }
   
 /*
@@ -733,7 +740,7 @@ static bool esp01_waitOK
       ch = aux_spool_read();
       if ( DLT(DLT_DIAG) )
       {
-        Serial.print(ch);
+        printf("%c", ch);
       }
 
       i = 0;                                // Look through the list of messages
@@ -907,7 +914,7 @@ unsigned int esp01_available(void)
 
 static unsigned int send_state[esp01_N_CONNECT]; // State of each connection
 
-bool esp01_send_ch                      // Send a character
+bool_t esp01_send_ch                      // Send a character
   (
     char ch,                            // Character to send
     int  connection                     // Which connection to send on
@@ -918,9 +925,10 @@ bool esp01_send_ch                      // Send a character
   str[0] = ch;
   str[1] = 0;
   esp01_send(str, connection);
+  return true;
 }
 
-bool esp01_send
+bool_t esp01_send
   (
     char* str,                          // String to send
     int  connection                     // Which connection to send on
@@ -989,17 +997,17 @@ bool esp01_send
         if ( retry_count == 0 )
         {
           send_state[connection] = SEND_ERROR;          // Fatal error, nothing more we can do
-          Serial.print("send error");
+          printf("send error");
         }
         else
         {
           send_state[connection] = SEND_WAIT;
-          Serial.print("send wait");
+          printf("send wait");
         }
         break;
 
     case SEND_WAIT:
-        AUX_SERIAL.print(T("+++"));                    // Command not acted on
+        AUX_SERIAL.print("+++");                    // Command not acted on
         delay(ONE_SECOND + ONE_SECOND/10);
         send_state[connection] = SEND_OFF;
         break;
@@ -1018,7 +1026,7 @@ bool esp01_send
        break;
 
     case SEND_ERROR:
-        Serial.print(T("{\"SEND_ERROR\":")); Serial.print(connection); Serial.print(T(", \"SENDING\": \"")); Serial.print(str); Serial.print(T("\"}"));
+        printf("{\"SEND_ERROR\": %d , \"SENDING\": %s\"}", connection, str);
         esp01_status();
         esp01_close(connection);                       // and discard this connection
         send_state[connection] = SEND_OFF;             // Go back to the off state
@@ -1145,7 +1153,7 @@ void esp01_receive(void)
         i++;                            // Yes, wait for the next character
         if ( (message_type & IS_CONNECT) && (s_connect[i] == 0) )        // Reached the end of CONNECT?
         { 
-          Serial.print(T("{\"CONNECTION_START\": ")); Serial.print(connection); Serial.print(T("}"));
+          printf("{\"CONNECTION_START\": %d }", connection); 
           esp01_connect[connection] = true;// Record the connection       
           POST_version();               // Send out the software version to keep the PC happy
           show_echo();                  // Send out the settings
@@ -1153,7 +1161,7 @@ void esp01_receive(void)
         }
         if ( (message_type & IS_CLOSED) && (s_closed[i] == 0) )         // Reached the end of CLOSED?
         {                 
-          Serial.print(T("{\"CONNECTION_CLOSE\":")); Serial.print(connection); Serial.print(T("}"));
+          printf("{\"CONNECTION_CLOSE\": %d}", connection);
           esp01_connect[connection] = false;// No longer a valid connection
           state = WAIT_IDLE;            // Go back to waiting       
         }
@@ -1201,7 +1209,7 @@ void esp01_receive(void)
 }
 /*----------------------------------------------------------------
  *
- * function: bool esp01_connected()
+ * function: bool_t esp01_connected()
  *
  * brief:    Return the connection status
  * 
@@ -1213,10 +1221,10 @@ void esp01_receive(void)
  *   status of each connection
  *   
  *--------------------------------------------------------------*/
-bool esp01_connected(void)
+bool_t esp01_connected(void)
 { 
   unsigned int i;
-  bool return_value;
+  bool_t return_value;
 
   return_value = false;
 
@@ -1230,7 +1238,7 @@ bool esp01_connected(void)
 
 /*----------------------------------------------------------------
  *
- * function: bool esp01_close()
+ * function: bool_t esp01_close()
  *
  * brief:    Close the open connections
  * 
@@ -1247,22 +1255,21 @@ void esp01_close
   unsigned int connection                  // connection of connection to close
   )
 { 
-  unsigned int i;
   char str[32];
   
 /*
  * Send out the AT break if needed
  */
-  if ( esp01_is_present() );
+  if ( esp01_is_present() )
   {
-    AUX_SERIAL.print(T("+++"));
+    AUX_SERIAL.print("+++");
     delay(ONE_SECOND);
       
     esp01_connect[connection] = false;                                 // and discard this connection
     sprintf(str, "AT+CIPCLOSE=%d\r\n", connection);                    // Close this connection
     AUX_SERIAL.print(str);
     sprintf(str, "{\"CONNECTION_CLOSE\": %d}\r\n", connection);   // Close this connection
-    Serial.print(str);
+    printf(str);
           
 /*
  * Wait and eat any junk that might be coming back

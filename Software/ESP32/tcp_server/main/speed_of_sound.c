@@ -11,6 +11,8 @@
 #include "freETarget.h"
 #include "gpio.h"
 #include "diag_tools.h"
+#include "math.h"
+#include "stdio.h"
 
 #define TO_MM 1000.0d                  // Convert Metres to mm
 #define TO_US 1000000.0d               // Convert seconds to microseconds
@@ -125,7 +127,7 @@ double speed_of_sound
   
   if ( DLT(DLT_DIAG) )
   {
-    Serial.print(T("Temperature: ")); Serial.print(temperature, 0); Serial.print(T("  Humidity: ")); Serial.print(relative_humidity); Serial.print(T("  Speed of Sound:  ")); Serial.println(speed_MPS, 2);
+    printf("Temperature: %4.2f Humidity: %d Speed of Sound: %4.2f", temperature, relative_humidity, speed_MPS);
   }
 
 /*
