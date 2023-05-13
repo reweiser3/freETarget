@@ -166,8 +166,4 @@ void json_spool_put(char ch);                             // Put something into 
 #define J10_5       18                    // TX1
 #define J10_6      GND
 
-
-
-#define EOF 0xFF
-
 #endif

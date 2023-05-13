@@ -4,13 +4,26 @@
  * 
  * Nonvol storage managment
  * 
+ *-------------------------------------------------------
+ *
+ * See https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/nvs_flash.html
+ * 
  * ----------------------------------------------------*/
 #include "freETarget.h"
 #include "json.h"
 #include "nonvol.h"
+
 #include "gpio.h"
 #include "diag_tools.h"
 #include "stdio.h"
+
+#include "nvs_flash.h"
+#include "nvs.h"
+
+/*
+ *  Local variables
+ */
+static nvs_handle_t my_handle;
 
 /*----------------------------------------------------------------
  * 
@@ -37,8 +50,7 @@ void check_nonvol(void)
 /*
  * Read the nonvol marker and if uninitialized then set up values
  */
-  EEPROM.get(NONVOL_INIT, nonvol_init);
-  
+  nvs_get_i32(my_handle, "NONVOL_INIT", &nonvol_init);
   if ( nonvol_init != INIT_DONE)                       // EEPROM never programmed
   {
     factory_nonvol(true);                              // Force in good values
@@ -47,7 +59,7 @@ void check_nonvol(void)
 /*
  * Check to see if there has been a change to the persistent storage version
  */
-  EEPROM.get(NONVOL_PS_VERSION, nonvol_init);
+  nvs_get_i32(my_handle, "NONVOL_PS_VERSION", &nonvol_init);
   if ( nonvol_init != PS_VERSION )                    // Is what is in memory not the same as now
   {
     backup_nonvol();                                  // Copy what we have 
@@ -124,7 +136,7 @@ void factory_nonvol
        
        case IS_TEXT:
        case IS_SECRET:
-        printf("\r\n"); Serial.print(JSON[i].token); printf(" \"\"");
+        printf("\r\n%s \"\"", JSON[i].token);
         if ( JSON[i].non_vol != 0 )
         {
           EEPROM.put(JSON[i].non_vol, 0);                    // Zero out the text
@@ -133,7 +145,7 @@ void factory_nonvol
         
       case IS_INT16:
         x = JSON[i].init_value;                            // Read in the value 
-        printf("\r\n"); Serial.print(JSON[i].token); printf(" "); Serial.print(x);
+        printf("\r\n%d %d", JSON[i].token, x);
         if ( JSON[i].non_vol != 0 )
         {
           EEPROM.put(JSON[i].non_vol, x);                    // Read in the value
@@ -141,9 +153,8 @@ void factory_nonvol
         break;
 
       case IS_FLOAT:
-      case IS_DOUBLE:
         dx = (double)JSON[i].init_value;
-        printf("\r\n"); Serial.print(JSON[i].token); printf(" "); Serial.print(dx);
+        printf("\r\n%s %d", JSON[i].token, dx);
         EEPROM.put(JSON[i].non_vol, dx);                    // Read in the value
         break;
     }
@@ -304,7 +315,8 @@ void read_nonvol(void)
   unsigned int  x;              // 16 bit number
   double       dx;              // Floating point number
   unsigned char ch;             // Text value
-
+  esp_err_t err;
+  
   if ( DLT(DLT_CRITICAL) )
   {
     printf("read_nonvol()");
@@ -313,21 +325,47 @@ void read_nonvol(void)
 /*
  * Read the nonvol marker and if uninitialized then set up values
  */
-  EEPROM.get(NONVOL_INIT, nonvol_init);
+  err = nvs_flash_init();
+  if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
+  {
+    nvs_flash_erase();
+    nvs_flash_init();
+  }
+
+  err = nvs_open(NAME_SPACE, NVS_READWRITE, &my_handle);
+  if (err != ESP_OK)
+  {
+    DLT(DLT_CRITICAL);
+    printf("read_nonvol(): Failed to open NVM");
+  }
+        
+  err = nvs_get_i32(my_handle, "NONVOL_INIT", &nonvol_init);
+  switch (err)
+  {
+    case ESP_OK:
+      break;
+
+      case ESP_ERR_NVS_NOT_FOUND:
+        printf("The value is not initialized yet!\n");
+        break;
+   
+      default :
+        printf("Error (%s) reading!\n", esp_err_to_name(err));
+  }
   
   if ( nonvol_init != INIT_DONE)                       // EEPROM never programmed
   {
     factory_nonvol(true);                              // Force in good values
   }
-  
-  EEPROM.get(NONVOL_SERIAL_NO, nonvol_init);
-  
+
+  nvs_get_i32(my_handle, "NVM_SERIAL_NO", &nonvol_init);
+
   if ( nonvol_init == (-1) )                          // Serial Number never programmed
   {
     factory_nonvol(true);                             // Force in good values
   }
 
-  EEPROM.get(NONVOL_PS_VERSION, nonvol_init);         // See if ther has been a change to the
+  nvs_get_i32(my_handle, "NVM_PS_VERSION", &nonvol_init);
   if ( nonvol_init != PS_VERSION )                    // persistent storage version
   {
     update_nonvol(nonvol_init);
@@ -352,8 +390,8 @@ void read_nonvol(void)
           {
             j=0;
             while (1)                                           // Loop and copy the NONVOL 
-            {
-              EEPROM.get((JSON[i].non_vol+j), ch );
+            { 
+              nvs_get_i8(my_handle, JSON[i].non_vol, &ch);
               *((unsigned char*)(JSON[i].value) + j) = ch;     // Over to the working storage
               if ( ch == 0 )
               {
@@ -368,11 +406,11 @@ void read_nonvol(void)
         case IS_FIXED:
           if ( JSON[i].non_vol != 0 )                          // Is persistent storage enabled?
           {
-            EEPROM.get(JSON[i].non_vol, x);                    // Read in the value
+            nvs_get_i16(my_handle, JSON[i].non_vol, &x);                   // Read in the value
             if ( x == 0xABAB )                                 // Is it uninitialized?
             {
               x = JSON[i].init_value;                          // Yes, overwrite with the default
-              EEPROM.put(JSON[i].non_vol, x);
+              nvs_set_i32(my_handle, JSON[i].non_vol, x);
             }
             *JSON[i].value = x;
           }
@@ -430,7 +468,7 @@ void update_nonvol
   
   if ( DLT(DLT_CRITICAL) )
   {
-    printf("update_nonvol("); Serial.print(current_version); printf(")"); 
+    printf("update_nonvol(%d)", current_version);
   }
   
 /*
@@ -466,153 +504,6 @@ void update_nonvol
  * Look through the list of PS versions and see if we have initialized before
  * Old memory has a completly bogus verion number that is not in range
  */
-  for (i=0; i <= (PS_VERSION+1); i++)
-  {  
-    if ( current_version == i )
-    {
-      break;
-    }
-  }
-  if ( i == (PS_VERSION+1) )
-  {
-    current_version = 1;
-  }
-  
-/*
- * Previously initialized memory.  Add in the new fields and values
- */
-  if ( current_version == 1 )                     
-  {
-    x = 3;                                                  // Use an int to make sure that
-    EEPROM.put(NONVOL_FOLLOW_THROUGH, x);                   // EEPROM.put uses the right size
-    current_version = 2;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-  
-  if ( current_version == 2 )                     
-  {
-    x = 120;                                                // Set to 120.  No harm if it's sent
-    EEPROM.put(NONVOL_KEEP_ALIVE, x);
-    current_version = 3;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-  
-  if ( current_version == 3 )                     
-  {
-    x = 20;                                                // 20 x 100 ms increments
-    EEPROM.put(NONVOL_TABATA_WARN_ON, x);
-    x = 20;                                                // 20 x 100 ms increments
-    EEPROM.put(NONVOL_TABATA_WARN_OFF, x);
-    current_version = 4;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-  
-  if ( current_version == 4 )                     
-  {
-    x = 5;                                                 // Five rings to accept a face strike
-    EEPROM.put(NONVOL_FACE_STRIKE, x);
-    current_version = 5;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-
-  if ( current_version == 5 )                     
-  {
-    x = 0;                                                 // 0 shots in a rapid cycle
-    EEPROM.put(NONVOL_RAPID_COUNT, x);
-    x = 1;
-    EEPROM.put(NONVOL_WIFI_CHANNEL, x);                     // Default to channel 1
-    current_version = 6;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-
-  if ( current_version == 6 )                             // Version 6 removed
-  {
-    current_version = 7;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-
-  if ( current_version == 7 )                     
-  {
-    x = 1;
-    EEPROM.put(NONVOL_WIFI_DHCP, x);                      // Default DHCP to be on
-    x = 0;
-    EEPROM.put(NONVOL_WIFI_SSID, x);                      // No default SSID
-    EEPROM.put(NONVOL_WIFI_PWD, x);                       // No default password
-    EEPROM.put(NONVOL_WIFI_IP, x);                        // No default IP Address
-    current_version = 8;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-
-  if ( current_version == 8 )                     
-  {
-    x = 0;
-    EEPROM.put(NONVOL_WIFI_IP, x);                        // No default IP address
-    current_version = 9;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-
-  
-  if ( current_version == 9 )                             // Extend SSID to 32 bits                  
-  {
-    for (i=0; i != esp01_SSID_SIZE; i++ )
-    {
-      EEPROM.get(NONVOL_WIFI_SSID+i, x);
-      EEPROM.put(NONVOL_WIFI_SSID_32+i, x);
-    }
-    current_version = 10;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-
-  if ( current_version == 10 )                             // Fix PS Version 10 bug                
-  {
-    x=0;
-    EEPROM.put(NONVOL_WIFI_SSID, x);                      // Version 10 put the SSID_32 in the
-    EEPROM.put(NONVOL_WIFI_SSID_32, x);                   // wrong place so this patch
-    EEPROM.put(NONVOL_WIFI_IP, x);                        // zero's out the variables.
-    EEPROM.put(NONVOL_WIFI_PWD, x);
-    current_version = 11;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-
-  if ( current_version == 11 )                            // Add in Relative Humidity
-  {
-    x=50;
-    EEPROM.put(NONVOL_RH, x);                             // Set RH to 50%
-    current_version = 12;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-
-  if ( current_version == 12 )                            // Add in minimum ring time
-  {
-    x=500;
-    EEPROM.put(NONVOL_MIN_RING_TIME, x);                  // Set ring time to 500ms
-    current_version = 13;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-
-  if ( current_version == 13 )                            // Correction for Doppler Inverse Square
-  {
-    y = 7.0d / (sq(700.0d));                      
-    EEPROM.put(NONVOL_DOPPLER, y);                        //  Adjust to 7 us per 700 us delay
-    current_version = 14;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-
-  if ( current_version == 14 )                            // Correction for Doppler Inverse Square
-  {
-    x = 0;                      
-    EEPROM.put(NONVOL_TOKEN, x);                          //  Adjust to 7 us per 700 us delay
-    current_version = 15;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
-  
-  if ( current_version == 15 )                            // Rapid fire button override
-  {
-    x = 0;                      
-    EEPROM.put(NONVOL_MFS2, x);                          //  leave as the default
-    current_version = 16;
-    EEPROM.put(NONVOL_PS_VERSION, current_version);
-  }
 /*
  * Up to date, return
  */
@@ -668,160 +559,3 @@ void gen_position(int v)
   return;
 }
 
-/*----------------------------------------------------------------
- *
- * function: dump_nonvol
- * 
- * brief: Core dumo the nonvol memory
- * 
- * return: Nothing
- * 
- *---------------------------------------------------------------
- *
- *  This function resets the offsets to 0 whenever a new 
- *  sensor diameter is entered.
- *  
- *------------------------------------------------------------*/
-void print_hex(unsigned int x)
-{
-  int i;
-
-  i = (x >> 4) & 0x0f;
-  Serial.print(to_hex[i]);
-  i = x & 0x0f;
-  Serial.print(to_hex[i]);
-  return;
-}
-
-void dump_nonvol(void)
-{
-  int i, j;
-  char x;
-  char line[128];
-  
-/*
- * Loop and print out the nonvol
- */
-  for (i=0; i != NONVOL_SIZE; i+= 16)
-  {
-    sprintf(line, "\r\n%04X: ", i);
-    Serial.print(line);
-    
-    for ( j=0; j!= 16; j++)
-    {
-      EEPROM.get(i+j, x);
-      print_hex(x);
-      if ( ((j+1) % 4) == 0 )
-      {
-      Serial.print(" ");
-      }
-    }
-        
-    for ( j=0; j!= 16; j++)
-    {
-      EEPROM.get(i+j, x);
-      if ( (x>=' ') && ( x <= 127) )
-      {
-        Serial.print(x);
-      }
-      else
-      {
-        printf(".");
-      }
-      if ( ((j+1) % 4) == 0 )
-      {
-      Serial.print(" ");
-      }
-    }
-  }
-
- Serial.print("\n\r");
-   
- /* 
-  *  All done, return
-  */
-  return;
-}
-
-
-/*----------------------------------------------------------------
- *
- * function: backup_nonvol
- * 
- * brief:  Copy the nonvol to a safe place
- * 
- * return: Nothing
- * 
- *---------------------------------------------------------------
- *
- *  This function copies the contents of 0x000 - 0x7ff to
- *  0x800 - 0xfff
- *  
- *------------------------------------------------------------*/
-
-void backup_nonvol(void)
-{
-  int i;
-  char x;
-
-  if ( DLT(DLT_DIAG) )
-  {
-    printf("\r\nStarting backup");
-  }
-  
-/*
- * Loop and print out the nonvol
- */
-  for (i=0; i != NONVOL_SIZE/2-1; i++)
-  {
-      EEPROM.get(i, x);
-      EEPROM.put(i + NONVOL_SIZE/2, x);
-  }
-  
- /* 
-  *  All done, return
-  */
-  return;
-}
-
-/*----------------------------------------------------------------
- *
- * function: restore_nonvol
- * 
- * brief:  Copy the safe nonvol to memory
- * 
- * return: Nothing
- * 
- *---------------------------------------------------------------
- *
- *  This function copies the contents of 0x800 - 0xfff to
- *  0x000 - 0x7ff
- *  
- *------------------------------------------------------------*/
-
-void restore_nonvol(void)
-{
-  int i;
-  char x;
-
-  if( DLT(DLT_DIAG))
-  {
-    printf("\r\nStarting restore");
-  }
-  
-/*
- * Loop and print out the nonvol
- */
-  for (i=0; i != NONVOL_SIZE/2-1; i++)
-  {
-      EEPROM.get(i + NONVOL_SIZE/2, x);
-      EEPROM.put(i, x);
-  }
-  
- printf(" - done");
-   
- /* 
-  *  All done, return
-  */
-  return;
-}

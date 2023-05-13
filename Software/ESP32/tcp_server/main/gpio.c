@@ -60,7 +60,7 @@ const GPIO_t init_table[] = {
   
   {PAPER,      "\"PAPER\":",     OUTPUT, 1},               // 18-Paper drive active low
   
-  {EOF, EOF, EOF, EOF} };
+  {EOF, "", EOF, EOF} };
 
 
 void face_ISR(void);                      // Acknowledge a face strike
@@ -788,7 +788,6 @@ void blink_fault
 void multifunction_switch(void)
  {
     unsigned int  action;               // Action to happen
-    unsigned int  i;                    // Iteration Counter
     unsigned long now;
     
     if ( CALIBRATE )
@@ -943,7 +942,7 @@ static void sw_state
       set_LED_PWM_now(json_LED_PWM);      // and leave it on
       power_save = (long)json_power_save * 60L * (long)ONE_SECOND; // and resets the power save time
       json_power_save += 30;      
-      sprintf(s, "\r\n{\LED_PWM\": %d}\n\r", json_power_save);
+      sprintf(s, "\r\n{\"LED_PWM\": %d}\n\r", json_power_save);
       output_to_all(s);  
         break;
         
@@ -980,7 +979,7 @@ static void sw_state
       }
       set_LED_PWM_now(json_LED_PWM);      // Set the brightness
       EEPROM.put(NONVOL_LED_PWM, json_LED_PWM);   
-      sprintf(s, "\r\n{\LED_BRIGHT\": %d}\n\r", json_LED_PWM);
+      sprintf(s, "\r\n{\"LED_BRIGHT\": %d}\n\r", json_LED_PWM);
       output_to_all(s);  
       break;
 
@@ -1273,7 +1272,7 @@ int json_spool_available(void)
  
  void output_to_all(char *str)
  {
-  unsigned int i, j;              // Iteration Counter
+  unsigned int i;                 // Iteration Counter
   
   Serial.print(str);              // Main USB port
   DISPLAY_SERIAL.print(str);      // Display Serial Port

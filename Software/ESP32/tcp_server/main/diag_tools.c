@@ -75,40 +75,26 @@ void self_test(unsigned int test)
     default:                // Undefined, show the tests
     case T_HELP:                
       printf("\r\n 1 - Digital inputs");
-      printf("\r\n 2 - Counter values (external trigger)");
-      if ( revision() >= REV_220 )
-      {
-        printf("\r\n 3 - Counter values (internal trigger)");
-      }
-      printf("\r\n 4 - Oscilloscope");
-      printf("\r\n 5 - Oscilloscope (PC)");
-      printf("\r\n 6 - Advance paper backer");
-      printf("\r\n 7 - Spiral Unit Test");
-      printf("\r\n 8 - Grid calibration pattern");
-      printf("\r\n 9 - One time calibration pattern");
-      printf("\r\n 8 - Grid calibration pattern");
-      if ( revision() >= REV_220 )
-      {
-        printf("\r\n10 - Aux port passthrough");
-      }
-      printf("\r\n11 - Calibrate"); 
-      printf("\r\n12 - Transfer loopback");
-      printf("\r\n13 - Serial port test");
-      printf("\r\n14 - LED brightness test");
-      printf("\r\n15 - Face strike test");
-      printf("\r\n16 - WiFi test");
-      printf("\r\n17 - Dump NonVol");
-      printf("\r\n18 - Send sample shot record");
-      printf("\r\n19 - Show WiFi status");
-      printf("\r\n20 - Send clock out of all serial ports");
-      printf("\r\n21 - Log North Sensor");
-      printf("\r\n22 - Log East Sensor");
-      printf("\r\n23 - Log South Sensor");
-      printf("\r\n24 - Log West Sensor");
-      printf("\r\n25 - Test Push Buttons");
-      printf("\r\n26 - Unit Test speed_of_sound()");
-      printf("\r\n27 - Token Ring Test()");
-      printf("\r\n28 - Count on the LEDs");
+      printf("\r\n 2 - Counter values (internal trigger)");
+      printf("\r\n 3 - Advance paper backer");
+      printf("\r\n 4 - Spiral Unit Test");
+      printf("\r\n 5 - Grid calibration pattern");
+      printf("\r\n 6 - One time calibration pattern");
+      printf("\r\n 7 - Grid calibration pattern");
+      printf("\r\n 8 - Aux port passthrough");
+      printf("\r\n 9 - Calibrate"); 
+      printf("\r\n10 - Transfer loopback");
+      printf("\r\n11 - Serial port test");
+      printf("\r\n12 - LED brightness test");
+      printf("\r\n13 - Face strike test");
+      printf("\r\n14 - WiFi test");
+      printf("\r\n15 - Dump NonVol");
+      printf("\r\n16 - Send sample shot record");
+      printf("\r\n17 - Show WiFi status");
+      printf("\r\n18 - Send clock out of all serial ports");
+      printf("\r\n19 - Unit Test speed_of_sound()");
+      printf("\r\n20 - Token Ring Test()");
+      printf("\r\n21 - Count on the LEDs");
       printf("\r\n");
       break;
 
@@ -180,17 +166,6 @@ void self_test(unsigned int test)
       
       set_LED(L('-', '-', '-'));
       delay(ONE_SECOND);
-      break;
-
-/*
- * Test 4, 5, Simple O'Scope
- */
-    case T_OSCOPE:                       // Show the analog input
-      show_analog(0);                  
-      break;
-      
-    case T_OSCOPE_PC:
-      show_analog_on_PC(0);
       break;
 
 /*
@@ -379,16 +354,6 @@ void self_test(unsigned int test)
     sprintf(s, "\r\nDone");
    break;
    
-/*
- * Test 21 Log the input voltage levels on North
- */
-  case T_LOG + 0:     // 20
-  case T_LOG + 1:     // 21
-  case T_LOG + 2:     // 22
-  case T_LOG + 3:     // 23
-    log_sensor(test - T_LOG);
-    break;
-
 /*
  * Test 25 Log the input voltage levels on North
  */
