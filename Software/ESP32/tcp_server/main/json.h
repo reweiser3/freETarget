@@ -20,12 +20,14 @@ typedef struct  {
 
 extern json_message_t JSON[];
 
-#define IS_VOID       0       // Value is a void
-#define IS_TEXT       1       // Value is a string
-#define IS_SECRET     2       // Value is a string but hidden
-#define IS_INT16      3       // Value is a 16 bit int
-#define IS_FLOAT      4       // Value is a floating point number
-#define IS_FIXED      5       // The value cannot be changed
+#define IS_VOID       0x00       // Value is a void
+#define IS_TEXT       0x80       // Value is a string
+#define IS_SECRET     0x40       // Value is a string but hidden
+#define IS_INT32      0x20       // Value is a 64 bit int
+#define IS_FLOAT      0x10       // Value is a floating point number
+#define FLOAT_MASK    0x07       // Scaling factor
+#define IS_FIXED      0x08       // The value cannot be changed
+#define IS_MASK       (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FIXED  )
 
 void reset_JSON(void);            // Clear the JSON input buffer
 bool_t read_JSON(void);           // Scan the serial port looking for JSON input

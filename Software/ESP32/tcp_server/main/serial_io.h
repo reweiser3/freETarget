@@ -1,0 +1,37 @@
+/*----------------------------------------------------------------
+ *
+ * gpio.h
+ *
+ * Header file for GPIO functions
+ *
+ *---------------------------------------------------------------*/
+#ifndef _SERIAL_IO_H_
+#define _SERIAL_IO_H_
+
+/*
+ * Global functions
+ */
+void serial_io_init(void);                                // Initialize the Serial ports
+void serial_to_all(char* s, bool_t console, bool_t aux);  // Multipurpose driver
+void char_to_all(char ch, bool_t console, bool_t aux);    // Output a single character
+char serial_gets(bool_t console, bool_t aux);             // Read from all of the ports
+char serial_getch(bool_t console, bool_t aux);            // Read the selected port
+unsigned int serial_available(bool_t console, bool_t aux);// Find out how much is waiting for us
+void serial_flush(bool_t console, bool_t aux);            // Get rid of everything
+
+char aux_spool_read(void);                                // Read something from the AUX spool
+int  aux_spool_available(void);                           // Is there something in the AUX spool
+void aux_spool_put(char ch);                              // Put something into the  AUX spoolunsigned int serial_available(bool_t console, bool_t aux);// Find out how much is waiting for us
+
+char json_spool_read(void);                               // Read something from the AUX spool
+int  json_spool_available(void);                          // Is there something in the AUX spool
+void json_spool_put(char ch);                             // Put something into the  AUX spool
+
+/*
+ *  Definitions
+ */
+#define CONSOLE true, false
+#define AUX     false, true
+#define ALL     true, true
+
+#endif

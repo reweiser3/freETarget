@@ -65,6 +65,7 @@
 #include "diag_tools.h"
 #include "json.h"
 #include "stdio.h"
+#include "serial_io.h"
 
 int my_ring = TOKEN_UNDEF;          // Token ring address
 int whos_ring = TOKEN_UNDEF;        // Who owns the ring right now?
@@ -109,11 +110,11 @@ void token_init(void)
  */
   if ( json_token == TOKEN_MASTER )
   {
-    AUX_SERIAL.print((char)(TOKEN_BYTE | TOKEN_ENUM | (1 + 1)) );                           // Master, send out an enum
+    char_to_all((char)(TOKEN_BYTE | TOKEN_ENUM | (1 + 1)), AUX );                           // Master, send out an enum
   }
   else
   {
-    AUX_SERIAL.print((char)(TOKEN_BYTE | TOKEN_ENUM_REQUEST | (my_ring & TOKEN_RING)));   // Slave, Send out the request
+    char_to_all((char)(TOKEN_BYTE | TOKEN_ENUM_REQUEST | (my_ring & TOKEN_RING)), AUX);   // Slave, Send out the request
   }
   
 /*
@@ -160,10 +161,10 @@ void token_poll(void)
  * Handle stuff coming from the PC for broadcast
  */
     case TOKEN_MASTER:                                // Am I the master connected to the PC?  
-      while ( Serial.available() )                    // Is there something waiting for us?
+      while ( serial_available(AUX) )                 // Is there something waiting for us?
       {
-        token = Serial.read();                        //  Pick it up
-        AUX_SERIAL.print(token);                      //  Pass it along
+        token = serial_getchar(AUX)                   //  Pick it up
+        char_to_all(token, AUX);                      //  Pass it along
         json_spool_put(token);                        //  and save it for our own use
       }     
                                   
@@ -183,7 +184,7 @@ void token_poll(void)
         switch ( token & (TOKEN_CONTROL) )                  // Yes, act on it
         {
           case (TOKEN_ENUM_REQUEST):                          // A new device has requested an enum
-            AUX_SERIAL.print((char)(TOKEN_BYTE | TOKEN_ENUM | (1 + 1)) ); // Yes, start the enumeration at 2 
+            char_to_all((char)(TOKEN_BYTE | TOKEN_ENUM | (1 + 1)), ALL ); // Yes, start the enumeration at 2 
             if (DLT(DLT_INFO) )                              // and not in trace mode (DIAG jumper installed)
             {
               printf("{\"TOKEN_ENUM\":%d }", (int)(token & TOKEN_RING));
@@ -227,7 +228,7 @@ void token_poll(void)
             break;
              
           default:                                            // Not a control byte
-            Serial.print(token);                              // Send it out the serial port
+            char_to_all(token, CONSOLE);                   // Send it out the serial port
             break;    
           }
       }
@@ -235,7 +236,7 @@ void token_poll(void)
       {  
         if ( whos_ring != TOKEN_UNDEF )                       // Is the ring undefined?
         {
-          Serial.print(token);                                // Then don't send anything onwards
+          char_to_all(token, CONSOLE);                                // Then don't send anything onwards
         }
       }
     }    
@@ -355,7 +356,7 @@ int token_take(void)
 /*
  * Send out the token initializaation request
  */
-  AUX_SERIAL.print((char)(TOKEN_BYTE | TOKEN_TAKE_REQUEST | my_ring));   // Send out the request
+  char_to_all(TOKEN_BYTE | TOKEN_TAKE_REQUEST | my_ring, AUX);   // Send out the request
 
 /*
  * All done, return
@@ -404,7 +405,7 @@ int token_give(void)
 /*
  * Send out the token initializaation request
  */
-  AUX_SERIAL.print((char)(TOKEN_BYTE | TOKEN_RELEASE_REQUEST | my_ring));// Send out the request
+  char_to_all((char)(TOKEN_BYTE | TOKEN_RELEASE_REQUEST | my_ring, AUX);// Send out the request
   
 /*
  * All done, return

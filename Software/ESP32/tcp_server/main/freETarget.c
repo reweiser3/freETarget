@@ -19,6 +19,7 @@
 #include "stdio.h"
 #include "math.h"
 #include "esp_random.h"
+#include "serial_io.h"
 
 /*
  *  Function Prototypes
@@ -81,8 +82,7 @@ void setup(void)
 /*
  *  Setup the serial port
  */
-  Serial.begin(115200, SERIAL_8N1);
-  AUX_SERIAL.begin(115200, SERIAL_8N1); 
+  serial_io_init();
   POST_version();                         // Show the version string on all ports
   
   read_nonvol();
@@ -146,13 +146,10 @@ void setup(void)
   set_LED_PWM(json_LED_PWM);
   POST_LEDs();                            // Cycle the LEDs
   set_LED(LED_READY);                     // to a client, then the RDY light is steady on
-  while ( available_all() )
-  {
-    get_all();                                // Flush any garbage before we start up
-  }
+  serial_flush(ALL);                      // Get rid of everything
   
   DLT(DLT_CRITICAL); 
-  Serial.print("Finished startup\n\r");
+  printf("Finished startup\n\r");
   show_echo();
   return;
 }
@@ -738,7 +735,7 @@ static long tabata
           state_timer = 30 * ONE_SECOND;
           set_LED_PWM_now(0);             // Turn off the lights
           sprintf(s, "{\"TABATA_STARTING\":%d}\r\n", (30));
-          output_to_all(s);
+          serial_to_all(s, ALL);
           tabata_state = TABATA_REST;
         }
         break;
@@ -749,7 +746,7 @@ static long tabata
           state_timer = json_tabata_warn_on * ONE_SECOND;
           set_LED_PWM_now(json_LED_PWM);  //     Turn on the lights
           sprintf(s, "{\"TABATA_WARN\":%d}\r\n", json_tabata_warn_on);
-          output_to_all(s);
+          serial_to_all(s, ALL);
           tabata_state = TABATA_WARNING;
         }
         break;
@@ -771,7 +768,7 @@ static long tabata
           state_timer = json_tabata_warn_off * ONE_SECOND;
           set_LED_PWM_now(0);             // Turn off the lights
           sprintf(s, "{\"TABATA_DARK\":%d}\r\n", json_tabata_warn_off);
-          output_to_all(s);
+          serial_to_all(s, ALL);
           tabata_state = TABATA_DARK;
         }
         break;
@@ -783,7 +780,7 @@ static long tabata
           state_timer = json_tabata_on * ONE_SECOND;
           set_LED_PWM_now(json_LED_PWM);           // Turn on the lights
           sprintf(s, "{\"TABATA_ON\":%d}\r\n", json_tabata_on);
-          output_to_all(s);
+          serial_to_all(s, ALL);
           tabata_state = TABATA_ON;
         }
         break;
@@ -793,7 +790,7 @@ static long tabata
         {
           state_timer = ((long)(json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off) * ONE_SECOND);
           sprintf(s, "{\"TABATA_OFF\":%d}\r\n", (json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off));
-          output_to_all(s);
+          serial_to_all(s, ALL);
           set_LED_PWM_now(0);             // Turn off the LEDs
           tabata_state = TABATA_REST;
         }
@@ -925,13 +922,13 @@ bool_t discard_shot(void)
       {
         random_wait = esp_random() % (json_rapid_wait % 100);     // Use bottom two digits for the time
         sprintf(str, "\r\n{\"RAPID_WAIT\":%d}", random_wait);
-        output_to_all(str);
+        serial_to_all(str, ALL);
         delay(random_wait * ONE_SECOND);
       }
       else
       {
         sprintf(str, "\r\n{\"RAPID_WAIT\":%d}", json_rapid_wait); // Use this time 
-        output_to_all(str);
+        serial_to_all(str, ALL);
         delay(json_rapid_wait * ONE_SECOND);
       }
     }
@@ -954,7 +951,7 @@ bool_t discard_shot(void)
   {
     if ( enable )
     {
-      printf("Starting Rapid Fire.  Time: ");Serial.print(json_rapid_time);
+      printf("Starting Rapid Fire.  Time: %d", json_rapid_time);
     }
     else
     {
@@ -997,8 +994,7 @@ void bye(void)
 /*
  * Say Good Night Gracie!
  */
-  sprintf(str, "{\"GOOD_BYE\":0}");
-  output_to_all(str);
+  serial_to_all("{\"GOOD_BYE\":0}", ALL);
   delay(ONE_SECOND);
   tabata_enable(false);             // Turn off any automatic cycles 
   rapid_enable(false);
@@ -1052,7 +1048,7 @@ void hello(void)
   char str[128];
 
   sprintf(str, "{\"Hello_World\":0}");
-  output_to_all(str);
+  serial_to_all(str);
   
 /*
  * Woken up again
@@ -1087,7 +1083,7 @@ static void send_keep_alive(void)
   if ( esp01_connected() )
   {
     sprintf(str, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);
-    output_to_all(str);
+    serial_to_all(str);
   }
   return;
 }

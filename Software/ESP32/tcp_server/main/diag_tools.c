@@ -18,6 +18,7 @@
 #include "esp_random.h"
 #include "compute_hit.h"
 #include "math.h"
+#include "serial_io.h"
 
 const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 
@@ -46,7 +47,10 @@ extern int   json_clock[4];
  *   of the case statement 
  *--------------------------------------------------------------*/
 unsigned int tick;
-void self_test(unsigned int test)
+void self_test
+(
+  unsigned int test                 // What test to execute
+)
 {
   unsigned int i;
   char         ch;
@@ -202,13 +206,15 @@ void self_test(unsigned int test)
       printf("\r\nPass through active.  Cycle power to exit\r\n");
       while (1)
       {
-        if ( Serial.available() )
+        if ( serial_available(CONSOLE))
         {
-          ch = Serial.read(); AUX_SERIAL.print(ch);
+          ch = get_all(CONSOLE);
+          char_to_all(ch, AUX);
         }
-        if ( aux_spool_available() )
+        if ( serial_available(AUX))
         {
-          ch = aux_spool_read(); Serial.print(ch);
+          ch = get_all(AUX);
+          char_to_all(ch, CONSOLE);
         }
       }
       break;
@@ -224,8 +230,7 @@ void self_test(unsigned int test)
  * Test 13
  */
     case T_SERIAL_PORT:
-      printf("\r\nArduino Serial Port: Hello World\r\n");
-      AUX_printf("\r\nAux Serial Port: Hello World\r\n");
+      serial_to_all("\r\nArduino Serial Port: Hello World\r\n", true, true);
       break;
 
 /* 
@@ -274,11 +279,10 @@ void self_test(unsigned int test)
           {
             printf("\r\n");
           }
-          printf(" S:"); Serial.print(face_strike);
+          printf(" S: %d", face_strike);
           sample = face_strike;        
         }
-        esp01_receive();                // Accumulate input from the IP port.
-        ch = get_all();
+        ch = get_all(ALL);
     }
     printf("\r\nDone\n\r");
     break;
@@ -287,7 +291,6 @@ void self_test(unsigned int test)
   * TEST 16 WiFI
   */
    case T_WIFI:
-    esp01_test();
    break;
 
 /*
@@ -324,15 +327,13 @@ void self_test(unsigned int test)
   * TEST 19 WiFi Status
   */
    case T_WIFI_STATUS:
-    esp01_status();
    break;
    
  /*
   * TEST 20 WiFi Broadcast
   */
    case T_WIFI_BROADCAST:
-    sprintf(s, "Type ! to exit ");
-    output_to_all(s); 
+    serial_to_all("Type ! to exit ", ALL); 
     ch = 0;
     while( ch != '!' )
     {
@@ -340,34 +341,17 @@ void self_test(unsigned int test)
       if ( (i % 60) == 0 )
       {
         sprintf(&s, "\r\n%d:%d ", i/60, i % 60);
-        output_to_all(s);
+        serial_to_all(s, ALL);
       }
       else
       {
       sprintf(&s, " %d:%d ", i/60, i % 60);
-      output_to_all(s);
+      serial_to_all(s, ALL);
       }
-      esp01_receive();                // Accumulate input from the IP port.
-      ch = get_all();
-      delay(1000);
     }
     sprintf(s, "\r\nDone");
    break;
    
-/*
- * Test 25 Log the input voltage levels on North
- */
-  case T_SWITCH:
-    ch = 0;
-    while ( ch != '!' )
-    {
-      set_LED( 1, DIP_SW_A, DIP_SW_B );   // Copy the switches
-      esp01_receive();                    // Accumulate input from the IP port.
-      ch = get_all();
-    }
-    printf("\n\rDone");
-    break;
-
 /*
  * Test 26 Test speed_of_sound()
  */
@@ -424,7 +408,7 @@ void self_test(unsigned int test)
  {
   char str[64];
   sprintf(str, "\r\nfreETarget %s\r\n", SOFTWARE_VERSION);
-  output_to_all(str);
+  serial_to_all(str, ALL);
 /*
  * All done, return
  */
@@ -545,7 +529,7 @@ void self_test(unsigned int test)
     {
       if ( (read_counter(j) != 0) && DLT(DLT_CRITICAL) )     // Make sure they stay at zero
       {
-        printf("Failed Clock Test. Counter free running:"); Serial.print(nesw[j]);
+        printf("Failed Clock Test. Counter free running: %c", nesw[j]);
         test_passed =  false;         // return a failed test
       }   
     }
@@ -597,7 +581,7 @@ void self_test(unsigned int test)
       
       if ( (x > CLOCK_TEST_LIMIT) && DLT(DLT_CRITICAL) )     // The time should be positive and within limits
       { 
-        printf("Failed Clock Test. Counter:"); Serial.print(nesw[j]); printf(" Is:"); Serial.print(read_counter(j)); printf(" Should be:"); Serial.print(random_delay); printf(" Delta:"); Serial.print(x);
+        printf("Failed Clock Test. Counter: %c  Is: %d  Should be: %d   Delta: %d", nesw[j], read_counter(j), random_delay, x);
         test_passed = false;          // since there is delay  in
       }                               // Turning off the counters
     }
@@ -689,7 +673,7 @@ void set_trip_point
  */
   json_vset_PWM = 128;
   set_vset_PWM(json_vset_PWM);
-  EEPROM.put(NONVOL_vset_PWM, json_vset_PWM);
+  EEPROM.put(NONVOL_VSET_PWM, json_vset_PWM);
 
 /*
  * Loop if not in spec, passes to display, or the CAL jumper is in
@@ -701,7 +685,7 @@ void set_trip_point
 /*
  * Got to the end.  See if we are going to do this for a fixed time or forever
  */
-    switch (Serial.read())
+    switch (get_all(ALL))
     {
       case '!':                       // ! waiting in the serial port
         printf("\r\nExiting calibration\r\n");
@@ -718,7 +702,6 @@ void set_trip_point
       case 'W':
       case 'w':                      // Test the WiFI
         printf("\r\nTest WiFi");
-        esp01_test();
         break;
         
       case 'R':
@@ -761,157 +744,6 @@ void set_trip_point
   */
   enable_timer_interrupt();
   return;
-}
-
-/*----------------------------------------------------------------
- * 
- * function: show_analog
- * 
- * brief: Read and display as a 4 channel scope trace
- * 
- * return: None
- *----------------------------------------------------------------
- *
- *  The output appears as a 1 channel O'scope with all four
- *  sensors shown on the display.
- *  
- *  Tapping the microphone will be enough to trigger a response
- *  
- *  To make catching the trace easier, the input has a peak 
- *  detection and decay
- *  
- *--------------------------------------------------------------*/
-unsigned int channel[] = {NORTH_ANA, EAST_ANA, SOUTH_ANA, WEST_ANA};
-unsigned int cycle = 0;
-
-unsigned int max_input[4];
-#define FULL_SCALE   128              // Max full scale is 128 (128 = 5V)
-#define SCALE        128/128          // Gain applied to analog input
-#define DECAY_RATE   16               // Decay rate for peak detection
-#define SAMPLE_TIME  (500000U)        // 500 x 1000 us
-
-void show_analog(int v)
-{
-  unsigned int i, sample;
-  char o_scope[FULL_SCALE];
-  unsigned long now;
-  
-  set_LED((1 << cycle) & 1, (1 << cycle) & 2, (1 << cycle) & 4);
-  cycle = (cycle+1) % 4;
-
- /*
-  *  Clear the oscope line
-  */
-  for ( i=0; i != FULL_SCALE; i++)              // Clear the oscope
-  {
-    o_scope[i] = ' ';
-  }
-  o_scope[FULL_SCALE-1] = 0;                    // Null terminate
-/*
- * Draw in the trip point
- */
-  i = analogRead(V_REFERENCE) * SCALE;
-  o_scope[i] = '|';
-
-/*
- * Sample the input for 250ms 
- */
-  max_input[N] = 0;
-  max_input[E] = 0;                             // Forget the maxium
-  max_input[S] = 0;
-  max_input[W] = 0;     
-  now = micros();
-  while ((micros() - now) <= SAMPLE_TIME ) // Enough time already
-    { 
-    for (i=N; i <= W; i++)
-      {
-      sample = analogRead(channel[i]) * SCALE;     // Read and scale the input
-      if ( sample >= FULL_SCALE -1 )
-      {
-        sample = FULL_SCALE-2;
-      }
-      if ( sample > max_input[i] )                 // Remember the max
-        {
-        max_input[i] = sample;
-        }
-      }
-    }
-
- /*
-  * Put the values into the line
-  */
-   for (i=N; i <= W; i++)
-   {
-    o_scope[max_input[i]] = nesw[i];
-   }
-  
-  printf("{\"OSCOPE\": "); Serial.print(o_scope);  printf("\"}\r\n");     // Display the trace as JSON
-
- /*
-  * All done.
-  */
-  return;
-
-}
-
-/*----------------------------------------------------------------
- * 
- * function: show_analog_on_PC
- * 
- * brief: Four channel scope shown on the PC
- * 
- * return: None
- *----------------------------------------------------------------
- *
- *  Special purpose version of the software for use on the PC test
- * .program  
- *--------------------------------------------------------------*/
-
-static void show_analog_on_PC(int v)
-{
-  unsigned int i, j, k;
-  char o_scope[FULL_SCALE];
-/*
- * Output as a scope trace
- */
-  printf("\n{Ref:"); Serial.print(TO_VOLTS(analogRead(V_REFERENCE))); printf("  ");
-  
-  for (i=N; i != W + 1; i++)
-  {
-    Serial.print(which_one[i]);
-    if ( max_input[i] != 0 )
-    {
-      max_input[i]--;
-    }
-    
-    j = analogRead(channel[i]) * SCALE;           // Read and scale the input
-    if ( (j * DECAY_RATE) > max_input[i] )        // Remember the max
-    {
-      max_input[i] = j * DECAY_RATE;
-    }
-          
-    if ( j > FULL_SCALE-1 )
-    {
-      j = FULL_SCALE-1;
-    }
-    
-    for ( k=0; k != FULL_SCALE; k++)              // Clear the oscope
-    {
-      o_scope[k] = ' ';
-    }
-    o_scope[j] = '*';                             // Put in the trace
-    o_scope[(max_input[i]) / DECAY_RATE] = '#';
-    o_scope[FULL_SCALE-1] = 0;
-    
-    Serial.print(o_scope);                        // Display this channel
-  }
-  printf("}");
-
- /*
-  * All done.
-  */
-  return;
-
 }
 
 /*----------------------------------------------------------------
@@ -1185,8 +1017,8 @@ void log_sensor
   bool_t       is_new;            // TRUE if a change was found
 
   sprintf(s, "\r\nLogging %s Use X to reset,  ! to exit\r\n", which_one[sensor]);
-  output_to_all(s);
-  output_to_all(0);
+  serial_to_all(s);
+  serial_to_all(0);
   max_all =  0;
   arm_timers();
   
@@ -1220,14 +1052,14 @@ void log_sensor
     if ( is_new  || (sensor_status != 0) )
     {
       sprintf(s, "\r\n%s cycle:%d  max:%d is_running:", which_one[sensor], max_cycle, max_all);
-      output_to_all(s);   
+      serial_to_all(s);   
 
       s[1] = 0;
       for (i=N; i<=W; i++)
       {
         if ( sensor_status & (1<<i) )   s[0] = nesw[i];
         else                            s[0] = '.';
-        output_to_all(s);
+        serial_to_all(s);
       }
       arm_timers();
     }
@@ -1239,7 +1071,7 @@ void log_sensor
       {
         case '!':
           sprintf(s, "\r\nDone");
-          output_to_all(s);
+          serial_to_all(s);
           return;
 
         case 'x':

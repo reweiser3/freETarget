@@ -26,8 +26,6 @@ bool_t  do_dlt(unsigned int level);                     // Diagnostics Log and T
 #define T_DIGITAL      1       // Digital test
 #define T_TRIGGER      2       // Test microphone trigger
 #define T_CLOCK        3       // Trigger clock internally
-#define T_OSCOPE       4       // Microphone digital oscilliscope
-#define T_OSCOPE_PC    5       // Display oscillisope on PC
 #define T_PAPER        6       // Advance paper backer
 #define T_SPIRAL       7       // Generate sprial pattern
 #define T_GRID         8       // Generate grid pattern
@@ -43,7 +41,6 @@ bool_t  do_dlt(unsigned int level);                     // Diagnostics Log and T
 #define T_SHOT        18       // Send shot record
 #define T_WIFI_STATUS 19       // Obtain the WiFi Status
 #define T_WIFI_BROADCAST 20
-#define T_LOG         21       // Log the shot levels
 #define T_SWITCH      25       // Test the switches
 #define T_S_OF_SOUND  26       // Test Speed of Sound algorithm
 #define T_TOKEN       27       // Token Ring Test

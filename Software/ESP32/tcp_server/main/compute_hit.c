@@ -14,6 +14,7 @@
 #include "math.h"
 #include "analog_io.h"
 #include "stdio.h" 
+#include "serial_io.h"
 
 #define THRESHOLD (0.001)
 
@@ -150,7 +151,7 @@ unsigned int compute_hit
   z_offset_clock = (double)json_z_offset  * OSCILLATOR_MHZ / s_of_sound; // Clock adjustement for paper to sensor difference
   if ( DLT(DLT_DIAG) )
   {
-    printf("z_offset_clock:"); Serial.print(z_offset_clock); printf("\r\n");
+    printf("z_offset_clock: %4.2f", z_offset_clock);
   }
   
  /* 
@@ -160,7 +161,7 @@ unsigned int compute_hit
   { 
     for (i=N; i <= W; i++)
     {
-      Serial.print(which_one[i]); Serial.print(shot->timer_count[i]); printf(" "); 
+      printf("%s: %d ", which_one[i], shot->timer_count[i]);
     }
   }
   
@@ -180,7 +181,7 @@ unsigned int compute_hit
   
  if ( DLT(DLT_DIAG) )
  {
-   printf("Reference: "); Serial.print(reference); printf("  location:"); Serial.print(nesw[location]);
+   printf("Reference: %4.2f   location: %c", reference, nesw[location]);
  }
 
 /*
@@ -206,12 +207,12 @@ unsigned int compute_hit
     printf("Counts       ");
     for (i=N; i <= W; i++)
     {
-     Serial.print(*which_one[i]); Serial.print(":"); Serial.print(s[i].count); printf(" ");
+     printf("%s: %4.2f ", which_one[i], s[i].count);
     }
     printf("\r\nMicroseconds ");
     for (i=N; i <= W; i++)
     {
-     Serial.print(*which_one[i]); printf(":"); Serial.print(((double)s[i].count) / ((double)OSCILLATOR_MHZ)); printf(" ");
+     printf("%c: %4.2f ", *which_one[i], (double)s[i].count / ((double)OSCILLATOR_MHZ));
     }
   }
 
@@ -242,12 +243,7 @@ unsigned int compute_hit
     printf("Compensate Counts       ");
     for (i=N; i <= W; i++)
     {
-     Serial.print(*which_one[i]); Serial.print(":"); Serial.print(s[i].count); printf(" ");
-    }
-    printf("\r\nMicroseconds ");
-    for (i=N; i <= W; i++)
-    {
-     Serial.print(*which_one[i]); printf(":"); Serial.print(((double)s[i].count) / ((double)OSCILLATOR_MHZ)); printf(" ");
+     printf("%s:%4.2f", *which_one[i], (double)s[i].count / ((double)OSCILLATOR_MHZ));
     }
   }
   
@@ -284,7 +280,7 @@ unsigned int compute_hit
  
   if ( DLT(DLT_DIAG) )
   {
-   printf("estimate: "); Serial.print(estimate);
+   printf("estimate: %4.2f", estimate);
   }
   error = 999999;                  // Start with a big error
   count = 0;
@@ -410,7 +406,7 @@ bool_t find_xy_3D
   {
     if ( DLT(DLT_DIAG) )
     {
-      printf("Sensor: "); Serial.print(s->index); printf(" no data");
+      printf("Sensor: %d no data", s->index);
     }
     return false;           // Sensor did not trigger.
   }
@@ -481,7 +477,7 @@ bool_t find_xy_3D
     default:
       if ( DLT(DLT_DIAG) )
       {
-        printf("\n\nUnknown Rotation:"); Serial.print(s->index);
+        printf("\n\nUnknown Rotation:, %d", s->index);
       }
       break;
   }
@@ -532,7 +528,7 @@ void send_score
   double radius;
   double angle;
   unsigned int volts;
-  char   str[256], str_c[10];  // String holding buffers
+  char   str[256];                // String holding buffers
   unsigned long now;
   
   if ( DLT(DLT_DIAG) )
@@ -580,7 +576,7 @@ void send_score
  *  Display the results
  */
   sprintf(str, "\r\n{");
-  output_to_all(str);
+  serial_to_all(str, ALL);
   
 #if ( S_SHOT )
   if ( (json_token == TOKEN_WIFI) || (my_ring == TOKEN_UNDEF))
@@ -591,9 +587,9 @@ void send_score
   {
     sprintf(str, "\"shot\":%d, \"name\":\"%d\"", shot->shot_number,  my_ring);
   }
-  output_to_all(str);
+  serial_to_all(str, ALL);
   sprintf(str, ", \"time\":%4.2f ", (float)shot->shot_time/(float)(ONE_SECOND));
-  output_to_all(str);
+  serial_to_all(str, ALL);
 #endif
 
 #if ( S_SCORE )
@@ -604,18 +600,18 @@ void send_score
     z = 360 - (((int)angle - 90) % 360);
     clock_face = (double)z / 30.0;
     sprintf(str, ", \"score\": %d, "\"clock\":\"%d:%d, \"  ", score,(int)clock_face, (int)(60*(clock_face-((int)clock_face))) ;
-    output_to_all(str);
+    serial_to_all(str, ALL);
   }
 #endif
 
 #if ( S_XY )
   sprintf(str, ",\"x\":%4.2f, \"y\":%4.2f ", x, y);
-  output_to_all(str);
+  serial_to_all(str, ALL);
   
   if ( json_target_type > 1 )
   {
     sprintf(str, ",\"real_x\":%4.2f, \"real_y\":%4.2f ", real_x, real_y);
-    output_to_all(str);
+    serial_to_all(str, ALL);
   }
 #endif
 
@@ -631,7 +627,7 @@ void send_score
   if ( json_token == TOKEN_WIFI )
   {
     sprintf(str, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)s[N].count, (int)s[E].count, (int)s[S].count, (int)s[W].count);
-    output_to_all(str);
+    serial_to_all(str, ALL);
   }
 #endif
 
@@ -639,13 +635,13 @@ void send_score
   if ( json_token == TOKEN_WIFI )
   {
     volts = analogRead(V_REFERENCE);
-    sprintf(str, ", \"V_REF\":%4.2f, \"T\":%4,2f, , \"VERSION\":%s", TO_VOLTS(volts), temperature_C(), SOFTWARE_VERSION);
-    output_to_all(str);
+    sprintf(str, ", \"V_REF\":%4.2f, \"Temp\":%4.2f, , \"VERSION\":%s", TO_VOLTS(volts), temperature_C(), SOFTWARE_VERSION);
+    serial_to_all(str, ALL);
   }
 #endif
 
   sprintf(str, "}\r\n");
-  output_to_all(str);
+  serial_to_all(str, ALL);
   
 /*
  * All done, return
@@ -707,7 +703,7 @@ void send_miss
  *  Display the results
  */
   sprintf(str, "\r\n{");
-  output_to_all(str);
+  serial_to_all(str, ALL);
   
  #if ( S_SHOT )
    if ( (json_token == TOKEN_WIFI) || (my_ring == TOKEN_UNDEF))
@@ -718,16 +714,15 @@ void send_miss
   {
     sprintf(str, "\"shot\":%d, \"miss\":1, \"name\":\"%d\"", shot->shot_number,  my_ring);
   }
-  output_to_all(str);
-  dtostrf((float)shot->shot_time/(float)(ONE_SECOND), 2, 2, str );
-  sprintf(str, ", \"time\":%s ", str);
+  serial_to_all(str, ALL);
+  sprintf(str, ", \"time\":%4.2f ", (float)shot->shot_time/(float)(ONE_SECOND));
 #endif
 
 #if ( S_XY )
   if ( json_token == TOKEN_WIFI )
   { 
     sprintf(str, ", \"x\":0, \"y\":0 ");
-    output_to_all(str);
+    serial_to_all(str, ALL);
   }
 
 
@@ -738,14 +733,14 @@ void send_miss
   if ( json_token == TOKEN_WIFI )
   {
     sprintf(str, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)shot->timer_count[N], (int)shot->timer_count[E], (int)shot->timer_count[S], (int)shot->timer_count[W]);
-    output_to_all(str);
+    serial_to_all(str, ALL);
     sprintf(str, ", \"face\":%d ", shot->face_strike);
-    output_to_all(str);
+    serial_to_all(str, ALL);
   }
 #endif
 
   sprintf(str, "}\n\r");
-  output_to_all(str);
+  serial_to_all(str, ALL);
 
 /*
  * All done, go home
@@ -853,7 +848,7 @@ static void remap_target
     distance = sqrt(sq(ptr->x - *x) + sq(ptr->y - *y));
     if ( DLT(DLT_DIAG) )
     {
-      printf(" distance:"); Serial.print(distance); 
+      printf(" distance: %4.2f", distance); 
     }
     if ( distance < closest )   // Found a closer one?
     {
@@ -862,7 +857,7 @@ static void remap_target
       dy = ptr->y;              // Remember the closest bull
       if ( DLT(DLT_DIAG) )
       {
-        printf("Target: "); Serial.print(i); printf("   dx:"); Serial.print(dx); printf(" dy:"); Serial.print(dy); 
+        printf("Target: %d   dx: %4.2f   dy: %4.2f", i, dx, dy); 
       }
     }
     ptr++;
@@ -876,7 +871,7 @@ static void remap_target
   *y = *y - dy;
   if ( DLT(DLT_DIAG) )
   {
-    printf("rx:"); Serial.print(*x); printf(" y:"); Serial.print(*y);
+    printf("x: %4.2f , y: %4.2f ", *x, *y);
   }
   
 /*
@@ -915,7 +910,7 @@ void send_timer
   {
     if ( sensor_status & (1<<i) )
     {
-      printf("%s ", nesw[i]);
+      printf("%c ", nesw[i]);
     }
     else
     {
@@ -927,7 +922,7 @@ void send_timer
   
   for (i=N; i <= W; i++)
   {
-    printf("\" %s\":%d, ", nesw[i], timer_count[i]);
+    printf("\" %c\":%d, ", nesw[i], timer_count[i]);
   }
 
   printf("\"V_REF\": %4.2f,", TO_VOLTS(analogRead(V_REFERENCE)));

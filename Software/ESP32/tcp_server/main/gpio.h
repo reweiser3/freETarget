@@ -31,19 +31,10 @@ void multifunction_init(void);                            // Initialize the mult
 void multifunction_switch(void);                          // Handle the actions of the DIP Switch signal
 void multifuction_display(void);                          // Display the MFS settings
 void multifunction_wait_open(void);                       // Wait for both multifunction switches to be open
-void output_to_all(char* s);                              // Multipurpose driver
-void char_to_all(char ch);                                // Output a single character
 void digital_test(void);                                  // Execute the digital test
 void paper_on_off(bool_t on);                             // Turn the motor on or off
 void rapid_green(unsigned int state);                     // Drive the GREEN light
 void rapid_red(unsigned int state);                       // Drive the RED light
-char get_all(void);                                       // Read from all of the ports
-char aux_spool_read(void);                                // Read something from the AUX spool
-int  aux_spool_available(void);                           // Is there something in the AUX spool
-void aux_spool_put(char ch);                              // Put something into the  AUX spool
-char json_spool_read(void);                               // Read something from the AUX spool
-int  json_spool_available(void);                          // Is there something in the AUX spool
-void json_spool_put(char ch);                             // Put something into the  AUX spool
 
 /*
  *  Port Definitions

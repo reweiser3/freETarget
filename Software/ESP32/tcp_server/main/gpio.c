@@ -943,7 +943,7 @@ static void sw_state
       power_save = (long)json_power_save * 60L * (long)ONE_SECOND; // and resets the power save time
       json_power_save += 30;      
       sprintf(s, "\r\n{\"LED_PWM\": %d}\n\r", json_power_save);
-      output_to_all(s);  
+      serial_to_all(s);  
         break;
         
     case PAPER_FEED:                      // The switch acts as paper feed control
@@ -980,7 +980,7 @@ static void sw_state
       set_LED_PWM_now(json_LED_PWM);      // Set the brightness
       EEPROM.put(NONVOL_LED_PWM, json_LED_PWM);   
       sprintf(s, "\r\n{\"LED_BRIGHT\": %d}\n\r", json_LED_PWM);
-      output_to_all(s);  
+      serial_to_all(s);  
       break;
 
     case TARGET_TYPE:                     // Over ride the target type if the switch is closed
@@ -1070,11 +1070,11 @@ void multifunction_display(void)
 
   sprintf(s, "\"MFS_TAP1\": \"%s\",\n\r\"MFS_TAP2\": \"%s\",\n\r\"MFS_HOLD1\": \"%s\",\n\r\"MFS_HOLD2\": \"%s\",\n\r\"MFS_HOLD12\": \"%s\",\n\r", 
   mfs_text[TAP1(json_multifunction)], mfs_text[TAP2(json_multifunction)], mfs_text[HOLD1(json_multifunction)], mfs_text[HOLD2(json_multifunction)], mfs_text[HOLD12(json_multifunction)]);
-  output_to_all(s);  
+  serial_to_all(s);  
 
   sprintf(s, "\"MFS_CONFIG\": \"%s\",\n\r\"MFS_DIAG\": \"%s\",\n\r", 
   mfs2_text[HOLD1(json_multifunction2)], mfs2_text[HOLD2(json_multifunction2)]);
-  output_to_all(s);  
+  serial_to_all(s);  
   
 /*
  * All done, return
@@ -1247,59 +1247,6 @@ int json_spool_available(void)
 {
   return (json_spool_in != json_spool_out);
 }
-/*-----------------------------------------------------
- * 
- * function: output_to_all
- * 
- * brief:    Send a string to the available serial ports
- * 
- * return:   None
- * 
- *-----------------------------------------------------
- *
- * Send a string to all of the serial devices that are 
- * in use. 
- * 
- *-----------------------------------------------------*/
- void char_to_all(char ch)
- {
-  char str_a[2];
-  str_a[0] = ch;
-  str_a[1] = 0;
-  output_to_all(str_a);
-  return;
- }
- 
- void output_to_all(char *str)
- {
-  unsigned int i;                 // Iteration Counter
-  
-  Serial.print(str);              // Main USB port
-  DISPLAY_SERIAL.print(str);      // Display Serial Port
-
-/*
- * Determine how the output is going to the auxilary port
- */
-  if ( esp01_is_present() )       // WiFi Port
-  {
-    for (i=0; i != esp01_N_CONNECT; i++ )
-    {
-      esp01_send(str, i);
-    }
-    return;
-  }
-
-  if ( (json_token == TOKEN_WIFI) // Is the AUX port in normal mode?
-      || (token_available()))     // Or the token ring is running?
-  {
-    AUX_SERIAL.print(str);        // No ESP-01, then use just the AUX port
-  }
-
- /*
-  * All done, return
-  */
-  return;
- }
 
 /*-----------------------------------------------------
  * 

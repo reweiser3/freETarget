@@ -30,12 +30,6 @@
  */
 #define SAMPLE_CALCULATIONS false                 // Trace the COUNTER values
 
-
-/*
- * Three way Serial Port
- */
-#define AUX_SERIAL         Serial3    // Auxilary Connector
-
 /*
  * Oscillator Features
  */
@@ -68,6 +62,7 @@
 #define PI_ON_4 (PI / 4.0d)
 #define PI_ON_2 (PI / 2.0d)
 #define sq(x) ((x)*(x))
+
 /*
  *  Types
  */
@@ -106,16 +101,5 @@ extern const char to_hex[];
 extern unsigned int face_strike;
 extern const char nesw[];             // Cardinal Points
 extern unsigned int is_trace;         // Tracing level(s)
-
-/*
- *  Factory settings via Arduino monitor
- */
-/*
-#define FACTORY        {"NAME_ID":1, "TRGT_1_RINGx10":1550, "ECHO":2}
-#define FACTORY_BOSS   {"NAME_ID":1, "TRGT_1_RINGx10":1550, "ECHO":2}
-#define FACTORY_MINION {"NAME_ID":2, "TRGT_1_RINGx10":1550, "ECHO":2}
-#define SERIAL_NUMBER  {"NAME_ID":1, "TRGT_1_RINGx10":1550, "SN":1234, "ECHO":2}
-#define LONG_TEST      {"SENSOR":231, "Z_OFFSET":5, "STEP_TIME":50, "STEP_COUNT":0, "NORTH_X":0, "NORTH_Y":0, "EAST_X":0, "EAST_Y":0, "SOUTH_X":0, "SOUTH_Y":0, "WEST_X":0, "WEST_Y":0, "LED_BRIGHT":50, "NAME_ID":0, "ECHO":9}
-*/
 
 #endif
