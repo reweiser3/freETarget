@@ -218,7 +218,7 @@ bool read_JSON(void)
 /*
  * See if anything is waiting and if so, add it in
  */
-  while ( available_all() != 0 )
+  while ( serial_available(ALL) != 0 )
   {
     return_value = true;
     
@@ -532,7 +532,7 @@ void show_echo(void)
   {
     sprintf(s, "\r\n{\r\n\"NAME\":\"%s\", \r\n", names[json_name_id+my_ring]);
   }
-  serial_to_all(s);
+  serial_to_all(s, ALL);
 
 /*
  * Loop through all of the JSON tokens
@@ -578,7 +578,7 @@ void show_echo(void)
           sprintf(s, "%s %s, \r\n", JSON[i].token, str_c);
           break;
       }
-      serial_to_all(s);
+      serial_to_all(s, ALL);
       if ( esp01_connected() )            // If the wifi is attached
       {
         delay(100);                        // Slow down to let it catch up
@@ -591,78 +591,75 @@ void show_echo(void)
  * Finish up with the special cases
  */
   sprintf(s, "\n\r");                                                                    // Blank Line
-  serial_to_all(s);
+  serial_to_all(s, ALL);
   
   multifunction_display();
   
   sprintf(s, "\"TRACE\": %d, \n\r", is_trace);                                             // TRUE to if trace is enabled
-  serial_to_all(s);
+  serial_to_all(s, ALL);
 
   sprintf(s, "\"RUNNING_MINUTES\": %ld, \n\r", millis()/1000/60);                       // On Time
-  serial_to_all(s);
+  serial_to_all(s, ALL);
   
-  dtostrf(temperature_C(), 4, 2, str_c );
-  sprintf(s, "\"TEMPERATURE\": %s, \n\r", str_c);                                         // Temperature in degrees C
-  serial_to_all(s);
+  sprintf(s, "\"TEMPERATURE\": %4.2f, \n\r", temperature_C());                                         // Temperature in degrees C
+  serial_to_all(s, ALL);
   
   dtostrf(speed_of_sound(temperature_C(), json_rh), 4, 2, str_c );
-  sprintf(s, "\"SPEED_SOUND\": %s, \n\r", str_c);                                         // Speed of Sound
-  serial_to_all(s);
+  sprintf(s, "\"SPEED_SOUND\": %4.2f, \n\r", speed_of_sound(temperature_C()));
+  serial_to_all(s, ALL);
 
-  dtostrf(TO_VOLTS(analogRead(V_REFERENCE)), 4, 2, str_c );
-  sprintf(s, "\"V_REF\": %s, \n\r", str_c);                                               // Trip point reference
-  serial_to_all(s);
+  sprintf(s, "\"V_REF\": %4.2f, \n\r", TO_VOLTS(analogRead(V_REFERENCE)));                                               // Trip point reference
+  serial_to_all(s, ALL);
   
-  dtostrf(5.0d * (float)analogRead(V_12_LED) * K_12 / 1023.0d , 4, 2, str_c );            // Analog Reference * input * resistor divider / max MSB
-  sprintf(s, "\"V_12_LED\": %s, \n\r", str_c);                                            // 12 Volt LED supply
-  serial_to_all(s);
+  sprintf(s, "\"V_12_LED\": %4.2f, \n\r", s5.0d * (float)analogRead(V_12_LED) * K_12 / 1023.0dtr_c);                                            // 12 Volt LED supply
+  serial_to_all(s, ALL);
   
   sprintf(s, "\"VSET_PWM\": %d, \n\r", json_vset_PWM);                                    // Setpoint adjust PWM
-  serial_to_all(s);
+  serial_to_all(s, ALL);
   
   sprintf(s, "\"TIMER_COUNT\": %d, \n\r", (int)(SHOT_TIME * OSCILLATOR_MHZ));             // Maximum number of clock cycles to record shot (target dependent)
-  serial_to_all(s);
+  serial_to_all(s, ALL);
 
 
   if ( json_token == TOKEN_WIFI )
   {
     sprintf(s, "\"WiFi_PRESENT\": %d, \n\r", esp01_is_present());                         // TRUE if WiFi is available
-    serial_to_all(s);
+    serial_to_all(s, ALL);
   
     if ( esp01_is_present() )
     {
       esp01_myIP(str_c);
       sprintf(s, "\"WiFi_IP_ADDRESS\": \"%s:1090\", \n\r", str_c);                        // Print out the IP address
-      serial_to_all(s);
+      serial_to_all(s, ALL);
   
       for ( i=0; i != esp01_N_CONNECT; i++)
       {
         sprintf(s, "\"WiFi_CONNECT %d\": %d, \n\r", i+1, esp01_connect[i]);               // TRUE if Client[i] connected
-        serial_to_all(s);
+        serial_to_all(s, ALL);
       }
     }
   }
   else
   {
     sprintf(s, "\"TOKEN_RING\":  %d, \n\r", my_ring);                                     // My token ring address
-    serial_to_all(s);
+    serial_to_all(s, ALL);
     sprintf(s, "\"TOKEN_OWNER\": %d, \n\r", whos_ring);                                  // Who owns the token ring
-    serial_to_all(s);
+    serial_to_all(s, ALL);
   }
   
   sprintf(s, "\"VERSION\": %s, \n\r", SOFTWARE_VERSION);                                  // Current software version
-  serial_to_all(s);  
+  serial_to_all(s, ALL);  
 
   EEPROM.get(NONVOL_PS_VERSION, j);
   sprintf(s, "\"PS_VERSION\": %d, \n\r", j);                                             // Current persistent storage version
-  serial_to_all(s); 
+  serial_to_all(s, ALL); 
   
   dtostrf(revision()/100.0, 4, 2, str_c );              
   sprintf(s, "\"BD_REV\": %s \n\r", str_c);                                               // Current board versoin
-  serial_to_all(s);
+  serial_to_all(s, ALL);
   
   sprintf(s, "}\r\n"); 
-  serial_to_all(s);
+  serial_to_all(s, ALL);
   
 /*
  *  All done, return
@@ -748,15 +745,15 @@ static void show_test(int test_number)
 
     trace |= DLT_CRITICAL;        // Critical is always enabled
     
-    if ( trace & DLT_CRITICAL)    {sprintf(s, "\r\rDLT CRITICAL\r\n");   serial_to_all(s);}
-    if ( trace & DLT_APPLICATION) {sprintf(s, "\r\nDLT APPLICATON\r\n"); serial_to_all(s);}
-    if ( trace & DLT_DIAG)        {sprintf(s, "\r\nDLT DIAG\r\n");       serial_to_all(s);}
-    if ( trace & DLT_INFO)        {sprintf(s, "\r\nDLT INFO\r\n");       serial_to_all(s);}
+    if ( trace & DLT_CRITICAL)    {sprintf(s, "\r\rDLT CRITICAL\r\n");   serial_to_all(s, ALL);}
+    if ( trace & DLT_APPLICATION) {sprintf(s, "\r\nDLT APPLICATON\r\n"); serial_to_all(s, ALL);}
+    if ( trace & DLT_DIAG)        {sprintf(s, "\r\nDLT DIAG\r\n");       serial_to_all(s, ALL);}
+    if ( trace & DLT_INFO)        {sprintf(s, "\r\nDLT INFO\r\n");       serial_to_all(s, ALL);}
     
-    sprintf(s, "\r\n0x01 DLT APPLICATON\r\n"); serial_to_all(s);
-    sprintf(s, "\r\n0x02 DLT DIAG\r\n");       serial_to_all(s);
-    sprintf(s, "\r\n0x04 DLT INFO\r\n");       serial_to_all(s);
-    sprintf(s, "\r\r0x89 DLT CRITICAL\r\n");   serial_to_all(s);
+    sprintf(s, "\r\n0x01 DLT APPLICATON\r\n"); serial_to_all(s, ALL);
+    sprintf(s, "\r\n0x02 DLT DIAG\r\n");       serial_to_all(s, ALL);
+    sprintf(s, "\r\n0x04 DLT INFO\r\n");       serial_to_all(s, ALL);
+    sprintf(s, "\r\r0x89 DLT CRITICAL\r\n");   serial_to_all(s, ALL);
 
 /*
  * The DIP switch has been remotely set

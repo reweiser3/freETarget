@@ -27,7 +27,7 @@
 extern const char* which_one[4];
 extern int json_clock[4];
 
-static sensor_t s[4];
+sensor_t s[4];
 
 unsigned int  pellet_calibre;     // Time offset to compensate for pellet diameter
 

@@ -10,12 +10,12 @@
 
 typedef struct  {
   char*             token;    // JSON token string, ex "RADIUS": 
-  int*              value;    // Where value is stored 
+  long*             value;    // Where value is stored 
   double*         d_value;    // Where value is stored 
   byte_t          convert;    // Conversion type
   void        (*f)(int x);   // Function to execute with message
   char*           non_vol;    // Storage in NON-VOL
-  unsigned int init_value;    // Initial Value
+  long         init_value;    // Initial Value
 } json_message_t;
 
 extern json_message_t JSON[];

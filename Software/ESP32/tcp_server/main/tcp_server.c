@@ -23,6 +23,7 @@
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
+#include "freETarget.h"
 
 #define PORT                        CONFIG_EXAMPLE_PORT
 #define KEEPALIVE_IDLE              CONFIG_EXAMPLE_KEEPALIVE_IDLE
@@ -157,6 +158,22 @@ CLEAN_UP:
     vTaskDelete(NULL);
 }
 
+/*----------------------------------------------------------------
+ * 
+ * function: app_main()
+ * 
+ * brief:    Main entry point for freeETarget softwae
+ * 
+ * return: None
+ * 
+ *----------------------------------------------------------------
+ *
+ * This is called after the compiler - etc. has woken up and \
+ * initialized the background and is now ready to start the 
+ * 'correct' application
+ * 
+ *--------------------------------------------------------------*/
+
 void app_main(void)
 {
     ESP_ERROR_CHECK(nvs_flash_init());
@@ -175,4 +192,10 @@ void app_main(void)
 #ifdef CONFIG_EXAMPLE_IPV6
     xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET6, 5, NULL);
 #endif
+
+/*
+ *  Start FreeETarget
+ */
+    freeETarget_init();
+
 }

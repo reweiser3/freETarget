@@ -107,7 +107,8 @@ void serial_io_init(void)
 unsigned int serial_available
 (
   bool_t console,    // TRUE if reading console
-  bool_t aux         // TRUE if reading AUX port
+  bool_t aux,        // TRUE if reading AUX port
+  bool_t tcpip       // TRUE if checking the TCPIP port
 )
 {
   unsigned int n_available;
@@ -147,7 +148,8 @@ unsigned int serial_available
 void serial_flush
 (
   bool_t console,    // TRUE if reading console
-  bool_t aux         // TRUE if reading AUX port
+  bool_t aux,        // TRUE if reading AUX port
+  bool_t tcpip       // TRUE if flushing the TCPIP channel
 )
 {
   if ( console )
@@ -179,7 +181,8 @@ void serial_flush
 char get_chars
   (
     bool_t console,       // Read the console
-    bool_t aux            // Read the AUX port
+    bool_t aux,           // Read the AUX port
+    bool_t tcpip
   )
 {
   char ch;
@@ -225,12 +228,18 @@ char get_chars
  * in use. 
  * 
  *-----------------------------------------------------*/
- void char_to_all(char ch, bool_t console, bool_t aux, bool_t tcpip)
- {
+ void char_to_all
+ (
+    char ch,
+    bool_t console, 
+    bool_t aux,
+    bool_t tcpip
+)
+{
   char str_a[2];
   str_a[0] = ch;
   str_a[1] = 0;
-  serial_to_all(str_a, console, aux);
+  serial_to_all(str_a, console, aux, tcpip]);
   return;
  }
  

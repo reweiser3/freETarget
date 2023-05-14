@@ -33,6 +33,7 @@ struct sensor
 
 typedef struct sensor sensor_t;
 
+extern sensor_t s[4];
 
 
 /*

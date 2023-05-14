@@ -70,7 +70,7 @@ const char    to_hex[] = "0123456789ABCDEF";      // Quick Hex to ASCII
 
 /*----------------------------------------------------------------
  * 
- * function: setup()
+ * function: freeETarget_init()
  * 
  * brief: Initialize the board and prepare to run
  * 
@@ -78,7 +78,7 @@ const char    to_hex[] = "0123456789ABCDEF";      // Quick Hex to ASCII
  * 
  *--------------------------------------------------------------*/
 
-void setup(void) 
+void freeETarget_init(void)
 {    
 /*
  *  Setup the serial port
@@ -87,7 +87,6 @@ void setup(void)
   POST_version();                         // Show the version string on all ports
   
   read_nonvol();
-  is_trace = DLT_CRITICAL;                // Turn on tracing
 
 /*
  *  Set up the port pins
@@ -1050,7 +1049,7 @@ void hello(void)
  * Woken up again
  */  
   set_LED_PWM_now(json_LED_PWM);
-  power_save = json_power_save * ONE_SECOND * 60L;);   // and reset the power save time
+  power_save = json_power_save * ONE_SECOND * 60L;   // and reset the power save time
   
   return;
 }

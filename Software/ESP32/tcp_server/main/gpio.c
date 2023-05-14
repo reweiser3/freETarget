@@ -12,6 +12,7 @@
 #include "stdio.h"
 #include "json.h"
 #include "token.h"
+#include "compute_hit.h"
 
 const GPIO_t init_table[] = {
   {D0,          "\"D0\":",       INPUT_PULLUP, 0 },
@@ -66,8 +67,6 @@ const GPIO_t init_table[] = {
 void face_ISR(void);                      // Acknowledge a face strike
 void sensor_ISR(void);                    // Begin recording times for a target shot
 
-static bool_t fcn_DIP_SW_A(void);         // Function to read DIP_SW_A
-static bool_t fcn_DIP_SW_B(void);         // Function to read DIP_SW_B
 static void sw_state(unsigned int action);// Do something with the switches
 static void send_fake_score(void);        // Send a fake score to the PC
 
@@ -541,7 +540,7 @@ void drive_paper(void)
   
   if ( DLT(DLT_CRITICAL) )
   {
-    printf("Advancing paper:"); Serial.print(s_time);
+    printf("Advancing paper: %dms", s_time);
   }
 
 /*
@@ -593,10 +592,10 @@ void drive_paper(void)
  * 
  *-----------------------------------------------------*/
 
-static void paper_on_off                        // Function to turn the motor on and off
-  (
-  bool_t on                                       // on == true, turn on motor drive
-  )
+void paper_on_off                               // Function to turn the motor on and off
+(
+  bool_t on                                     // on == true, turn on motor drive
+)
 {
   if ( on == true )
   {
@@ -653,7 +652,7 @@ static void paper_on_off                        // Function to turn the motor on
 
   if ( DLT(DLT_CRITICAL) )
   {
-    printf("\r\nface_ISR():"); Serial.print(face_strike);
+    printf("\r\nface_ISR(): %d", face_strike);
   }
 
   return;
@@ -929,7 +928,7 @@ static void sw_state
 
   if ( DLT(DLT_CRITICAL) )
   {
-    printf("Switch action: "); Serial.print(action);
+    printf("Switch action: %d", action);
   }
 
   switch (action)
@@ -1084,172 +1083,6 @@ void multifunction_display(void)
 
 /*-----------------------------------------------------
  * 
- * function: get_all
- * 
- * brief:    Read all of the serial ports
- * 
- * return:   Next character in the serial port
- * 
- *-----------------------------------------------------
- *
- * Each of the available serial ports are polled for
- * a character.
- * 
- * If a token ring is enabled, the get_all() function is 
- * uses the JSON spool
- * 
- *-----------------------------------------------------*/
-char get_all(void) 
-{
-  char ch;
-
-  switch (json_token)
-  {
-    case TOKEN_WIFI:
-      if ( esp01_available() )
-      {
-        ch = esp01_read();
-        return ch;                                      // ESP01 only avaialbe in WIFI
-      }
-      if ( Serial.available() )                         // Check the serial port
-      {
-        ch = Serial.read();
-        return ch;
-      }
-      break;
-
-    case TOKEN_SLAVE:   
-      if ( Serial.available() )                         // Serial port
-      {
-        ch =  Serial.read();
-        return ch;
-      }
-
-    case TOKEN_MASTER:  
-      if (json_spool_available() )                        // AUX input
-      {
-        return json_spool_read();
-      }
-
-      if ( DISPLAY_SERIAL.available() )                   // Display port
-      {
-        ch =  DISPLAY_SERIAL.read();
-        return ch;
-      }
-      break;
-  }
-  
-  return 0;
-}
-
-/*
- * Spooling function associated with the AUX port
- */
-char aux_spool_read(void)                                 // Take something out of the spool
-{
-    char ch = 0;
-    
-    if ( aux_spool_in != aux_spool_out )
-    {
-      ch = aux_spool[aux_spool_out];
-      aux_spool_out = (aux_spool_out+1) % sizeof(aux_spool);
-    }
-    return ch;
-}
-
-void aux_spool_put(char ch)                               // Put something into the spool
-{
-    aux_spool[aux_spool_in] = ch;
-    aux_spool_in = (aux_spool_in+1) % sizeof(aux_spool);
-
-    return;
-}
-
-/*
- * Spooling functions associated with handling JSON commands
- */
-char json_spool_read(void)                                 // Take something out of the spool
-{
-    char ch = 0;
-    
-    if ( json_spool_in != json_spool_out )
-    {
-      ch = json_spool[json_spool_out];
-      json_spool_out = (json_spool_out+1) % sizeof(json_spool);
-    }
-    return ch;
-}
-
-void json_spool_put(char ch)                               // Put something into the spool
-{
-    json_spool[json_spool_in] = ch;
-    json_spool_in = (json_spool_in+1) % sizeof(json_spool);
-
-    return;
-}
-
-
-/*-----------------------------------------------------
- * 
- * function: available
- * 
- * brief:    Check for an available character
- * 
- * return:   TRUE if something is waiting
- * 
- *-----------------------------------------------------
- *
- * Each of the available serial ports are polled for
- * a character.
- * 
- * If a token ring is enabled, the get_all() function is 
- * bypassed
- * 
- *-----------------------------------------------------*/
-char available_all(void)
-{
-  if ( DISPLAY_SERIAL.available() )         // USB is always acive
-  {
-    return 1;
-  }
-
-  switch (json_token)
-  {
-     case TOKEN_WIFI:
-       if ( esp01_available()  
-        || Serial.available() )
-       {
-         return 1;
-       }
-       return 0;
-      
-     case TOKEN_MASTER:
-        return json_spool_available();
-        
-     case TOKEN_SLAVE:
-        if ( json_spool_available() 
-          || Serial.available() )
-        {
-          return 1;
-        }
-
-  }
-  
-  return 0;
-}
-
-int aux_spool_available(void)
-{
-  return (aux_spool_in != aux_spool_out);
-}
-
-int json_spool_available(void)
-{
-  return (json_spool_in != json_spool_out);
-}
-
-/*-----------------------------------------------------
- * 
  * function: digital_test()
  * 
  * brief:    Exercise the GPIO digital ports
@@ -1264,22 +1097,21 @@ int json_spool_available(void)
  *-----------------------------------------------------*/
 void digital_test(void)
 {
-
   int i;
   double       volts;         // Reference Voltage
   
 /*
  * Read in the fixed digital inputs
  */
-  printf("\r\nTime:");                      Serial.print(micros()/1000000); Serial.print("."); Serial.print(micros()%1000000); printf("s");
-  printf("\r\nBD Rev:");                    Serial.print(revision());       
-  printf("\r\nDIP: 0x");                    Serial.print(read_DIP(0), HEX); 
+  printf("\r\nTime: %4.2fs", micros()/1000000);
+  printf("\r\nBD Rev: %d", revision());       
+  printf("\r\nDIP: 0x%02X", read_DIP(0)); 
   digitalWrite(STOP_N, 0);
   digitalWrite(STOP_N, 1);                        // Reset the fun flip flop
-  printf("\r\nRUN FlipFlop: 0x");           Serial.print(is_running(), HEX);   
-  printf("\r\nTemperature: ");              Serial.print(temperature_C());  printf("'C ");
-  Serial.print(speed_of_sound(temperature_C(), json_rh));  printf("mm/us");
-  printf("\r\nV_REF: ");                    Serial.print(volts); printf(" Volts");
+  printf("\r\nRUN FlipFlop: 0x%02X", is_running());   
+  printf("\r\nTemperature: %dC", temperature_C());
+  printf("\r\nSpeed of Sound: %4.2fmm/us", speed_of_sound(temperature_C(), json_rh))
+  printf("\r\nV_REF: %4.f Volts", volts);
   printf("\r\n");
 
 /*
@@ -1296,7 +1128,7 @@ void digital_test(void)
     {
       printf("\r\n IN  << ");
     }
-    Serial.print(init_table[i].gpio_name); Serial.print(digitalRead(init_table[i].port));
+    printf("%s: %d", init_table[i].gpio_name, init_table[i].port);
     i++;
   }
 
@@ -1330,7 +1162,7 @@ void aquire(void)
  */
   if ( DLT(DLT_CRITICAL) )
   {
-    printf("Aquiring shot:"); Serial.print(this_shot);
+    printf("Aquiring shot: %d", this_shot);
   }
   stop_timers();                                    // Stop the counters
   read_timers(&record[this_shot].timer_count[0]);   // Record this count

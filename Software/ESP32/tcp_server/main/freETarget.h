@@ -68,6 +68,7 @@
  */
 void rapid_enable(unsigned int enable);               // Rapid fire enable state
 void hello(void);                                     // Say Hello World
+void freeETarget_init(void);                          // Get the target software ready
 
 /*
  *  Types
@@ -87,6 +88,7 @@ struct shot_r
 };
 
 typedef struct shot_r shot_record_t;
+extern shot_record_t record[SHOT_STRING];      //Array of shot records
 
 struct GPIO {
   byte_t port;

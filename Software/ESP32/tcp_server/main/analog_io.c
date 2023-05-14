@@ -13,8 +13,13 @@
 #include "math.h"
 #include "gpio.h"
 #include "analog_io.h"
+#include "nonvol.h"
+#include "serial_io.h"
+#include "nvs_flash.h"
+#include "nvs.h"
 
 void set_vset_PWM(unsigned int pwm);
+extern nvs_handle_t my_handle;
 
 /*----------------------------------------------------------------
  * 
@@ -36,7 +41,7 @@ void init_analog_io(void)
   pinMode(vset_PWM, OUTPUT);
   Wire.begin();
 
-  EEPROM.get(NONVOL_VSET, json_vset_PWM);
+  nvs_get_i32(my_handle, NONVOL_VSET, json_vset_PWM);
   set_vset_PWM(json_vset_PWM);
   
 /*
@@ -75,7 +80,7 @@ void set_LED_PWM_now
   
   if ( DLT(DLT_INFO) )
   {
-    printf("new_LED_percent:"); Serial.print(new_LED_percent); printf("  old_LED_percent:"); Serial.print(old_LED_percent);
+    printf("new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);
   }
 
   old_LED_percent = new_LED_percent;
@@ -92,7 +97,7 @@ void set_LED_PWM                                  // Theatre lighting
 {
   if ( DLT(DLT_INFO) )
   {
-    printf("new_LED_percent:"); Serial.print(new_LED_percent); printf("  old_LED_percent:"); Serial.print(old_LED_percent);
+    printf("new_LED_percent: %d  old_LED_percent: %d", new_LED_percent, old_LED_percent);
   }
 
 /*
@@ -232,7 +237,7 @@ unsigned int max_analog(void)
 
 /*----------------------------------------------------------------
  * 
- * funciton: temperature_C()
+ * function: temperature_C()
  * 
  * brief: Read the temperature sensor and return temperature in degrees C
  * 
@@ -355,10 +360,8 @@ double temperature_C(void)
     {
       pwm = 255;
     }
-    dtostrf(json_vset, 4, 2, svset );
-    dtostrf((double)vref_raw * 5.0 / 1023.0, 4, 2, svref);
     sprintf(s, "\r\nDesired: %s VREF: %s as read %d wanted %d error %d PWM %d", svset, svref, vref_raw, vref_desired, vref_error, pwm);
-    serial_to_all(s);
+    serial_to_all(s, ALL);
     
     if ( abs(vref_error) <= 2 )
     {
@@ -371,7 +374,7 @@ double temperature_C(void)
     if ( cycle_count > 100 )
     {
       sprintf(s, "\r\nvset_PWM exceeded.  Set value using CAL function and try again");
-      serial_to_all(s);;
+      serial_to_all(s, ALL);
       return;
     }
   }
@@ -382,7 +385,7 @@ double temperature_C(void)
     sprintf(s, "\r\nDone\r\n");
     serial_to_all(s);
     json_vset_PWM = pwm;
-    EEPROM.put(NONVOL_VSET, json_vset_PWM);
+    nvs_set_i32(my_handle, NONVOL_VSET, json_vset_PWM);
     return;
 } 
  

@@ -263,10 +263,6 @@ void token_poll(void)
           case TOKEN_ENUM:                                  // An enumeration byte is passing around
               my_ring = token & TOKEN_RING;                 // Extract the node number
               whos_ring = TOKEN_UNDEF;                      // Nobody owns the ring right now?
-              if (DLT(DLT_INFO) )                           // and not in trace mode (DIAG jumper installed)
-              { 
-                printf("{\"TOKEN\": %d}", millis());
-              }
               char_to_all((char)(TOKEN_BYTE | TOKEN_ENUM | (my_ring+1)), AUX ); // Add 1 and send it along
               break;
         

@@ -11,6 +11,8 @@
 #include "gpio.h"
 #include "diag_tools.h"
 #include "nonvol.h"
+#include "nvs_flash.h"
+#include "nvs.h"
 #include "analog_io.h"
 #include "token.h"            // Time provided by the token ring
 #include "json.h"
@@ -35,6 +37,7 @@ extern int   json_clock[4];
 
 extern void sound_test(void);
 extern long in_shot_timer;
+extern nvs_handle_t my_handle;
 
 /*----------------------------------------------------------------
  *
@@ -62,9 +65,9 @@ void self_test
   unsigned int random_delay;        // Random sampe time
   bool_t       pass;
   shot_record_t shot;               // Shot history
-  char s[128];             // Text buffer
+  char s[128];                      // Text buffer
   double       volts;
-
+  
 /*
  *  Update the timer
  */
@@ -233,7 +236,7 @@ void self_test
  * Test 13
  */
     case T_SERIAL_PORT:
-      serial_to_all("\r\nArduino Serial Port: Hello World\r\n", true, true);
+      serial_to_all("\r\nArduino Serial Port: Hello World\r\n", ALL);
       break;
 
 /* 
@@ -285,7 +288,7 @@ void self_test
           printf(" S: %d", face_strike);
           sample = face_strike;        
         }
-        ch = get_all(ALL);
+        ch = serial_getch(ALL);
     }
     printf("\r\nDone\n\r");
     break;
@@ -343,12 +346,12 @@ void self_test
       i = millis() / 1000;
       if ( (i % 60) == 0 )
       {
-        sprintf(&s, "\r\n%d:%d ", i/60, i % 60);
+        sprintf(s, "\r\n%d:%d ", i/60, i % 60);
         serial_to_all(s, ALL);
       }
       else
       {
-      sprintf(&s, " %d:%d ", i/60, i % 60);
+      sprintf(s, " %d:%d ", i/60, i % 60);
       serial_to_all(s, ALL);
       }
     }
@@ -660,7 +663,7 @@ void set_trip_point
   
   printf("Setting trip point. Type ! of cycle power to exit\r\n");
 
-  sensor_status = 0;                                        // No sensors have tripped
+ // sensor_status = 0;                                        // No sensors have tripped
   stay_forever = false;
   if (pass_count == 0 )                                     // A pass count of 0 means stay
   {
@@ -688,7 +691,7 @@ void set_trip_point
 /*
  * Got to the end.  See if we are going to do this for a fixed time or forever
  */
-    switch (get_all(ALL))
+    switch (serial_getch(ALL))
     {
       case '!':                       // ! waiting in the serial port
         printf("\r\nExiting calibration\r\n");
@@ -849,7 +852,7 @@ static bool_t sample_calculations
     shot.timer_count[W] = RX(W, x, y);
     shot.timer_count[W] -= 200;              // Inject an error into the West sensor
 
-    printf("\r\nResult should be: ");   printf("x:"); Serial.print(x); printf(" y:"); Serial.print(y); printf(" radius:"); Serial.print(radius); printf(" angle:"); Serial.print(angle * 180.0d / PI);
+    printf("\r\nResult should be x: %4.2f  y: %4.2f  radius: %4.2f  angle: %4.2f", x, y, radius, angle * 180.0d / PI);
     break;
 
  /*
@@ -930,7 +933,7 @@ void show_sensor_status
 
   for (i=N; i<=W; i++)
   {
-    if ( sensor_status & (1<<i) )   Serial.print(nesw[i]);
+    if ( sensor_status & (1<<i) )   printf("%c", nesw[i]);
     else                            printf(".");
   }
 
@@ -940,17 +943,17 @@ void show_sensor_status
 
     for (i=N; i<=W; i++)
     {
-      printf(" ");  Serial.print(nesw[i]); printf(":"); Serial.print(shot->timer_count[i]); 
+      printf(" %c:", nesw[i], shot->timer_count[i]); 
     }
   }
   
-  printf("  Face Strike:"); Serial.print(face_strike);
+  printf("  Face Strike: %d", face_strike);
   
-  printf("  V_Ref:"); Serial.print(TO_VOLTS(analogRead(V_REFERENCE)));
+  printf("  V_Ref:%4.2d",TO_VOLTS(analogRead(V_REFERENCE)));
   
-  printf("  Temperature:"); Serial.print(temperature_C());
+  printf("  Temperature: %4.2f", temperature_C());
   
-  printf("  WiFi:"); Serial.print(esp01_is_present());                           // TRUE if WiFi is available
+  printf("  WiFi: %d", esp01_is_present());                           // TRUE if WiFi is available
 
   printf("  Switch:");
   
@@ -1020,8 +1023,7 @@ void log_sensor
   bool_t       is_new;            // TRUE if a change was found
 
   sprintf(s, "\r\nLogging %s Use X to reset,  ! to exit\r\n", which_one[sensor]);
-  serial_to_all(s);
-  serial_to_all(0);
+  serial_to_all(s, ALL);
   max_all =  0;
   arm_timers();
   
@@ -1055,26 +1057,26 @@ void log_sensor
     if ( is_new  || (sensor_status != 0) )
     {
       sprintf(s, "\r\n%s cycle:%d  max:%d is_running:", which_one[sensor], max_cycle, max_all);
-      serial_to_all(s);   
+      serial_to_all(s, ALL);   
 
       s[1] = 0;
       for (i=N; i<=W; i++)
       {
         if ( sensor_status & (1<<i) )   s[0] = nesw[i];
         else                            s[0] = '.';
-        serial_to_all(s);
+        serial_to_all(s, ALL);
       }
       arm_timers();
     }
 
-    while ( available_all() )
+    while ( serial_available(ALL) )
     {
       ch = get_all();
       switch ( ch )
       {
         case '!':
           sprintf(s, "\r\nDone");
-          serial_to_all(s);
+          serial_to_all(s, ALL);
           return;
 
         case 'x':

@@ -24,7 +24,7 @@
 /*
  *  Local variables
  */
-nvs_handle_t my_handle;
+extern nvs_handle_t my_handle;
 
 /*----------------------------------------------------------------
  * 
@@ -190,7 +190,7 @@ void factory_nonvol
         ch = serial_getch(CONSOLE);
         if ( ch == '!' )
         {  
-          nvs_set_i32(my_handlw, NONVOL_SERIAL_NO, &serial_number);
+          nvs_set_i32(my_handle, NONVOL_SERIAL_NO, serial_number);
           printf(" Setting Serial Number to: %d", serial_number);
           break;
         }
@@ -208,10 +208,10 @@ void factory_nonvol
  * Initialization complete.  Mark the init done
  */
   nonvol_init = PS_VERSION;
-  EEPROM.put(NONVOL_PS_VERSION, nonvol_init); // Write in the version number
+  nvs_set_i32(my_handle, NONVOL_PS_VERSION, nonvol_init); // Write in the version number
 
   nonvol_init = INIT_DONE;
-  EEPROM.put(NONVOL_INIT, nonvol_init);
+  nvs_set_i32(my_handle, NONVOL_INIT, nonvol_init);
 
 /*
  * Read the NONVOL and print the results
@@ -370,7 +370,7 @@ void read_nonvol(void)
         case IS_SECRET:
           if ( JSON[i].non_vol != 0 )                           // Is persistent storage enabled?
           {
-            nvs_get_str(my_handle, JSON[i].non_vol, JSON[i].value);
+            nvs_get_str(my_handle, JSON[i].non_vol, JSON[i].value, 32);
           }
           break;
 
@@ -433,7 +433,7 @@ void update_nonvol
   )
 {
   unsigned int  i;                        // Iteration counter
-  int           ps_value;                 // Value read from persistent storage  
+  long          ps_value;                 // Value read from persistent storage  
   
   if ( DLT(DLT_CRITICAL) )
   {
