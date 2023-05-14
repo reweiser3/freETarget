@@ -163,7 +163,7 @@ void token_poll(void)
     case TOKEN_MASTER:                                // Am I the master connected to the PC?  
       while ( serial_available(AUX) )                 // Is there something waiting for us?
       {
-        token = serial_getchar(AUX)                   //  Pick it up
+        token = serial_getch(AUX);                    //  Pick it up
         char_to_all(token, AUX);                      //  Pass it along
         json_spool_put(token);                        //  and save it for our own use
       }     
@@ -194,10 +194,6 @@ void token_poll(void)
           case TOKEN_ENUM:                                    // An enumeration byte is passing around
             my_ring = 1;                                      // Master is always 0
             whos_ring = TOKEN_UNDEF;                          // Nobody owns the ring right now
-            if (DLT(DLT_INFO) )
-            {
-              printf("{\"TOKEN\": %d}", millis());
-            }
             break;
         
           case TOKEN_TAKE:                                    // A take is passing aroound
@@ -215,7 +211,7 @@ void token_poll(void)
             if ( whos_ring == TOKEN_UNDEF )                   // Is the ring available?
             {
               whos_ring = token & TOKEN_RING;                 // Yes, give ownership
-              AUX_SERIAL.print((char)(TOKEN_BYTE | TOKEN_TAKE | (token & TOKEN_RING)));   // and pass it along
+              char_to_all((char)(TOKEN_BYTE | TOKEN_TAKE | (token & TOKEN_RING)), AUX);   // and pass it along
             }
             break;                                            // Otherwise throw it away
 
@@ -223,7 +219,7 @@ void token_poll(void)
             if ( whos_ring == (token & TOKEN_RING) )          // Is the person asking the owner too?
             {
               whos_ring = TOKEN_UNDEF;                        // Yes, the ring is now undefined
-              AUX_SERIAL.print((char)(TOKEN_BYTE | TOKEN_RELEASE | (token & TOKEN_RING)));  // and pass it along
+              char_to_all((char)(TOKEN_BYTE | TOKEN_RELEASE | (token & TOKEN_RING)), AUX);  // and pass it along
             }
             break;
              
@@ -261,7 +257,7 @@ void token_poll(void)
           case TOKEN_ENUM_REQUEST:                          // A new device has requested an enum
           case TOKEN_TAKE_REQUEST:                          // Request ownership of the bus     
           case TOKEN_RELEASE_REQUEST:                       // Give up ownership of the bus      
-              AUX_SERIAL.print( token );                    // Just pass it along
+              char_to_all( token, AUX );                    // Just pass it along
               break;
   
           case TOKEN_ENUM:                                  // An enumeration byte is passing around
@@ -271,7 +267,7 @@ void token_poll(void)
               { 
                 printf("{\"TOKEN\": %d}", millis());
               }
-              AUX_SERIAL.print((char)(TOKEN_BYTE | TOKEN_ENUM | (my_ring+1)) ); // Add 1 and send it along
+              char_to_all((char)(TOKEN_BYTE | TOKEN_ENUM | (my_ring+1)), AUX ); // Add 1 and send it along
               break;
         
           case TOKEN_TAKE:                                  // A take is passing aroound
@@ -280,23 +276,23 @@ void token_poll(void)
               {
                 set_LED(LED_WIFI_SEND);
               }
-              AUX_SERIAL.print(token);                      // Pass it along to the master
+              char_to_all(token, AUX);                      // Pass it along to the master
               break;
           
           case TOKEN_RELEASE:                               // A release is passing around
               whos_ring = TOKEN_UNDEF;                      // Yes, Release it
               set_LED(LED_READY);                           // And show it is ready
-              AUX_SERIAL.print(token);                      // Pass it along to the master
+              char_to_all(token, AUX);                      // Pass it along to the master
               break;                                        // 
                
           default:                                          // Not a control byte
-             AUX_SERIAL.print(token);                       // Send it on to the next node
+              char_to_all(token, AUX);                      // Send it on to the next node
              break;  
         }
       }
       else
       {
-        AUX_SERIAL.print(token);                            // Send it to the next guy
+        char_to_all(token, AUX);                            // Send it to the next guy
         if ( whos_ring == TOKEN_UNDEF)                      // and the ring is not in use
         {      
           json_spool_put(token);                            // Ring in broadcast
@@ -405,7 +401,7 @@ int token_give(void)
 /*
  * Send out the token initializaation request
  */
-  char_to_all((char)(TOKEN_BYTE | TOKEN_RELEASE_REQUEST | my_ring, AUX);// Send out the request
+  char_to_all((char)(TOKEN_BYTE | TOKEN_RELEASE_REQUEST | my_ring),  AUX);// Send out the request
   
 /*
  * All done, return

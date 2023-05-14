@@ -26,13 +26,13 @@
  */
 static void   bye(void);                // Say good night Gracie
 static long   tabata(bool_t reset_time);// Tabata state machine
-static bool_t discard_tabata(void);     // TRUE if the shot should be discarded 
 static unsigned int set_mode(void);     // Set the target running mode
 static unsigned int arm(void);          // Arm the circuit for a shot
 static unsigned int wait(void);         // Wait for the shot to arrive
 static unsigned int reduce(void);       // Reduce the shot data
 static unsigned int finish(void);       // Finish uip and start over
 static void send_keep_alive(void);      // Send out at TCPIP message    
+static bool_t discard_shot(void);       // In TabataThrow away the shot
 
 /*
  *  Variables
@@ -51,9 +51,10 @@ unsigned long rapid_on = 0;             // Duration of rapid fire event
 unsigned int  rapid_count = 0;          // Number of shots to be expected in Rapid Fire
 unsigned int  tabata_state;             // Tabata state
 unsigned int  shot_number;              // Shot Identifier
+volatile unsigned long  in_shot_timer;  // Time inside of the shot window
+
 static volatile unsigned long  keep_alive;      // Keep alive timer
 static volatile unsigned long  state_timer;     // Free running state timer
-static volatile unsigned long  in_shot_timer;   // Time inside of the shot window
 static volatile unsigned long  power_save;      // Power save timer
 static volatile unsigned long  token_tick;      // Token ring watchdog
 
@@ -571,7 +572,7 @@ unsigned int reduce(void)
 /*
  * Increment and process the next
  */
-    if ( (rapid_enable != 0) )                                  // In a rapid fire cycle
+    if ( json_rapid_enable != 0 )                               // In a rapid fire cycle
     {
       if ( rapid_count == 0 )                                   // And the shots used up?
       {
@@ -724,7 +725,7 @@ static long tabata
  */
   if ( (old_tabata_state != tabata_state ) && DLT(DLT_APPLICATION) )
   {
-    printf("Tabata State: %d Duration: %d ", tabata_state, state_timer / ONE_SECOND);
+    printf("Tabata State: %d Duration: %d ", tabata_state, (int)(state_timer / ONE_SECOND));
   }
   
   switch (tabata_state)
@@ -817,7 +818,7 @@ static long tabata
  *  
  *--------------------------------------------------------------*/
 
-bool_t discard_shot(void)
+static bool_t discard_shot(void)
 {
   if ( (json_rapid_enable != 0)                 // Rapid Fire
       &&  (rapid_count == 0) )                  // No shots remaining
@@ -899,11 +900,11 @@ bool_t discard_shot(void)
  *--------------------------------------------------------------*/
  #define RANDOM_INTERVAL 100    // 100 signals random time, %10 is the duration
 
- void rapid_enable
-  (
+void rapid_enable
+(
     unsigned int enable     // Rapid fire enable state
-  )
- {
+)
+{
   char str[32];
   unsigned int random_wait;
 
@@ -981,8 +982,6 @@ bool_t discard_shot(void)
  *--------------------------------------------------------------*/
 void bye(void)
 {
-  char str[32];
-
 /*
  * The BYE function does not work if we are a token ring.
  */
@@ -1003,17 +1002,14 @@ void bye(void)
 /*
  * Loop waiting for something to happen
  */ 
-  while ( available_all() )         // Purge the com port
-  {
-    get_all();
-  }
+  serial_flush(ALL);                // Purge the com port
   
   while( (DIP_SW_A == 0)            // Wait for the switch to be pressed
         && (DIP_SW_B == 0)          // Or the switch to be pressed
-        && ( available_all() == 0)  // Or a character to arrive
+        && ( serial_available(ALL) == 0)// Or a character to arrive
         && ( is_running() == 0) )   // Or a shot arrives
   {
-    esp01_receive();                // Keep polling the WiFi to see if anything 
+//    esp01_receive();                // Keep polling the WiFi to see if anything 
   }                                 // turns up
   
   hello();                          // Back in action
@@ -1048,14 +1044,13 @@ void hello(void)
   char str[128];
 
   sprintf(str, "{\"Hello_World\":0}");
-  serial_to_all(str);
+  serial_to_all(str, ALL);
   
 /*
  * Woken up again
  */  
   set_LED_PWM_now(json_LED_PWM);
-  power_save = json_power_save * ONE_SECOND * 60L;
-  EEPROM.get(NONVOL_POWER_SAVE, json_power_save);   // and reset the power save time
+  power_save = json_power_save * ONE_SECOND * 60L;);   // and reset the power save time
   
   return;
 }
@@ -1083,7 +1078,7 @@ static void send_keep_alive(void)
   if ( esp01_connected() )
   {
     sprintf(str, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);
-    serial_to_all(str);
+    serial_to_all(str, TCPIP);
   }
   return;
 }

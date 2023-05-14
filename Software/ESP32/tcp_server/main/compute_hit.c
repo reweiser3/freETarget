@@ -15,6 +15,7 @@
 #include "analog_io.h"
 #include "stdio.h" 
 #include "serial_io.h"
+#include "timer.h"
 
 #define THRESHOLD (0.001)
 
@@ -123,12 +124,12 @@ unsigned int compute_hit
   double        x_avg, y_avg;      // Running average location
   double        smallest;          // Smallest non-zero value measured
   double        z_offset_clock;    // Time offset between paper and sensor plane
+  int           wdt;               // Watchdog timer
 
-  now = millis();
+  timer_new(&wdt, 20);
       
   if ( DLT(DLT_DIAG) )
   {
-
     printf("compute_hit()"); 
   }
 
@@ -312,7 +313,6 @@ unsigned int compute_hit
     if ( DLT(DLT_DIAG) )
     {
       printf("x_avg: %4.2f  y_avg: %4.2f estimate: %4.2f error: %4.2f", x_avg, y_avg, estimate, error);
-      Serial.println();
     }
     count++;
     if ( count > 20 )

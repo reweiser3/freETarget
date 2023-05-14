@@ -33,6 +33,9 @@ static bool_t sample_calculations(unsigned int mode, unsigned int sample);
 static void  log_sensor(int sensor);
 extern int   json_clock[4];
 
+extern void sound_test(void);
+extern long in_shot_timer;
+
 /*----------------------------------------------------------------
  *
  * function: void self_test
@@ -208,12 +211,12 @@ void self_test
       {
         if ( serial_available(CONSOLE))
         {
-          ch = get_all(CONSOLE);
+          ch = serial_getch(CONSOLE);
           char_to_all(ch, AUX);
         }
         if ( serial_available(AUX))
         {
-          ch = get_all(AUX);
+          ch = serial_getch(AUX);
           char_to_all(ch, CONSOLE);
         }
       }
@@ -673,7 +676,7 @@ void set_trip_point
  */
   json_vset_PWM = 128;
   set_vset_PWM(json_vset_PWM);
-  EEPROM.put(NONVOL_VSET_PWM, json_vset_PWM);
+  nvs_set_i32(my_handle, NONVOL_VSET_PWM, json_vset_PWM);
 
 /*
  * Loop if not in spec, passes to display, or the CAL jumper is in
@@ -780,11 +783,11 @@ static void unit_test(unsigned int mode)
   {
     if ( sample_calculations(mode, i) )
     {
-    location = compute_hit(&record[0]);
-    sensor_status = 0xF;        // Fake all sensors good
-    record[0].shot_number = shot_number++;
-    send_score(&record[0]);
-    delay(ONE_SECOND/2);        // Give the PC program some time to catch up
+      compute_hit(&record[0]);
+      sensor_status = 0xF;        // Fake all sensors good
+      record[0].shot_number = shot_number++;
+      send_score(&record[0]);
+      delay(ONE_SECOND/2);        // Give the PC program some time to catch up
     }
     if ( mode == T_ONCE )
     {

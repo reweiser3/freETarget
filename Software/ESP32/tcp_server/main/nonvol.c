@@ -12,6 +12,7 @@
 #include "freETarget.h"
 #include "json.h"
 #include "nonvol.h"
+#include "serial_io.h"
 
 #include "gpio.h"
 #include "diag_tools.h"
@@ -23,7 +24,7 @@
 /*
  *  Local variables
  */
-static nvs_handle_t my_handle;
+nvs_handle_t my_handle;
 
 /*----------------------------------------------------------------
  * 
@@ -123,7 +124,7 @@ void factory_nonvol
         printf("\r\n%s \"\"", JSON[i].token);
         if ( JSON[i].non_vol != 0 )
         {
-          EEPROM.put(JSON[i].non_vol, 0);                    // Zero out the text
+          nvs_set_i32(my_handle, JSON[i].non_vol, 0);                    // Zero out the text
         }
         break;
         
@@ -132,14 +133,14 @@ void factory_nonvol
         printf("\r\n%s %d", JSON[i].token, x);
         if ( JSON[i].non_vol != 0 )
         {
-          EEPROM.put(JSON[i].non_vol, x);                    // Read in the value
+          nvs_set_i32(my_handle, JSON[i].non_vol, x);                    // Read in the value
         }
         break;
 
       case IS_FLOAT:
         dx = (double)JSON[i].init_value;
-        printf("\r\n%s %d", JSON[i].token, dx);
-        EEPROM.put(JSON[i].non_vol, dx);                    // Read in the value
+        printf("\r\n%s %4.2f", JSON[i].token, dx);
+        nvs_set_i32(my_handle, JSON[i].non_vol, dx);                    // Read in the value
         break;
     }
    i++;
@@ -184,13 +185,13 @@ void factory_nonvol
     printf("\r\nSerial Number? (ex 223! or x))");
     while (i)
     {
-      if ( Serial.available() != 0 )
+      if ( serial_available(CONSOLE) != 0 )
       {
-        ch = Serial.read();
+        ch = serial_getch(CONSOLE);
         if ( ch == '!' )
         {  
-          EEPROM.put(NONVOL_SERIAL_NO, serial_number);
-          printf(" Setting Serial Number to: "); Serial.print(serial_number);
+          nvs_set_i32(my_handlw, NONVOL_SERIAL_NO, &serial_number);
+          printf(" Setting Serial Number to: %d", serial_number);
           break;
         }
         if ( ch == 'x' )
@@ -291,10 +292,11 @@ void init_nonvol
  *------------------------------------------------------------*/
 void read_nonvol(void)
 {
-  unsigned long nonvol_init;
-  unsigned int   i, j;          // Iteration Counter
-  unsigned long  x;             // 32 bit number
-  double         dx;            // Floating point number
+  long          nonvol_init;
+  unsigned int  i, j;          // Iteration Counter
+  long          x;             // 32 bit number
+  double        dx;            // Floating point number
+
   esp_err_t err;
   
   if ( DLT(DLT_CRITICAL) )
@@ -338,7 +340,7 @@ void read_nonvol(void)
     factory_nonvol(true);                              // Force in good values
   }
 
-  nvs_get_u32(my_handle, "NVM_SERIAL_NO", &nonvol_init);
+  nvs_get_i32(my_handle, "NVM_SERIAL_NO", &nonvol_init);
 
   if ( nonvol_init == (-1) )                          // Serial Number never programmed
   {
@@ -368,7 +370,7 @@ void read_nonvol(void)
         case IS_SECRET:
           if ( JSON[i].non_vol != 0 )                           // Is persistent storage enabled?
           {
-            nvs_get_str_or_blob(my_handle, JSON[i].non_vol, JSON[i].value);
+            nvs_get_str(my_handle, JSON[i].non_vol, JSON[i].value);
           }
           break;
 
@@ -376,7 +378,7 @@ void read_nonvol(void)
         case IS_FIXED:
           if ( JSON[i].non_vol != 0 )                          // Is persistent storage enabled?
           {
-            nvs_get_u32(my_handle, JSON[i].non_vol, &x);       // Read in the value
+            nvs_get_i32(my_handle, JSON[i].non_vol, &x);       // Read in the value
             *JSON[i].value = x;
           }
           else
@@ -386,7 +388,7 @@ void read_nonvol(void)
           break;
 
         case IS_FLOAT:
-          nvs_get_u32(my_handle, JSON[i].non_vol, &x);       // Read in the value
+          nvs_get_i32(my_handle, JSON[i].non_vol, &x);       // Read in the value
           dx = (double)x;
           for (j=0; j != (JSON[i].convert & FLOAT_MASK); j++)
           {
@@ -430,8 +432,8 @@ void update_nonvol
     unsigned int current_version          // Version present in persistent storage
   )
 {
-  unsigned int i;                         // Iteration counter
-  unsigned int ps_value;                  // Value read from persistent storage  
+  unsigned int  i;                        // Iteration counter
+  int           ps_value;                 // Value read from persistent storage  
   
   if ( DLT(DLT_CRITICAL) )
   {
@@ -450,10 +452,10 @@ void update_nonvol
       switch ( JSON[i].convert )
       {        
       case IS_INT32:
-        EEPROM.get(JSON[i].non_vol, ps_value);              // Pull up the value from memory
+        nvs_get_i32(my_handle, JSON[i].non_vol, &ps_value);              // Pull up the value from memory
         if ( PS_UNINIT(ps_value) )                          // Uninitilazed?
         {
-          EEPROM.put(JSON[i].non_vol, JSON[i].init_value);  // Initalize it from the table
+          nvs_set_i32(my_handle, JSON[i].non_vol, JSON[i].init_value);  // Initalize it from the table
         }
         break;
 
@@ -463,7 +465,7 @@ void update_nonvol
       i++;
    }
    current_version = PS_VERSION;                            // Initialized, force in the current version
-   EEPROM.put(NONVOL_PS_VERSION, current_version);
+   nvs_set_i32(my_handle, NONVOL_PS_VERSION, current_version);
    printf("\r\nDone\r\n");
   }
 
@@ -507,18 +509,6 @@ void gen_position(int v)
   
   json_west_x = 0;
   json_west_y = 0;
-
- /*
-  * Save to persistent storage
-  */
-  EEPROM.put(NONVOL_NORTH_X, json_north_x);  
-  EEPROM.put(NONVOL_NORTH_Y, json_north_y);  
-  EEPROM.put(NONVOL_EAST_X,  json_east_x);  
-  EEPROM.put(NONVOL_EAST_Y,  json_east_y);  
-  EEPROM.put(NONVOL_SOUTH_X, json_south_x);  
-  EEPROM.put(NONVOL_SOUTH_Y, json_south_y);  
-  EEPROM.put(NONVOL_WEST_X,  json_west_x);  
-  EEPROM.put(NONVOL_WEST_Y,  json_west_y);  
    
  /* 
   *  All done, return

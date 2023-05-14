@@ -225,7 +225,7 @@ char get_chars
  * in use. 
  * 
  *-----------------------------------------------------*/
- void char_to_all(char ch, bool_t console, bool_t aux)
+ void char_to_all(char ch, bool_t console, bool_t aux, bool_t tcpip)
  {
   char str_a[2];
   str_a[0] = ch;

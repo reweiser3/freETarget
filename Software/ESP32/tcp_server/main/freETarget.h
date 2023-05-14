@@ -63,6 +63,12 @@
 #define PI_ON_2 (PI / 2.0d)
 #define sq(x) ((x)*(x))
 
+/* 
+ * FreeETarget functions
+ */
+void rapid_enable(unsigned int enable);               // Rapid fire enable state
+void hello(void);                                     // Say Hello World
+
 /*
  *  Types
  */
