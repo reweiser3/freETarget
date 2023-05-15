@@ -30,96 +30,9 @@ static unsigned int isr_state = PORT_STATE_IDLE;// Current aquisition state
 
 /*-----------------------------------------------------
  * 
- * function: init_timer
+ * function: freeETarget_timer
  * 
- * brief: Initalize the timer channels
- * 
- * return: None
- * 
- *-----------------------------------------------------
- *
- * Timer 0 used to by Arduino for the millis() functions
- * Timer 1 is used by freETarget to sample the sensor inputs
- * Timer 2 is unassigned
- *-----------------------------------------------------*/
-void init_timer(void)
-{
-  int i;
-  
-  if ( DLT(DLT_CRITICAL) )
-  {
-    Serial.print(T("init_timer()"));
-  }
-  
-/*
- * Timer 1
- */
-  TCCR1A = 0;                           // set entire TCCR0A register to 0
-  TCCR1B = 0;                           // same for TCCR0B
-  TCNT1  = 0;                           // initialize counter value to 0
-
-  OCR1A = 16000000 / 64 / FREQUENCY;    // 16MHz CPU Clock / 64 Prescale / 1KHz timer interrupt
-  TCCR1A |= B00000010;                  // Enable CTC Mode
-  TCCR1B |= B00000011;                  // Prescale 64
-  TIMSK1 &= ~(B0000010);                // Make sure the interrupt is disabled
-
-  for (i=0; i != N_TIMERS; i++ )        // Clear the timer callback
-  {
-    timers[i] = 0;
-  }
-
-  timer_new(&isr_timer, 0);             // Setup two local timers
-  
-/*
- * All done, return
- */  
-  return;
-}
-
-/*-----------------------------------------------------
- * 
- * function: enable_timer_interrupt()
- * function: disable_timer_interrupt()
- * 
- * brief:    Turn on the interrupt enable bits
- * 
- * return: None
- * 
- *-----------------------------------------------------
- *
- * Set the CTC interrupt bit on or off
- * 
- *-----------------------------------------------------*/
-
-void enable_timer_interrupt(void)
-{
-  TIMSK1 |= (B0000010);                       // Enable timer compare interrupt
-  
-/*
- * All done, return
- */  
-  return;
-
-}
-
-
-
-void disable_timer_interrupt(void)
-{
-  TIMSK1 &= ~(B0000010);                      // disable timer compare interrupt
-  
-/*
- * All done, return
- */  
-  return;
-}
-
-
-/*-----------------------------------------------------
- * 
- * function: ISR
- * 
- * brief:    Timer 1 Interrupt
+ * brief:    High speed synchronous task
  * 
  * return:   None
  * 
@@ -146,13 +59,11 @@ void disable_timer_interrupt(void)
  * 
  *-----------------------------------------------------*/
 
-ISR(TIMER1_COMPA_vect)
+void freeETarget_timer(void)
 {
   unsigned int pin;                             // Value read from the port
   unsigned char ch;                             // Byte input
   unsigned int  i;                              // Iteration counter
-  
-  TCNT1  = 0;                                   // Reset the counter back to 0
 
 /*
  * Decide what to do if based on what inputs are present
@@ -272,7 +183,7 @@ unsigned int timer_new
 
   if ( DLT(DLT_CRITICAL) )
   {
-    Serial.print(T("No space for timer"));
+    printf("No space for timer");
   }
   
   return 0;

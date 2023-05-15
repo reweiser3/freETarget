@@ -47,5 +47,5 @@ bool_t        find_xy_3D(sensor_t* s, double estimate, double z_offset_clock);  
 void          send_timer(int sensor_status);                            // Show debugging information 
 void          send_miss(shot_record_t* shot);                           // Send a miss message
 double        speed_of_sound(double temperature, int relative_humidity);// Speed of sound in mm/us
-
+double        sq(double x);                                             // Square function
 #endif

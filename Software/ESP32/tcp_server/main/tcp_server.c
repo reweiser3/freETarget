@@ -197,5 +197,9 @@ void app_main(void)
  *  Start FreeETarget
  */
     freeETarget_init();
+    xTaskCreate(freeETarget_task,  "freeETarget_task", 4096, (void*)AF_INET6, 5, NULL);
+    xTaskCreate(freeETarget_json,  "freeETarget_json", 4096, (void*)AF_INET6, 5, NULL);
+    xTaskCreate(freeETarget_timer, "freeETarget_timer", 4096, (void*)AF_INET6, 5, NULL);
+
 
 }

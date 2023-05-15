@@ -17,39 +17,12 @@
 #include "serial_io.h"
 #include "nvs_flash.h"
 #include "nvs.h"
+#include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\gpio_types.h"
+#include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\adc_types.h"
+#include "C:\Users\allan\esp\esp-idf\esp-idf\components\esp_adc\include\esp_adc\adc_oneshot.h"
 
 void set_vset_PWM(unsigned int pwm);
 extern nvs_handle_t my_handle;
-
-/*----------------------------------------------------------------
- * 
- * function: init_analog()
- * 
- * brief: Initialize the analog I/O
- * 
- * return: None
- * 
- *--------------------------------------------------------------*/
-void init_analog_io(void)
-{
-  if ( DLT(DLT_CRITICAL) )                  // and not in trace mode (DIAG jumper installed)
-  {
-    printf("init_analog_io()");// Blink the LEDs
-  }
-  
-  pinMode(LED_PWM, OUTPUT);
-  pinMode(vset_PWM, OUTPUT);
-  Wire.begin();
-
-  nvs_get_i32(my_handle, NONVOL_VSET, json_vset_PWM);
-  set_vset_PWM(json_vset_PWM);
-  
-/*
- * All done, begin the program
- */
-  return;
-}
-
 /*----------------------------------------------------------------
  * 
  * function: set_LED_PWM()
@@ -136,7 +109,7 @@ void set_LED_PWM                                  // Theatre lighting
  */
   if ( new_LED_percent == 0 )
   {
-    digitalWrite(LED_PWM, 0);
+    gpio_set_level(LED_PWM, 0);
   }
   return;
 }
@@ -382,8 +355,7 @@ double temperature_C(void)
  /*
   * Got the right control value, sa it and exit
   */
-    sprintf(s, "\r\nDone\r\n");
-    serial_to_all(s);
+    serial_to_all("\r\nDone\r\n", ALL);
     json_vset_PWM = pwm;
     nvs_set_i32(my_handle, NONVOL_VSET, json_vset_PWM);
     return;

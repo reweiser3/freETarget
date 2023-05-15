@@ -10,12 +10,12 @@
 
 typedef struct  {
   char*             token;    // JSON token string, ex "RADIUS": 
-  long*             value;    // Where value is stored 
+  int*              value;    // Where value is stored 
   double*         d_value;    // Where value is stored 
   byte_t          convert;    // Conversion type
   void        (*f)(int x);   // Function to execute with message
   char*           non_vol;    // Storage in NON-VOL
-  long         init_value;    // Initial Value
+  int          init_value;    // Initial Value
 } json_message_t;
 
 extern json_message_t JSON[];
@@ -25,9 +25,9 @@ extern json_message_t JSON[];
 #define IS_SECRET     0x40       // Value is a string but hidden
 #define IS_INT32      0x20       // Value is a 64 bit int
 #define IS_FLOAT      0x10       // Value is a floating point number
-#define FLOAT_MASK    0x07       // Scaling factor
 #define IS_FIXED      0x08       // The value cannot be changed
 #define IS_MASK       (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FIXED  )
+#define FLOAT_MASK    ((~IS_MASK) & 0xFF)    // Scaling factor
 
 void reset_JSON(void);            // Clear the JSON input buffer
 bool_t read_JSON(void);           // Scan the serial port looking for JSON input

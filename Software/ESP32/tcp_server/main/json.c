@@ -11,6 +11,14 @@
 #include "stdio.h"
 #include "diag_tools.h"
 
+/*
+ *  Function Prototypes
+ */
+static void handle_json(void);    // Breakdown the JSON and execute it
+
+/*
+ *  Variables
+ */
 static char input_JSON[256];
 
 int     json_dip_switch;            // DIP switch overwritten by JSON message
@@ -37,6 +45,7 @@ int     json_serial_number;         // Electonic serial number
 int     json_step_count;            // Number of steps ouput to motor
 int     json_step_time;             // Duration of each step
 int     json_multifunction;         // Multifunction switch operation
+int     json_multifunction2;        // Multifunction Switch 2
 int     json_z_offset;              // Distance between paper and sensor plane in 0.1mm
 int     json_paper_eco;             // Do not advance paper if outside of the black
 int     json_target_type;           // Modify target type (0 == single bull)
@@ -63,7 +72,6 @@ int     json_rh;                    // Relative Humidity 0-1005
 int     json_min_ring_time;         // Time to wait for ringing to stop
 double  json_doppler;               // Adjust for dopper inverse square
 int     json_token;                 // Token ring state
-int     json_multifunction2;        // Multifunction Switch 2
 
 #if ( CLOCK_TEST )
 int     json_clock[4];              // Storage for clock test
@@ -77,6 +85,7 @@ static void show_test0(int v);      // Help Menu
 static void show_names(int v);
 static void nop(void);
 static void set_trace(int v);       // Set the trace on and off
+static void diag_delay(int x) ;     // Insert a delay
 
   
 const json_message_t JSON[] = {
@@ -85,7 +94,7 @@ const json_message_t JSON[] = {
   {"\"BYE\":",            0,                                 0,                IS_VOID,   &bye,                             0,       0 },    // Shut down the target
   {"\"CAL\":",            0,                                 0,                IS_VOID,   &set_trip_point,                  0,       0 },    // Enter calibration mode
   {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT32,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
-  {"\"DELAY\":",          0               ,                  0,                IS_INT32,  &diag_delay,                      0,       0 },    // Delay TBD seconds
+  {"\"DELAY\":",          0,                                 0,                IS_INT32,  &diag_delay,                      0,       0 },    // Delay TBD seconds
   {"\"DOPPLER\":",        0,                     &json_doppler,                IS_FLOAT,  0,                NONVOL_DOPPLER, (7.0d/(700.0d * 700.0d))},    // Adjust timing based on Doppler Inverse SQ
   {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,                       0,       0 },    // Echo test
   {"\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT32,  0,                NONVOL_FACE_STRIKE,      5 },    // Face Strike Count 
@@ -105,8 +114,6 @@ const json_message_t JSON[] = {
                                                                                                                           + (NO_ACTION) },   // Multifunction switch action
   {"\"MIN_RING_TIME\":",  &json_min_ring_time,               0,                IS_INT32,  0,                NONVOL_MIN_RING_TIME,  500 },    // Minimum time for ringing to stop (ms)
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT32,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
-  {"\"NONVOL_BACKUP\":",  0,                                 0,                IS_VOID,   &backup_nonvol,   0,                       0 },    // Backup the NONVOL
-  {"\"NONVOL_RESTORE\":", 0,                                 0,                IS_VOID,   &restore_nonvol,  0,                       0 },    // Restore the NONVOL
   {"\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT32,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
   {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT32,  0,                NONVOL_PAPER_TIME,      50 },    // Set the paper advance time
   {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
@@ -155,11 +162,11 @@ const json_message_t JSON[] = {
 };
 
 int instr(char* s1, char* s2);
-static void diag_delay(int x) { Serial.print(T("\r\n\"DELAY\":")); Serial.print(x); delay(x*1000);  return;}
+static void diag_delay(int x) { printf"\r\n\"DELAY\":%d", x); delay(x*1000);  return;}
 
 /*-----------------------------------------------------
  * 
- * function: read_JSON()
+ * function: freeETarget_json
  * 
  * brief: Accumulate input from the serial port
  * 
@@ -200,7 +207,7 @@ static int to_int(char h)
   }
 }
 
-bool read_JSON(void)
+void freeETarget_json(void)
 {
   unsigned int  i;      // Index across JSON message
   unsigned int  j;      // Index across JSON token table (JSON[])
@@ -212,9 +219,6 @@ bool read_JSON(void)
   double        y;
   bool          return_value;
   char          ch;
-
-  
-  return_value = false;
 /*
  * See if anything is waiting and if so, add it in
  */
@@ -285,11 +289,37 @@ bool read_JSON(void)
     input_JSON[in_JSON] = 0;                  // Null terminate
   }
   
-  if ( got_right == 0 )
+  if ( got_right != 0 )                       // Got something
   {
-    return return_value;
+    handle_json();
   }
-  
+}
+
+/*-----------------------------------------------------
+ * 
+ * function: handle_json
+ * 
+ * brief:  Breakdown the JSON and handle it
+ * 
+ * return: None
+ * 
+ *-----------------------------------------------------
+ *
+ * The input stream is parsed one JSON token at a time
+ * and the JSON[] is used to determine the action
+ * 
+ *-----------------------------------------------------*/
+  union pack 
+  {
+    double d;
+    long   l;
+  };
+
+static void handle_json(void)
+{
+  union pack my_float;
+  int   x;
+
 /*
  * Found out where the braces are, extract the contents.
  */
@@ -363,7 +393,7 @@ bool read_JSON(void)
               }
               if ( JSON[j].non_vol != 0 )
               {
-                EEPROM.put(JSON[j].non_vol, x);                 // Store into NON-VOL
+                nvs_set_i32(my_handle,, JSON[j].non_vol, x);    // Store into NON-VOL
               }
               break;
   
@@ -376,7 +406,8 @@ bool read_JSON(void)
               }
               if ( JSON[j].non_vol != 0 )
               {
-                EEPROM.put(JSON[j].non_vol, y);                 // Store into NON-VOL
+                my_float.d = y;
+                nvs_set_i64(my_handle, JSON[j].non_vol, my_float.x);                 // Store into NON-VOL
               }
               break;
             }
@@ -395,10 +426,10 @@ bool read_JSON(void)
           if ( k > 0 )                                            // Non zero, found something
           {
             not_found = false;                                    // Read and convert the JSON value
-            Serial.print(T("\r\n")); Serial.print(init_table[j].gpio_name);
+            printf("\r\n%s", init_table[j].gpio_name);
             if ( init_table[j].in_or_out == INPUT_PULLUP )
             {
-              Serial.print(T(" is input only"));
+              printf(" is input only"));
               break;
             }
           
@@ -406,20 +437,19 @@ bool read_JSON(void)
             {
               x = atoi(&input_JSON[i+k]);
               analogWrite(LED_PWM, x); 
-              Serial.print(x);
+              printf("%d",x);
             }
             else if ( instr("vset_PWM", init_table[j].gpio_name ) > 0 )  // Special case analog output
             {
               x = atoi(&input_JSON[i+k]);
               analogWrite(vset_PWM, x); 
-              Serial.print(x);
+              printf("%d",x);
             }
             else
             {
               x = atoi(&input_JSON[i+k]);
-              digitalWrite(init_table[j].port, x);
-              Serial.print(x); 
-              Serial.print(T(" Verify:")); Serial.print(digitalRead(init_table[j].port));
+              gpio_set_level(init_table[j].port, x);
+              printf("%d Verify:", x, gpio_get_level(init_table[j].port));
             }
           }
         }
@@ -440,27 +470,27 @@ bool read_JSON(void)
  */
   if ( not_found == true )
   {
-    Serial.print(T("\r\n\r\nCannot decode: {")); Serial.print(input_JSON); Serial.print(T("}. Use")); 
+    printf("\r\n\r\nCannot decode: {%s}. Use", input_JSON);
     j = 0;    
     while ( JSON[j].token != 0 ) 
     {
-      Serial.print(T("\r\n")); Serial.print(JSON[j].token);
+      printf("\r\n%s", JSON[j].token);
       j++;
       if ( (j%4) == 0 ) 
       {
-        Serial.print(T("\r\n"));
+        printf("\r\n"));
       }
     }
-    Serial.print(T("\r\n\r\n  *** GPIO ***"));
+    prinf("\r\n\r\n  *** GPIO ***"));
     j=0;
     while ( init_table[j].port != 0xff ) 
     {
       if ( init_table[j].in_or_out == OUTPUT )
       {
-        Serial.print(T("\r\n")); Serial.print(init_table[j].gpio_name);
+        prinf("\r\n%s", init_table[j].gpio_name);
         if ( (j%4) == 0 ) 
         {
-          Serial.print(T("\r\n"));
+          printf"\r\n");
         }
       }
       j++;
@@ -473,7 +503,7 @@ bool read_JSON(void)
   in_JSON   = 0;                // Start Over
   got_right = 0;                // Neet to wait for a new Right Bracket
   input_JSON[in_JSON] = 0;      // Clear the input
-  return return_value;
+  return;
 }
 
 // Compare two strings.  Return -1 if not equal, length of string if equal
@@ -690,12 +720,12 @@ static void show_names(int v)
     return;
   }
   
-  Serial.print(T("\r\nNames\r\n"));
+  printf()"\r\nNames\r\n");
   
   i=0;
   while (names[i] != 0 )
   {
-    Serial.print(i); Serial.print(T(": \""));  Serial.print(names[i]); Serial.print(T("\", \r\n"));
+    printf("%d: \"%s\", \r\n", i, names[i]);
     i++;
   }
 
@@ -717,7 +747,7 @@ static void show_names(int v)
 
 static void show_test(int test_number)
  {
-  Serial.print(T("\r\nSelf Test:")); Serial.print(test_number); Serial.print(T("\r\n"));
+  printf("\r\nSelf Test: %d\r\n"), test_number);
   
   self_test(test_number);
   return;

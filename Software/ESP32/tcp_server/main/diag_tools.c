@@ -21,6 +21,8 @@
 #include "compute_hit.h"
 #include "math.h"
 #include "serial_io.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 
@@ -29,7 +31,6 @@ const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 #define GRID_SIDE 25                              // Should be an odd number
 #define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
 
-static void  show_analog_on_PC(int v);
 static void  unit_test(unsigned int mode);
 static bool_t sample_calculations(unsigned int mode, unsigned int sample);
 static void  log_sensor(int sensor);
@@ -66,13 +67,11 @@ void self_test
   bool_t       pass;
   shot_record_t shot;               // Shot history
   char s[128];                      // Text buffer
-  double       volts;
-  
+
 /*
  *  Update the timer
  */
   tick++;
-  volts = TO_VOLTS(analogRead(V_REFERENCE));
   
 /*
  * Figure out what test to run
@@ -98,7 +97,6 @@ void self_test
       printf("\r\n12 - LED brightness test");
       printf("\r\n13 - Face strike test");
       printf("\r\n14 - WiFi test");
-      printf("\r\n15 - Dump NonVol");
       printf("\r\n16 - Send sample shot record");
       printf("\r\n17 - Show WiFi status");
       printf("\r\n18 - Send clock out of all serial ports");
@@ -128,18 +126,10 @@ void self_test
       
       if ( test == T_CLOCK )
       {
-        if ( revision() >= REV_220 )  
-        {
-          random_delay = esp_random() % 6000;   // Pick a random delay time in us
-          printf("\r\nRandom clock test: %dus. All outputs must be the same. ", random_delay);
-          trip_timers();
-          delayMicroseconds(random_delay);  // Delay a random time
-        }
-        else
-        {
-          printf("\r\nThis test not supported on this hardware revision");
-          break;
-        }
+        random_delay = esp_random() % 6000;   // Pick a random delay time in us
+        printf("\r\nRandom clock test: %dus. All outputs must be the same. ", random_delay);
+        trip_timers();
+        delayMicroseconds(random_delay);  // Delay a random time
       }
   
       while ( !is_running() )
@@ -939,7 +929,7 @@ void show_sensor_status
 
   if ( shot != 0 )
   {
-    Serial.print(" Timers:");
+    printdf(" Timers:");
 
     for (i=N; i<=W; i++)
     {
@@ -949,12 +939,10 @@ void show_sensor_status
   
   printf("  Face Strike: %d", face_strike);
   
-  printf("  V_Ref:%4.2d",TO_VOLTS(analogRead(V_REFERENCE)));
+  printf("  V_Ref:%4.2f",TO_VOLTS(analogRead(V_REFERENCE)));
   
   printf("  Temperature: %4.2f", temperature_C());
   
-  printf("  WiFi: %d", esp01_is_present());                           // TRUE if WiFi is available
-
   printf("  Switch:");
   
   if ( DIP_SW_A == 0 )
@@ -988,112 +976,6 @@ void show_sensor_status
 
   return;
 }
-
-/*----------------------------------------------------------------
- *
- * function: log_sensor()
- *
- * brief:    Sample and display the North sensor value
- *
- * return:   Nothing
- * 
- *----------------------------------------------------------------
- * 
- * The North sensor is sampled for one second and the maximum
- * for that sample is displayed.
- * 
- * The process repeats until the user types in a !
- *   
- *--------------------------------------------------------------*/
-#define LOG_TIME  1000            // 1 second loop time
-
-void log_sensor
-  (
-  int sensor                      // Sensor to be monitored
-  )
-{
-  unsigned int i;
-  unsigned long start;
-  unsigned int max_cycle;         // Largest value this cycle
-  unsigned int max_all;           // Largest value ever
-  unsigned int sample;            // Sample read from ADC
-  unsigned int sensor_status;     // Sensor running latch
-  char         s[128];            // String Holder
-  char         ch;                // Input character
-  bool_t       is_new;            // TRUE if a change was found
-
-  sprintf(s, "\r\nLogging %s Use X to reset,  ! to exit\r\n", which_one[sensor]);
-  serial_to_all(s, ALL);
-  max_all =  0;
-  arm_timers();
-  
-  while (1)
-  {
-/*
- * Loop for the sample time, picking up the analog voltage as quick as we can
- */
-    start = LOG_TIME;                         // Pick up the starting time
-    max_cycle = analogRead(channel[sensor]);
-    is_new = false;
-    while ( (--start) )                       // For Log Time, 
-    {
-      sample = analogRead(channel[sensor]);   // Read the ADC
-      if ( sample > max_cycle )
-      {
-        max_cycle = sample;
-        is_new = true;
-      }
-      if ( sample > max_all )
-      {
-        max_all = sample;
-        is_new = true;
-      }
-    }
-
-/*
- * If there is a change output the result
- */
-    sensor_status = is_running();
-    if ( is_new  || (sensor_status != 0) )
-    {
-      sprintf(s, "\r\n%s cycle:%d  max:%d is_running:", which_one[sensor], max_cycle, max_all);
-      serial_to_all(s, ALL);   
-
-      s[1] = 0;
-      for (i=N; i<=W; i++)
-      {
-        if ( sensor_status & (1<<i) )   s[0] = nesw[i];
-        else                            s[0] = '.';
-        serial_to_all(s, ALL);
-      }
-      arm_timers();
-    }
-
-    while ( serial_available(ALL) )
-    {
-      ch = get_all();
-      switch ( ch )
-      {
-        case '!':
-          sprintf(s, "\r\nDone");
-          serial_to_all(s, ALL);
-          return;
-
-        case 'x':
-        case 'X':
-          max_all = 0;
-          max_cycle = 0;
-          break;
-      }
-    }
-  }
-
-/*  
- *   We never get here
- */
-  return;
-} 
-
 /*----------------------------------------------------------------
  *
  * function: do_dlt
@@ -1122,9 +1004,7 @@ bool_t do_dlt
     return false;      // Send out if the trace is higher than the level 
   }
 
-  dtostrf(micros()/1000000.0, 7, 6, str );
-  sprintf(s, "\n\r%s: ", str);
-  Serial.print(s);
+  printf("\n\r%4.2fs",micros()/1000000.0 );
 
   return true;
 }

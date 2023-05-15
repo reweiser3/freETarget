@@ -24,7 +24,7 @@
 /*
  *  Function Prototypes
  */
-static void   bye(void);                // Say good night Gracie
+       void   bye(void);                // Say good night Gracie
 static long   tabata(bool_t reset_time);// Tabata state machine
 static unsigned int set_mode(void);     // Set the target running mode
 static unsigned int arm(void);          // Arm the circuit for a shot
@@ -156,7 +156,7 @@ void freeETarget_init(void)
 
 /*----------------------------------------------------------------
  * 
- * function: loop()
+ * function: freeEtarget_task
  * 
  * brief: Main control loop
  * 
@@ -178,7 +178,7 @@ unsigned int  location;               // Sensor location
 
 char* loop_name[] = {"SET_MODE", "ARM", "WAIT", "AQUIRE", "REDUCE", "FINISH" };
 
-void loop() 
+void freeETarget_task (void)
 {
 /*
  * First thing, handle polled devices

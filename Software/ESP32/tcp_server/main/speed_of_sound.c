@@ -13,6 +13,7 @@
 #include "diag_tools.h"
 #include "math.h"
 #include "stdio.h"
+#include "compute_hit.h"
 
 #define TO_MM 1000.0d                  // Convert Metres to mm
 #define TO_US 1000000.0d               // Convert seconds to microseconds

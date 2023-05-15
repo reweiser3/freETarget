@@ -13,59 +13,14 @@
 #include "json.h"
 #include "token.h"
 #include "compute_hit.h"
-
-const GPIO_t init_table[] = {
-  {D0,          "\"D0\":",       INPUT_PULLUP, 0 },
-  {D1,          "\"D1\":",       INPUT_PULLUP, 0 },
-  {D2,          "\"D2\":",       INPUT_PULLUP, 0 },
-  {D3,          "\"D3\":",       INPUT_PULLUP, 0 },
-  {D4,          "\"D4\":",       INPUT_PULLUP, 0 },     
-  {D5,          "\"D5\":",       INPUT_PULLUP, 0 },
-  {D6,          "\"D6\":",       INPUT_PULLUP, 0 },
-
-  {NORTH_HI,    "\"N_HI\":",     OUTPUT, 1},
-  {NORTH_LO,    "\"N_LO\":",     OUTPUT, 1},
-  {EAST_HI,     "\"E_HI\":",     OUTPUT, 1},
-  {EAST_LO,     "\"E_LO\":",     OUTPUT, 1},
-  {SOUTH_HI,    "\"S_HI\":",     OUTPUT, 1},
-  {SOUTH_LO,    "\"S_LO\":",     OUTPUT, 1},
-  {WEST_HI,     "\"W_HI\":",     OUTPUT, 1},
-  {WEST_LO,     "\"W_LO\":",     OUTPUT, 1},      
-        
-  {RUN_NORTH,   "\"RUN_N\":",    INPUT_PULLUP, 0},
-  {RUN_EAST,    "\"RUN_E\":",    INPUT_PULLUP, 0},
-  {RUN_SOUTH,   "\"RUN_S\":",    INPUT_PULLUP, 0},
-  {RUN_WEST,    "\"RUN_W\":",    INPUT_PULLUP, 0},     
-
-  {QUIET,       "\"QUIET\":",    OUTPUT, 1},
-  {RCLK,        "\"RCLK\":",     OUTPUT, 1},
-  {CLR_N,       "\"CLR_N\":",    OUTPUT, 1},
-  {STOP_N,      "\"STOP_N\":",   OUTPUT, 1},
-  {CLOCK_START, "\"CLK_ST\":",   OUTPUT, 0},
-  
-  {DIP_0,       "\"DIP_0\":",    INPUT_PULLUP, 0},
-  {DIP_1,       "\"DIP_1\":",    INPUT_PULLUP, 0},
-  {DIP_2,       "\"DIP_2\":",    INPUT_PULLUP, 0},
-  {DIP_3,       "\"DIP_3\":",    INPUT_PULLUP, 0},  
-
-  {LED_RDY,     "\"RDY\":",      OUTPUT, 1},
-  {LED_X,       "\"X\":",        OUTPUT, 1},
-  {LED_Y,       "\"Y\":",        OUTPUT, 1},
-
-  {LED_PWM,     "\"LED_PWM\":",  OUTPUT, 0},
-  {VSET_PWM,    "\"VSET_PWM\":", OUTPUT, 0},
-  {RTS_U,       "\"RTS_U\":",    OUTPUT, 1},
-  {CTS_U,       "\"CTS_U\":",    INPUT_PULLUP, 0},
-
-  {FACE_SENSOR, "\"FACE\":",     INPUT_PULLUP, 0},
-  
-  {PAPER,      "\"PAPER\":",     OUTPUT, 1},               // 18-Paper drive active low
-  
-  {EOF, "", EOF, EOF} };
-
-
-void face_ISR(void);                      // Acknowledge a face strike
-void sensor_ISR(void);                    // Begin recording times for a target shot
+#include "nonvol.h"
+#include "serial_io.h"
+#include "nvs_flash.h"
+#include "nvs.h"
+#include "driver/gpio.h"
+#include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\gpio_types.h"
+#include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\adc_types.h"
+#include "C:\Users\allan\esp\esp-idf\esp-idf\components\esp_adc\include\esp_adc\adc_oneshot.h"
 
 static void sw_state(unsigned int action);// Do something with the switches
 static void send_fake_score(void);        // Send a fake score to the PC
@@ -75,56 +30,7 @@ static char aux_spool[128];               // Spooling buffer from the AUX port
 static char json_spool[64];               // Spool for JSON
 static unsigned int  aux_spool_in, aux_spool_out; // Pointer to the spool
 static unsigned int  json_spool_in, json_spool_out; // Pointer to the spool
-
-/*-----------------------------------------------------
- * 
- * function: gpio_init
- * 
- * brief: Initalize the various GPIO ports
- * 
- * return: None
- * 
- *-----------------------------------------------------
- *
- * The GPIO programming is held in a stgrucutre and 
- * copied out to the hardware on power up.
- *-----------------------------------------------------*/
-
-void init_gpio(void)
-{
-  int i;
-
-  if ( DLT(DLT_CRITICAL) ) 
-  {
-    printf("init_gpio()");  
-  }
-  
-  i = 0;
-  while (init_table[i].port != 0xff )
-  {
-    pinMode(init_table[i].port, init_table[i].in_or_out);
-    if ( init_table[i].in_or_out == OUTPUT )
-    {
-      digitalWrite(init_table[i].port, init_table[i].value);
-    }
-    i++;
-  }
-  
-  multifunction_init();
-  disable_face_interrupt();
-  set_LED_PWM(0);             // Turn off the illumination for now
-  
-/*
- * Special case of the witness paper
- */
-  pinMode(PAPER, OUTPUT);
-  paper_on_off(false);        // Turn it off
-  
-/*
- * All done, return
- */  
-  return;
-}
+static long power_save;
 
 /*-----------------------------------------------------
  * 
@@ -141,7 +47,7 @@ void init_gpio(void)
  * them into a single byte for return
  * 
  *-----------------------------------------------------*/
-int port_list[] = {D7, D6, D5, D4, D3, D2, D1, D0};
+int port_list[] = { D0, D1, D2, D3, D4, D5, D6, D7};
 
 unsigned int read_port(void)
 {
@@ -154,7 +60,7 @@ unsigned int read_port(void)
   for (i=0; i != 8; i++)
     {
     return_value <<= 1;
-    return_value |= digitalRead(port_list[i]) & 1;
+    return_value |= gpio_get_level(port_list[i]) & 1;
     }
 
  /*
@@ -191,21 +97,21 @@ unsigned int read_counter
  *  Reset all of the address bits
  */
   for (i=0; i != 8; i++)
-    {
-    digitalWrite(direction_register[i], 1);
-    }
-  digitalWrite(RCLK,  1);   // Prepare to read
+  {
+    gpio_set_level(direction_register[i], 1);
+  }
+  gpio_set_level(RCLK,  1);   // Prepare to read
   
 /*
  *  Set the direction line to low
  */
-  digitalWrite(direction_register[direction * 2 + 0], 0);
+  gpio_set_level(direction_register[direction * 2 + 0], 0);
   return_value_HI = read_port();
-  digitalWrite(direction_register[direction * 2 + 0], 1);
+  gpio_set_level(direction_register[direction * 2 + 0], 1);
   
-  digitalWrite(direction_register[direction * 2 + 1], 0);
+  gpio_set_level(direction_register[direction * 2 + 1], 0);
   return_value_LO = read_port();
-  digitalWrite(direction_register[direction * 2 + 1], 1);
+  gpio_set_level(direction_register[direction * 2 + 1], 1);
 
 /*
  *  All done, return
@@ -230,15 +136,8 @@ unsigned int read_counter
 
 unsigned int is_running (void)
 {
-  unsigned int i;
-  
-  i = (RUN_PORT & RUN_A_MASK)  >> RUN_LSB;
-
- /*
-  *  Return the running mask
-  */
-  return i;
-  }
+  return 0;
+}
 
 /*-----------------------------------------------------
  * 
@@ -261,21 +160,21 @@ unsigned int is_running (void)
  *-----------------------------------------------------*/
 void arm_timers(void)
 {
-  digitalWrite(CLOCK_START, 0);   // Make sure Clock start is OFF
-  digitalWrite(STOP_N, 0);        // Reset the flip flop to stop the timers
-  digitalWrite(RCLK,   0);        // Set READ CLOCK to LOW
-  digitalWrite(QUIET,  1);        // Arm the counter
-  digitalWrite(CLR_N,  0);        // Reset the counters 
-  digitalWrite(CLR_N,  1);        // Remove the counter reset 
-  digitalWrite(STOP_N, 1);        // Let the counters run
+  gpio_set_level(CLOCK_START, 0);   // Make sure Clock start is OFF
+  gpio_set_level(STOP_N, 0);        // Reset the flip flop to stop the timers
+  gpio_set_level(RCLK,   0);        // Set READ CLOCK to LOW
+  gpio_set_level(QUIET,  1);        // Arm the counter
+  gpio_set_level(CLR_N,  0);        // Reset the counters 
+  gpio_set_level(CLR_N,  1);        // Remove the counter reset 
+  gpio_set_level(STOP_N, 1);        // Let the counters run
   
   return;
 }
 
 void clear_running(void)          // Reset the RUN flip Flop
 {
-  digitalWrite(STOP_N, 0);        // Reset RUN outputs on the Flip Flop
-  digitalWrite(STOP_N, 1);        // Set the RUN outputs to active
+  gpio_set_level(STOP_N, 0);        // Reset RUN outputs on the Flip Flop
+  gpio_set_level(STOP_N, 1);        // Set the RUN outputs to active
 
   return;
 }
@@ -285,8 +184,8 @@ void clear_running(void)          // Reset the RUN flip Flop
  */
 void stop_timers(void)
 {
-  digitalWrite(STOP_N,0);   // Stop the counters
-  digitalWrite(QUIET, 0);   // Kill the oscillator 
+  gpio_set_level(STOP_N,0);   // Stop the counters
+  gpio_set_level(QUIET, 0);   // Kill the oscillator 
   return;
 }
 
@@ -295,44 +194,9 @@ void stop_timers(void)
  */
 void trip_timers(void)
 {
-  digitalWrite(CLOCK_START, 0);
-  digitalWrite(CLOCK_START, 1);     // Trigger the clocks from the D input of the FF
-  digitalWrite(CLOCK_START, 0);
-
-  return;
-}
-
-/*-----------------------------------------------------
- * 
- * function: enable_face_interrupt
- * function: disable_face_interrupt
- * 
- * brief: Turn on the face detection interrupt
- * 
- * return: NONE
- * 
- *-----------------------------------------------------
- *
- * This enables the face interrupts so that shot detection
- * an be perfomed as a thread and not inline with the code
- * 
- *-----------------------------------------------------*/
-void enable_face_interrupt(void)
-{
-  if ( revision() >= REV_300 )
-  {
-    attachInterrupt(digitalPinToInterrupt(FACE_SENSOR),  face_ISR, CHANGE);
-  }
-
-  return;
-}
-
-void disable_face_interrupt(void)
-{
-  if ( revision() >= REV_300 )
-  {
-    detachInterrupt(digitalPinToInterrupt(FACE_SENSOR));
-  }
+  gpio_set_level(CLOCK_START, 0);
+  gpio_set_level(CLOCK_START, 1);     // Trigger the clocks from the D input of the FF
+  gpio_set_level(CLOCK_START, 0);
 
   return;
 }
@@ -359,18 +223,8 @@ unsigned int read_DIP
   unsigned int dip_mask
 )
 {
-  unsigned int return_value;
-  
-  if ( revision() < REV_300 )          // The silkscreen was reversed in Version 3.0  oops
-  {
-    return_value =  (~((digitalRead(DIP_0) << 0) + (digitalRead(DIP_1) << 1) + (digitalRead(DIP_2) << 2) + (digitalRead(DIP_3) << 3))) & 0x0F;  // DIP Switch
-  }
-  else
-  {
-    return_value =  (~((digitalRead(DIP_3) << 0) + (digitalRead(DIP_2) << 1) + (digitalRead(DIP_1) << 2) + (digitalRead(DIP_0) << 3))) & 0x0F;  // DIP Switch
-  }
-  return_value &= (~dip_mask);
-  return_value |= json_dip_switch;  // JSON message
+  unsigned int return_value = 0;
+
   return_value |= 0xF0;             // COMPILE TIME
 
   return return_value;
@@ -406,12 +260,12 @@ void set_LED
   {
     case 0:
     case '.':
-        digitalWrite(LED_RDY, 1 );
+        gpio_set_level(LED_RDY, 1 );
         break;
     
     case 1:
     case '*':
-        digitalWrite(LED_RDY, 0 );
+        gpio_set_level(LED_RDY, 0 );
         break;
   }
   
@@ -419,12 +273,12 @@ void set_LED
   {
     case 0:
     case '.':
-        digitalWrite(LED_X, 1 );
+        gpio_set_level(LED_X, 1 );
         break;
     
     case 1:
     case '*':
-        digitalWrite(LED_X, 0 );
+        gpio_set_level(LED_X, 0 );
         break;
   }
 
@@ -432,12 +286,12 @@ void set_LED
   {
     case 0:
     case '.':
-        digitalWrite(LED_Y, 1 );
+        gpio_set_level(LED_Y, 1 );
         break;
     
     case 1:
     case '*':
-        digitalWrite(LED_Y, 0 );
+        gpio_set_level(LED_Y, 0 );
         break;
   }
   return;  
@@ -448,7 +302,7 @@ void set_LED
  */
 bool_t read_in(unsigned int port)
 {
-  return digitalRead(port);
+  return gpio_get_level(port);
 }
 
 /*-----------------------------------------------------
@@ -599,25 +453,11 @@ void paper_on_off                               // Function to turn the motor on
 {
   if ( on == true )
   {
-    if ( revision() < REV_300 )                 // Rev 3.0 changed the motor sense
-    {
-      digitalWrite(PAPER, PAPER_ON);            // Turn it on
-    }
-    else
-    {
-      digitalWrite(PAPER, PAPER_ON_300);        //
-    }
+    gpio_set_level(PAPER, PAPER_ON);            // Turn it on
   }
   else
   {
-    if ( revision() < REV_300 )                 // Rev 3.0 changed the motor sense
-    {
-      digitalWrite(PAPER, PAPER_OFF);            // Turn it off
-    }
-    else
-    {
-      digitalWrite(PAPER, PAPER_OFF_300);        //
-    }
+    gpio_set_level(PAPER, PAPER_OFF);            // Turn it off
   }
 
 /*
@@ -707,16 +547,14 @@ void blink_fault
   if ( (HOLD1(json_multifunction2) == RAPID_RED) 
         || (HOLD1(json_multifunction2) == RAPID_GREEN))
   {
-      pinMode(DIP_0, OUTPUT);
-      digitalWrite(DIP_0, 1);
+      gpio_set_level(DIP_0, 1);
       dip_mask = RED_MASK;
   }
 
   if (  (HOLD2(json_multifunction2) == RAPID_RED)
       || (HOLD2(json_multifunction2) == RAPID_GREEN ) )
   {
-      pinMode(DIP_3, OUTPUT);
-      digitalWrite(DIP_3, 1);
+      gpio_set_level(DIP_3, 1);
       dip_mask |= GREEN_MASK;
   }
 
@@ -925,7 +763,7 @@ static void sw_state
 {     
   
   char s[128];                          // Holding string 
-
+  
   if ( DLT(DLT_CRITICAL) )
   {
     printf("Switch action: %d", action);
@@ -942,7 +780,7 @@ static void sw_state
       power_save = (long)json_power_save * 60L * (long)ONE_SECOND; // and resets the power save time
       json_power_save += 30;      
       sprintf(s, "\r\n{\"LED_PWM\": %d}\n\r", json_power_save);
-      serial_to_all(s);  
+      serial_to_all(s, ALL);  
         break;
         
     case PAPER_FEED:                      // The switch acts as paper feed control
@@ -977,9 +815,9 @@ static void sw_state
         json_LED_PWM = 0;                 // Force to zero on wrap around
       }
       set_LED_PWM_now(json_LED_PWM);      // Set the brightness
-      EEPROM.put(NONVOL_LED_PWM, json_LED_PWM);   
+      nvs_set_i32(my_handle, NONVOL_LED_PWM, json_LED_PWM);   
       sprintf(s, "\r\n{\"LED_BRIGHT\": %d}\n\r", json_LED_PWM);
-      serial_to_all(s);  
+      serial_to_all(s, ALL);  
       break;
 
     case TARGET_TYPE:                     // Over ride the target type if the switch is closed
@@ -1069,11 +907,11 @@ void multifunction_display(void)
 
   sprintf(s, "\"MFS_TAP1\": \"%s\",\n\r\"MFS_TAP2\": \"%s\",\n\r\"MFS_HOLD1\": \"%s\",\n\r\"MFS_HOLD2\": \"%s\",\n\r\"MFS_HOLD12\": \"%s\",\n\r", 
   mfs_text[TAP1(json_multifunction)], mfs_text[TAP2(json_multifunction)], mfs_text[HOLD1(json_multifunction)], mfs_text[HOLD2(json_multifunction)], mfs_text[HOLD12(json_multifunction)]);
-  serial_to_all(s);  
+  serial_to_all(s, ALL);  
 
   sprintf(s, "\"MFS_CONFIG\": \"%s\",\n\r\"MFS_DIAG\": \"%s\",\n\r", 
   mfs2_text[HOLD1(json_multifunction2)], mfs2_text[HOLD2(json_multifunction2)]);
-  serial_to_all(s);  
+  serial_to_all(s, ALL);  
   
 /*
  * All done, return
@@ -1103,14 +941,14 @@ void digital_test(void)
 /*
  * Read in the fixed digital inputs
  */
-  printf("\r\nTime: %4.2fs", micros()/1000000);
+  printf("\r\nTime: %4.2fs", (float)(micros()/1000000));
   printf("\r\nBD Rev: %d", revision());       
   printf("\r\nDIP: 0x%02X", read_DIP(0)); 
-  digitalWrite(STOP_N, 0);
-  digitalWrite(STOP_N, 1);                        // Reset the fun flip flop
+  gpio_set_level(STOP_N, 0);
+  gpio_set_level(STOP_N, 1);                        // Reset the fun flip flop
   printf("\r\nRUN FlipFlop: 0x%02X", is_running());   
   printf("\r\nTemperature: %dC", temperature_C());
-  printf("\r\nSpeed of Sound: %4.2fmm/us", speed_of_sound(temperature_C(), json_rh))
+  printf("\r\nSpeed of Sound: %4.2fmm/us", speed_of_sound(temperature_C(), json_rh));
   printf("\r\nV_REF: %4.f Volts", volts);
   printf("\r\n");
 
@@ -1118,19 +956,6 @@ void digital_test(void)
  * Read the port pins and report
  */
   i=0;
-  while (init_table[i].port != 0xff)
-  {
-    if ( init_table[i].in_or_out == OUTPUT )
-    {
-      printf("\r\n OUT >> ");
-    }
-    else
-    {
-      printf("\r\n IN  << ");
-    }
-    printf("%s: %d", init_table[i].gpio_name, init_table[i].port);
-    i++;
-  }
 
  /*
   * Blink the LEDs and exit
@@ -1228,11 +1053,11 @@ void rapid_red
 {
   if ( HOLD1(json_multifunction2) == RAPID_RED )
   {
-      digitalWrite(DIP_0, state);
+      gpio_set_level(DIP_0, state);
   }
   if ( HOLD2(json_multifunction2) == RAPID_RED )
   {
-      digitalWrite(DIP_3, state);
+      gpio_set_level(DIP_3, state);
   }
 
   return;
@@ -1245,11 +1070,11 @@ void rapid_green
 {
   if ( HOLD1(json_multifunction2) == RAPID_GREEN )
   {
-      digitalWrite(DIP_0, state);
+      gpio_set_level(DIP_0, state);
   }
   if ( HOLD2(json_multifunction2) == RAPID_GREEN )
   {
-      digitalWrite(DIP_3, state);
+      gpio_set_level(DIP_3, state);
   }
 
   return;

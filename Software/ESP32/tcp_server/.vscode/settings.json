@@ -4,5 +4,6 @@
   "files.associations": {
     "sstream": "c",
     "regex": "c"
-  }
+  },
+  "idf.flashType": "UART"
 }

@@ -126,7 +126,7 @@ void set_LED_PWM                                  // Theatre lighting
  */
   if ( new_LED_percent == 0 )
   {
-    digitalWrite(LED_PWM, 0);
+    gpio_set_level(LED_PWM, 0);
   }
   return;
 }

@@ -68,5 +68,4 @@ void restore_nonvol(void);                        // Copyt the nonvol back
 #define NONVOL_MIN_RING_TIME  "MIN_RING_TIME"  // Minimum time for ringing to stop 
 #define NONVOL_DOPPLER        "DOPPLER"        // Compensation for signal fading
 #define NONVOL_TOKEN          "TOKEN"          // Token ring state
-
 #endif

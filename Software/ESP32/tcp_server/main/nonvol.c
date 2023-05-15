@@ -97,8 +97,10 @@ void factory_nonvol
   unsigned int x;                         // Temporary Value
   double       dx;                        // Temporarty Value
   unsigned int i;                         // Iteration Counter
-  
-  
+  int          length;
+
+  non_vol_init = 0;
+  serial_number = 0;
   gen_position(0); 
   x = 0;
   nvs_set_u32(my_handle, "NONVOL_V_SET", nonvol_init);
@@ -124,7 +126,8 @@ void factory_nonvol
         printf("\r\n%s \"\"", JSON[i].token);
         if ( JSON[i].non_vol != 0 )
         {
-          nvs_set_i32(my_handle, JSON[i].non_vol, 0);                    // Zero out the text
+          length = JSON[i].token & FLOAT_MASK;
+          nvs_set_i32(my_handle, JSON[i].non_vol, length);                    // Zero out the text
         }
         break;
         
@@ -296,6 +299,7 @@ void read_nonvol(void)
   unsigned int  i, j;          // Iteration Counter
   long          x;             // 32 bit number
   double        dx;            // Floating point number
+  int           length;        // Length of input string
 
   esp_err_t err;
   
@@ -370,7 +374,8 @@ void read_nonvol(void)
         case IS_SECRET:
           if ( JSON[i].non_vol != 0 )                           // Is persistent storage enabled?
           {
-            nvs_get_str(my_handle, JSON[i].non_vol, JSON[i].value, 32);
+            length = JSON[i].convert & FLOAT_MASK;
+            nvs_get_str(my_handle, JSON[i].non_vol, (char*)JSON[i].value, &length);
           }
           break;
 

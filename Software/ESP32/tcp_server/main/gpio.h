@@ -98,12 +98,10 @@ void rapid_red(unsigned int state);                       // Drive the RED light
  * DIP Switch Use. 
  */
 //                      From DIP                   From Software
-#define CALIBRATE       ((digitalRead(DIP_3) == 0)    + 0)   // 1 Go to Calibration Mode
-#define DIP_SW_A        ((digitalRead(DIP_2) == 0)    + 0)   // 2 When CALIBRATE is asserted, use lower trip point
-#define CAL_LOW         (DIP_SW_A)
-#define DIP_SW_B        ((digitalRead(DIP_1) == 0)    + 0)   // 4 When CALIBRATE is asserted, use higher trip point
-#define CAL_HIGH        (DIP_SW_B)
-#define VERBOSE_TRACE   ((digitalRead(DIP_0) == 0)    + 0)   // 8 Show the verbose software trace
+#define CALIBRATE       ((gpio_get_level(DIP_3) == 0)    + 0)   // 1 Go to Calibration Mode
+#define DIP_SW_A        ((gpio_get_level(DIP_2) == 0)    + 0)   // 2 When CALIBRATE is asserted, use lower trip point
+#define DIP_SW_B        ((gpio_get_level(DIP_1) == 0)    + 0)   // 4 When CALIBRATE is asserted, use higher trip point
+#define VERBOSE_TRACE   ((gpio_get_level(DIP_0) == 0)    + 0)   // 8 Show the verbose software trace
 
 #define VSET_PWM     8          // VREF setting
 #define CTS_U        7

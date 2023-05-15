@@ -32,7 +32,7 @@ uart_config_t uart_console_config =
     .data_bits = UART_DATA_8_BITS,
     .parity = UART_PARITY_DISABLE,
     .stop_bits = UART_STOP_BITS_1,
-    .flow_ctrl = UUART_HW_FLOWCTRL_DISABLE,
+    .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
     .rx_flow_ctrl_thresh = 122,
 };
 const int uart_console_size = (1024 * 2);
@@ -192,7 +192,7 @@ char get_chars
  */
   if ( console )
   {
-    if ( uart_read_bytes(uart_console, &ch, 1, 20 / portTICK_RATE_MS) > 0 )
+    if ( uart_read_bytes(uart_console, &ch, 1, 0) > 0 )
     {
       return ch;
     }
@@ -203,7 +203,7 @@ char get_chars
  */
   if ( aux )
   {
-    if ( uart_read_bytes(uart_aux, &ch, 1, 20 / portTICK_RATE_MS) > 0 )
+    if ( uart_read_bytes(uart_aux, &ch, 1, 0) > 0 )
     {
       return ch;
     }
@@ -239,15 +239,16 @@ char get_chars
   char str_a[2];
   str_a[0] = ch;
   str_a[1] = 0;
-  serial_to_all(str_a, console, aux, tcpip]);
+  serial_to_all(str_a, console, aux, tcpip);
   return;
  }
  
 void serial_to_all
 (
   char*   str,                      // String to output
-  bool_t  console,                // Output to the console
-  bool_t  aux                     // Output to the aux port
+  bool_t  console,                  // Output to the console
+  bool_t  aux,                      // Output to the aux port
+  bool_t  tcpip                     // Output to the TCPIP socket
 )
 {
   unsigned int len;

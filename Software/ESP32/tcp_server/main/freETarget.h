@@ -61,7 +61,6 @@
 #define PI 3.14159269
 #define PI_ON_4 (PI / 4.0d)
 #define PI_ON_2 (PI / 2.0d)
-#define sq(x) ((x)*(x))
 
 /* 
  * FreeETarget functions
@@ -69,6 +68,11 @@
 void rapid_enable(unsigned int enable);               // Rapid fire enable state
 void hello(void);                                     // Say Hello World
 void freeETarget_init(void);                          // Get the target software ready
+void freeETarget_task(void);                          // Cyclic target task
+void freeETarget_json(void);                          // Cyclic JSON parser
+void freeETarget_timer(void);                         // High speed cyclic task
+void bye(void);                                       // Shut down and say goodbye
+void hello(void);                                     // Wake up and say hello
 
 /*
  *  Types

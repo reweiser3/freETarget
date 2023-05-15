@@ -9,4 +9,5 @@ idf_component_register(SRCS "tcp_server.c"
                     "compute_hit.c"
                     "speed_of_sound.c"
                     "serial_io.c"
+                    "gpio_define.c"
                     INCLUDE_DIRS ".")

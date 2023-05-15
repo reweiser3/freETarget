@@ -125,7 +125,9 @@ unsigned int compute_hit
   double        smallest;          // Smallest non-zero value measured
   double        z_offset_clock;    // Time offset between paper and sensor plane
   int           wdt;               // Watchdog timer
-
+  x_avg = 0;
+  y_avg = 0;
+  
   timer_new(&wdt, 20);
       
   if ( DLT(DLT_DIAG) )
@@ -448,6 +450,7 @@ bool_t find_xy_3D
 /*
  *  Compute the X,Y based on the detection sensor
  */
+  rotation = 0;
   switch (s->index)
   {
     case (N): 
@@ -817,7 +820,9 @@ static void remap_target
   double distance, closest;        // Distance to bull in clock ticks
   double dx, dy;                   // Best fitting bullseye
   int i;
-  
+  dx = 0.0;
+  dy = 0.0;
+
   new_target_t* ptr;               // Bull pointer
   
   if ( DLT(DLT_DIAG) )
@@ -932,3 +937,4 @@ void send_timer
 }
 
  
+double sq(double x) { return x*x;}
