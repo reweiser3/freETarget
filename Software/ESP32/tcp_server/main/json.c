@@ -10,11 +10,23 @@
 #include "ctype.h"
 #include "stdio.h"
 #include "diag_tools.h"
+#include "serial_io.h"
+#include "nvs.h"
+#include "nonvol.h"
+#include "gpio.h"
+#include "analog_io.h"
+#include "token.h"
+#include "compute_hit.h"
+#include "stdio.h"
+#include "serial_io.h"
+#include "mechanical.h"
+#include "timer.h"
 
 /*
  *  Function Prototypes
  */
 static void handle_json(void);    // Breakdown the JSON and execute it
+
 
 /*
  *  Variables
@@ -65,8 +77,8 @@ int     json_rapid_count;           // Number of shots expected in string
 int     json_rapid_enable;          // Set to TRUE if the rapid fire event is enabled
 int     json_rapid_time;            // When will the rapid fire event end?
 int     json_rapid_wait;            // Delay applied to rapid start
-char    json_wifi_ssid[esp01_SSID_SIZE_32]; // Stored value of SSID
-char    json_wifi_pwd[esp01_PWD_SIZE];// Stored value of password
+char    json_wifi_ssid[SSID_SIZE];  // Stored value of SSID
+char    json_wifi_pwd[PWD_SIZE];    // Stored value of password
 int     json_wifi_dhcp;             // The ESP is a DHCP server
 int     json_rh;                    // Relative Humidity 0-1005
 int     json_min_ring_time;         // Time to wait for ringing to stop
@@ -81,9 +93,9 @@ int     json_clock[4];              // Storage for clock test
 
        void show_echo(void);        // Display the current settings
 static void show_test(int v);       // Execute the self test once
-static void show_test0(int v);      // Help Menu
+//static void show_test0(int v);      // Help Menu
 static void show_names(int v);
-static void nop(void);
+//static void nop(void);
 static void set_trace(int v);       // Set the trace on and off
 static void diag_delay(int x) ;     // Insert a delay
 
@@ -91,12 +103,12 @@ static void diag_delay(int x) ;     // Insert a delay
 const json_message_t JSON[] = {
 //    token                 value stored in RAM     double stored in RAM        convert    service fcn()     NONVOL location      Initial Value
   {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT32,  0,                NONVOL_SENSOR_ANGLE,    45 },    // Locate the sensor angles
-  {"\"BYE\":",            0,                                 0,                IS_VOID,   &bye,                             0,       0 },    // Shut down the target
+//  {"\"BYE\":",            0,                                 0,                IS_VOID,   &bye,                             0,       0 },    // Shut down the target
   {"\"CAL\":",            0,                                 0,                IS_VOID,   &set_trip_point,                  0,       0 },    // Enter calibration mode
   {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT32,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
   {"\"DELAY\":",          0,                                 0,                IS_INT32,  &diag_delay,                      0,       0 },    // Delay TBD seconds
   {"\"DOPPLER\":",        0,                     &json_doppler,                IS_FLOAT,  0,                NONVOL_DOPPLER, (7.0d/(700.0d * 700.0d))},    // Adjust timing based on Doppler Inverse SQ
-  {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,                       0,       0 },    // Echo test
+ // {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,                       0,       0 },    // Echo test
   {"\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT32,  0,                NONVOL_FACE_STRIKE,      5 },    // Face Strike Count 
   {"\"FOLLOW_THROUGH\":", &json_follow_through,              0,                IS_INT32,  0,                NONVOL_FOLLOW_THROUGH,   0 },    // Three second follow through
   {"\"INIT\":",           0,                                 0,                IS_INT32,  &init_nonvol,     NONVOL_INIT,             0 },    // Initialize the NONVOL memory
@@ -118,30 +130,28 @@ const json_message_t JSON[] = {
   {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT32,  0,                NONVOL_PAPER_TIME,      50 },    // Set the paper advance time
   {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
   {"\"RAPID_COUNT\":",    &json_rapid_count,                 0,                IS_INT32,  0,                0,                       0 },    // Number of shots expected in series
-  {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT32,  &rapid_enable,    0,                       0 },    // Enable the rapid fire fieature
+//  {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT32,  &rapid_enable,    0,                       0 },    // Enable the rapid fire fieature
   {"\"RAPID_TIME\":",     &json_rapid_time,                  0,                IS_INT32,  0,                0,                       0 },    // Set the duration of the rapid fire event and start
   {"\"RAPID_WAIT\":",     &json_rapid_wait,                  0,                IS_INT32,  0,                0,                       0 },    // Delay applied between enable and ready
-  {"\"RESET\":",          0,                                 0,                IS_INT32,  &setup,           0,                       0 },    // Reinit the board
-  {"\"RH\":",             &json_rh,                          0,                IS_INT32,  0,                NONVOL_RH,              50 },    // Relative Humidity
   {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT32,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
   {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  &gen_position,    NONVOL_SENSOR_DIA,     230 },    // Generate the sensor postion array
   {"\"SN\":",             &json_serial_number,               0,                IS_FIXED,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
   {"\"STEP_COUNT\":",     &json_step_count,                  0,                IS_INT32,  0,                NONVOL_STEP_COUNT,       0 },    // Set the duration of the stepper motor ON time
   {"\"STEP_TIME\":",      &json_step_time,                   0,                IS_INT32,  0,                NONVOL_STEP_TIME,        0 },    // Set the number of times stepper motor is stepped
-  {"\"TABATA_ENABLE\":",  &json_tabata_enable,               0,                IS_INT32,  &tabata_enable,   0,                       0 },    // Enable the tabata feature
+//  {"\"TABATA_ENABLE\":",  &json_tabata_enable,               0,                IS_INT32,  &tabata_enable,   0,                       0 },    // Enable the tabata feature
   {"\"TABATA_ON\":",      &json_tabata_on,                   0,                IS_INT32,  0,                0,                       0 },    // Time that the LEDs are ON for a Tabata timer (1/10 seconds)
   {"\"TABATA_REST\":",    &json_tabata_rest,                 0,                IS_INT32,  0,                0,                       0 },    // Time that the LEDs are OFF for a Tabata timer
   {"\"TABATA_WARN_OFF\":",&json_tabata_warn_off,             0,                IS_INT32,  0,                0,                       0 },    // Time that the LEDs are ON during a warning cycle
   {"\"TABATA_WARN_ON\":", &json_tabata_warn_on,              0,                IS_INT32,  0,                0,                     200 },    // Time that the LEDs are OFF during a warning cycle
   {"\"TARGET_TYPE\":",    &json_target_type,                 0,                IS_INT32,  0,                NONVOL_TARGET_TYPE,      0 },    // Marify shot location (0 == Single Bull)
-  {"\"TEST\":",           0,                                 0,                IS_INT32,  &show_test,       NONVOL_TEST_MODE,        0 },    // Execute a self test
+  {"\"TEST\":",           0,                                 0,                IS_INT32,  &show_test,       0,                       0 },    // Execute a self test
   {"\"TOKEN\":",          &json_token,                       0,                IS_INT32,  0,                NONVOL_TOKEN,            0 },    // Token ring state
   {"\"TRACE\":",          0,                                 0,                IS_INT32,  &set_trace,       0,                       0 },    // Enter / exit diagnostic trace
-  {"\"VERSION\":",        0,                                 0,                IS_INT32,  &POST_version,    0,                       0 },    // Return the version string
-  {"\"V_SET\":",          0,                                 &json_vset,       IS_FLOAT,  &compute_vset_PWM,NONVOL_VSET,             0 },    // Set the voltage reference
+//  {"\"VERSION\":",        0,                                 0,                IS_INT32,  &POST_version,    0,                       0 },    // Return the version string
+//  {"\"V_SET\":",          0,                                 &json_vset,       IS_FLOAT,  &compute_vset_PWM,NONVOL_VSET,             0 },    // Set the voltage reference
   {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT32,  0,                NONVOL_WIFI_CHANNEL,     6 },    // Set the wifi channel
   {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_SECRET, 0,                NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
-  {"\"WIFI_SSID\":",      (int*)&json_wifi_ssid,             0,                IS_TEXT,   0,                NONVOL_WIFI_SSID_32,     0 },    // Name of SSID to attach to 
+  {"\"WIFI_SSID\":",      (int*)&json_wifi_ssid,             0,                IS_TEXT,   0,                NONVOL_WIFI_SSID,        0 },    // Name of SSID to attach to 
   {"\"Z_OFFSET\":",       &json_z_offset,                    0,                IS_INT32,  0,                NONVOL_Z_OFFSET,        13 },    // Distance from paper to sensor plane (mm)
   {"\"NORTH_X\":",        &json_north_x,                     0,                IS_INT32,  0,                NONVOL_NORTH_X,          0 },    //
   {"\"NORTH_Y\":",        &json_north_y,                     0,                IS_INT32,  0,                NONVOL_NORTH_Y,          0 },    //
@@ -151,18 +161,16 @@ const json_message_t JSON[] = {
   {"\"SOUTH_Y\":",        &json_south_y,                     0,                IS_INT32,  0,                NONVOL_SOUTH_Y,          0 },    //
   {"\"WEST_X\":",         &json_west_x,                      0,                IS_INT32,  0,                NONVOL_WEST_X,           0 },    //
   {"\"WEST_Y\":",         &json_west_y,                      0,                IS_INT32,  0,                NONVOL_WEST_Y,           0 },    //
-#if CLOCK_TEST
+#if (0)
   {"\"NC\":",             &json_clock[N],                    0,                IS_INT32,  0,                0,                       0 },    // Values forced into timer for
   {"\"EC\":",             &json_clock[E],                    0,                IS_INT32,  0,                0,                       0 },    // diagnostics
   {"\"SC\":",             &json_clock[S],                    0,                IS_INT32,  0,                0,                       0 },    //
   {"\"WC\":",             &json_clock[W],                    0,                IS_INT32,  0,                0,                       0 },    //
 #endif
-
-{ 0, 0, 0, 0, 0, 0}
 };
 
 int instr(char* s1, char* s2);
-static void diag_delay(int x) { printf"\r\n\"DELAY\":%d", x); delay(x*1000);  return;}
+static void diag_delay(int x) { printf("\r\n\"DELAY\":%d", x); delay(x*1000);  return;}
 
 /*-----------------------------------------------------
  * 
@@ -189,7 +197,7 @@ static void diag_delay(int x) { printf"\r\n\"DELAY\":%d", x); delay(x*1000);  re
  * 
  *-----------------------------------------------------*/
 static unsigned int in_JSON = 0;
-static bold_t got_right = false;
+static bool_t got_right = false;
 static bool_t not_found;
 static bool_t keep_space;   // Set to 1 if keeping spaces
 
@@ -209,24 +217,14 @@ static int to_int(char h)
 
 void freeETarget_json(void)
 {
-  unsigned int  i;      // Index across JSON message
-  unsigned int  j;      // Index across JSON token table (JSON[])
-           int  k;      // Result from string compare (-Ve => not found)
-  unsigned int  l;      // Index across the gpio init table (init_table)
-  unsigned int  m;      // Index into NONVOL text storage
-  unsigned int  x;      // Temporary working variable
-  char*         s;      // Pointer to stored text string
-  double        y;
-  bool          return_value;
   char          ch;
+
 /*
  * See if anything is waiting and if so, add it in
  */
   while ( serial_available(ALL) != 0 )
   {
-    return_value = true;
-    
-    ch = get_all();
+    ch = serial_getch(ALL);
     if ( ch == '*' )
     {
       ch = '"';                             // Fix for European keyboards(?)
@@ -274,6 +272,7 @@ void freeETarget_json(void)
 
       case '"':                             // Start or end of text
         keep_space = (keep_space ^ 1) & 1;
+        break;
         
       default:
         if ( (ch != ' ') || keep_space )
@@ -309,16 +308,14 @@ void freeETarget_json(void)
  * and the JSON[] is used to determine the action
  * 
  *-----------------------------------------------------*/
-  union pack 
-  {
-    double d;
-    long   l;
-  };
-
+ 
 static void handle_json(void)
 {
   union pack my_float;
-  int   x;
+  int   x, y;
+  int   i, j, k;
+  char* s;
+  int   m;
 
 /*
  * Found out where the braces are, extract the contents.
@@ -327,9 +324,8 @@ static void handle_json(void)
   for ( i=0; i != got_right; i++)                             // Go across the JSON input 
   {
     j = 0;                                                      // Index across the JSON token table
-    l = 0;                                                      // Index across gpio init table
     
-    while ( (JSON[j].token != 0) || (init_table[l].port != 0xff) ) // Cycle through the tokens
+    while ( (JSON[j].token != 0) )                              // Cycle through the tokens
     {
       if ( JSON[j].token != 0 )
       {
@@ -357,7 +353,7 @@ static void handle_json(void)
               s = (char *)JSON[j].value;                        // Fake a pointer to text
               *s = 0;                                           // Put in a null
               m = 0;
-              EEPROM.put(JSON[j].non_vol, 0);                   // Put in a null
+              nvs_set_i32(my_handle, JSON[j].non_vol, 0);                  // Put in a null
               while ( input_JSON[i+k] != '"' )                  // Skip to the opening quote
               {
                 if ( s != 0 )
@@ -369,9 +365,9 @@ static void handle_json(void)
                 
                 if ( JSON[j].non_vol != 0 )                     // Save to persistent storage if present
                 {
-                  EEPROM.put(JSON[j].non_vol+m, input_JSON[i+k]); // Store into NON-VOL
+                  nvs_set_u32(my_handle, JSON[j].non_vol+m, input_JSON[i+k]); // Store into NON-VOL
                   m++;
-                  EEPROM.put(JSON[j].non_vol+m, 0);             // Null terminate
+                  nvs_set_u32(my_handle, JSON[j].non_vol+m, 0);             // Null terminate
                 }
                 k++;
               }
@@ -393,12 +389,11 @@ static void handle_json(void)
               }
               if ( JSON[j].non_vol != 0 )
               {
-                nvs_set_i32(my_handle,, JSON[j].non_vol, x);    // Store into NON-VOL
+                nvs_set_i32(my_handle, JSON[j].non_vol, x);    // Store into NON-VOL
               }
               break;
   
             case IS_FLOAT:                                      // Convert a floating point number
-            case IS_DOUBLE:
               y = atof(&input_JSON[i+k]);
               if ( JSON[j].d_value != 0 )
               {
@@ -406,8 +401,8 @@ static void handle_json(void)
               }
               if ( JSON[j].non_vol != 0 )
               {
-                my_float.d = y;
-                nvs_set_i64(my_handle, JSON[j].non_vol, my_float.x);                 // Store into NON-VOL
+                my_float.double64 = y;
+                nvs_set_i64(my_handle, JSON[j].non_vol, my_float.int64);                 // Store into NON-VOL
               }
               break;
             }
@@ -420,49 +415,7 @@ static void handle_json(void)
             
           }
         }
-        if ( init_table[l].port != 0xff )                  // Cycle through the tokens
-        {
-          k = instr(&input_JSON[i], init_table[l].gpio_name );    // Compare the input against the list of JSON tags
-          if ( k > 0 )                                            // Non zero, found something
-          {
-            not_found = false;                                    // Read and convert the JSON value
-            printf("\r\n%s", init_table[j].gpio_name);
-            if ( init_table[j].in_or_out == INPUT_PULLUP )
-            {
-              printf(" is input only"));
-              break;
-            }
-          
-            if ( instr("LED_PWM", init_table[j].gpio_name ) > 0 )  // Special case analog output
-            {
-              x = atoi(&input_JSON[i+k]);
-              analogWrite(LED_PWM, x); 
-              printf("%d",x);
-            }
-            else if ( instr("vset_PWM", init_table[j].gpio_name ) > 0 )  // Special case analog output
-            {
-              x = atoi(&input_JSON[i+k]);
-              analogWrite(vset_PWM, x); 
-              printf("%d",x);
-            }
-            else
-            {
-              x = atoi(&input_JSON[i+k]);
-              gpio_set_level(init_table[j].port, x);
-              printf("%d Verify:", x, gpio_get_level(init_table[j].port));
-            }
-          }
-        }
-
-     if ( JSON[j].token != 0 )
-     {
-       j++;
-     }
-     if ( init_table[l].gpio_name != 0xff )
-     {
-       l++;
-     }
-   }
+    }
   }
 
 /*
@@ -478,22 +431,8 @@ static void handle_json(void)
       j++;
       if ( (j%4) == 0 ) 
       {
-        printf("\r\n"));
+        printf("\r\n");
       }
-    }
-    prinf("\r\n\r\n  *** GPIO ***"));
-    j=0;
-    while ( init_table[j].port != 0xff ) 
-    {
-      if ( init_table[j].in_or_out == OUTPUT )
-      {
-        prinf("\r\n%s", init_table[j].gpio_name);
-        if ( (j%4) == 0 ) 
-        {
-          printf"\r\n");
-        }
-      }
-      j++;
     }
   }
   
@@ -603,16 +542,10 @@ void show_echo(void)
           break;
 
         case IS_FLOAT:
-        case IS_DOUBLE:
-          dtostrf(*JSON[i].d_value, 8, 6, str_c );
-          sprintf(s, "%s %s, \r\n", JSON[i].token, str_c);
+          sprintf(s, "%s %4.2f, \r\n", JSON[i].token, *JSON[i].d_value);
           break;
       }
       serial_to_all(s, ALL);
-      if ( esp01_connected() )            // If the wifi is attached
-      {
-        delay(100);                        // Slow down to let it catch up
-      }
     }
     i++;
   }
@@ -625,23 +558,22 @@ void show_echo(void)
   
   multifunction_display();
   
-  sprintf(s, "\"TRACE\": %d, \n\r", is_trace);                                             // TRUE to if trace is enabled
+  sprintf(s, "\"TRACE\": %d, \n\r", is_trace);                                          // TRUE to if trace is enabled
   serial_to_all(s, ALL);
 
-  sprintf(s, "\"RUNNING_MINUTES\": %ld, \n\r", millis()/1000/60);                       // On Time
+//  sprintf(s, "\"RUNNING_MINUTES\": %d, \n\r", millis()/1000/60);                        // On Time
+//  serial_to_all(s, ALL);
+  
+  sprintf(s, "\"TEMPERATURE\": %4.2f, \n\r", temperature_C());                          // Temperature in degrees C
   serial_to_all(s, ALL);
   
-  sprintf(s, "\"TEMPERATURE\": %4.2f, \n\r", temperature_C());                                         // Temperature in degrees C
-  serial_to_all(s, ALL);
-  
-  dtostrf(speed_of_sound(temperature_C(), json_rh), 4, 2, str_c );
-  sprintf(s, "\"SPEED_SOUND\": %4.2f, \n\r", speed_of_sound(temperature_C()));
+  sprintf(s, "\"SPEED_SOUND\": %4.2f, \n\r", speed_of_sound(temperature_C(), json_rh));
   serial_to_all(s, ALL);
 
-  sprintf(s, "\"V_REF\": %4.2f, \n\r", TO_VOLTS(analogRead(V_REFERENCE)));                                               // Trip point reference
+//  sprintf(s, "\"V_REF\": %4.2f, \n\r", TO_VOLTS(analogRead(V_REFERENCE)));                                               // Trip point reference
   serial_to_all(s, ALL);
   
-  sprintf(s, "\"V_12_LED\": %4.2f, \n\r", s5.0d * (float)analogRead(V_12_LED) * K_12 / 1023.0dtr_c);                                            // 12 Volt LED supply
+//  sprintf(s, "\"V_12_LED\": %4.2f, \n\r", (float)analogRead(V_12_LED) * K_12 / 1023.0);                                            // 12 Volt LED supply
   serial_to_all(s, ALL);
   
   sprintf(s, "\"VSET_PWM\": %d, \n\r", json_vset_PWM);                                    // Setpoint adjust PWM
@@ -653,21 +585,10 @@ void show_echo(void)
 
   if ( json_token == TOKEN_WIFI )
   {
-    sprintf(s, "\"WiFi_PRESENT\": %d, \n\r", esp01_is_present());                         // TRUE if WiFi is available
-    serial_to_all(s, ALL);
-  
-    if ( esp01_is_present() )
-    {
-      esp01_myIP(str_c);
+ //     esp01_myIP(str_c);
       sprintf(s, "\"WiFi_IP_ADDRESS\": \"%s:1090\", \n\r", str_c);                        // Print out the IP address
       serial_to_all(s, ALL);
   
-      for ( i=0; i != esp01_N_CONNECT; i++)
-      {
-        sprintf(s, "\"WiFi_CONNECT %d\": %d, \n\r", i+1, esp01_connect[i]);               // TRUE if Client[i] connected
-        serial_to_all(s, ALL);
-      }
-    }
   }
   else
   {
@@ -680,12 +601,12 @@ void show_echo(void)
   sprintf(s, "\"VERSION\": %s, \n\r", SOFTWARE_VERSION);                                  // Current software version
   serial_to_all(s, ALL);  
 
-  EEPROM.get(NONVOL_PS_VERSION, j);
+  j = 0;
+  // nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
   sprintf(s, "\"PS_VERSION\": %d, \n\r", j);                                             // Current persistent storage version
   serial_to_all(s, ALL); 
   
-  dtostrf(revision()/100.0, 4, 2, str_c );              
-  sprintf(s, "\"BD_REV\": %s \n\r", str_c);                                               // Current board versoin
+  sprintf(s, "\"BD_REV\": %4.2f \n\r", (float)(revision())/100.0);                                               // Current board versoin
   serial_to_all(s, ALL);
   
   sprintf(s, "}\r\n"); 
@@ -720,7 +641,7 @@ static void show_names(int v)
     return;
   }
   
-  printf()"\r\nNames\r\n");
+  printf("\r\nNames\r\n");
   
   i=0;
   while (names[i] != 0 )
@@ -747,7 +668,7 @@ static void show_names(int v)
 
 static void show_test(int test_number)
  {
-  printf("\r\nSelf Test: %d\r\n"), test_number);
+  printf("\r\nSelf Test: %d\r\n", test_number);
   
   self_test(test_number);
   return;

@@ -124,7 +124,7 @@ unsigned int compute_hit
   double        x_avg, y_avg;      // Running average location
   double        smallest;          // Smallest non-zero value measured
   double        z_offset_clock;    // Time offset between paper and sensor plane
-  int           wdt;               // Watchdog timer
+  unsigned long wdt;               // Watchdog timer
   x_avg = 0;
   y_avg = 0;
   
@@ -246,7 +246,7 @@ unsigned int compute_hit
     printf("Compensate Counts       ");
     for (i=N; i <= W; i++)
     {
-     printf("%s:%4.2f", *which_one[i], (double)s[i].count / ((double)OSCILLATOR_MHZ));
+     printf("%s:%4.2f", which_one[i], (double)s[i].count / ((double)OSCILLATOR_MHZ));
     }
   }
   
@@ -532,7 +532,9 @@ void send_score
   double angle;
   unsigned int volts;
   char   str[256];                // String holding buffers
-  unsigned long now;
+  unsigned long   wdt;            // Watch dog Timer
+
+  volts = 0;
   
   if ( DLT(DLT_DIAG) )
   {
@@ -547,12 +549,13 @@ void send_score
      while(my_ring != whos_ring)
     {
       token_take();                              // Grab the token ring
-      now = millis();
-      while ( ((millis() - now) <= (ONE_SECOND*2))  // Wait a second
+      timer_new(&wdt, 2 * ONE_SECOND);
+      while ( ( wdt != 0 )                      // Wait up to 2 seconds
         && (whos_ring != my_ring) )             // Or we own the ring
       { 
         token_poll();
       }
+      timer_delete(&wdt);                       // Don't need it any more
     }
     set_LED(LED_WIFI_SEND);
   }
@@ -637,9 +640,9 @@ void send_score
 #if ( S_MISC ) 
   if ( json_token == TOKEN_WIFI )
   {
-    volts = analogRead(V_REFERENCE);
-    sprintf(str, ", \"V_REF\":%4.2f, \"Temp\":%4.2f, , \"VERSION\":%s", TO_VOLTS(volts), temperature_C(), SOFTWARE_VERSION);
-    serial_to_all(str, ALL);
+    volts = 0; //analogRead(V_REFERENCE);
+//    sprintf(str, ", \"V_REF\":%4.2f, \"Temp\":%4.2f, , \"VERSION\":%s", TO_VOLTS(volts), temperature_C(), SOFTWARE_VERSION);
+//    serial_to_all(str, ALL);
   }
 #endif
 
@@ -676,8 +679,8 @@ void send_miss
   shot_record_t* shot                    // record record
   )
 {
-  char str[256];                        // String holding buffer
-  unsigned long now;                    // Starting timer
+  char str[256];                          // String holding buffer
+  unsigned long wdt;                      // Starting timer
   
   if ( json_send_miss != 0)               // If send_miss not enabled
   {
@@ -692,8 +695,8 @@ void send_miss
      while(my_ring != whos_ring)
     {
       token_take();                              // Grab the token ring
-      now = millis();
-      while ( ((millis() - now) <= (ONE_SECOND))
+      timer_new(&wdt, ONE_SECOND);
+      while ( (wdt != 0)
         && ( my_ring == whos_ring) )
       { 
         token_poll();
@@ -930,7 +933,7 @@ void send_timer
     printf("\" %c\":%d, ", nesw[i], timer_count[i]);
   }
 
-  printf("\"V_REF\": %4.2f,", TO_VOLTS(analogRead(V_REFERENCE)));
+//  printf("\"V_REF\": %4.2f,", TO_VOLTS(analogRead(V_REFERENCE)));
   printf("}\r\n");      
 
   return;

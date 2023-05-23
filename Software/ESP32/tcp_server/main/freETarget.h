@@ -23,8 +23,12 @@
 #define REV_400    400   // ESP32
 
 #define INIT_DONE       0xabcd                    // Initialization complete signature
+#ifndef true
 #define true        (1==1)
 #define false       (0==1)
+#endif
+#define CLOCK_TEST   false
+
 /*
  * Options
  */
@@ -71,8 +75,9 @@ void freeETarget_init(void);                          // Get the target software
 void freeETarget_task(void);                          // Cyclic target task
 void freeETarget_json(void);                          // Cyclic JSON parser
 void freeETarget_timer(void);                         // High speed cyclic task
-void bye(void);                                       // Shut down and say goodbye
+void bye(unsigned int);                                       // Shut down and say goodbye
 void hello(void);                                     // Wake up and say hello
+void tabata_enable(unsigned int enable);              // Arm the Tabata counters
 
 /*
  *  Types
@@ -103,6 +108,10 @@ struct GPIO {
 
 typedef struct GPIO GPIO_t;
 
+union pack {                    // Put a floating point number
+  unsigned int int64;           // into a 64 bit number
+  double       double64;        // for NVS storage
+};
 
 /*
  *  Global Variables
@@ -113,5 +122,6 @@ extern const char to_hex[];
 extern unsigned int face_strike;
 extern const char nesw[];             // Cardinal Points
 extern unsigned int is_trace;         // Tracing level(s)
-
+extern unsigned int this_shot;        // Index into the shot array
+extern unsigned int shot_number;
 #endif

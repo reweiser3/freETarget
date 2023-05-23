@@ -10,6 +10,7 @@
 #include "freETarget.h"
 #include "gpio.h"
 #include "diag_tools.h"
+#include "nvs.h"
 #include "nonvol.h"
 #include "nvs_flash.h"
 #include "nvs.h"
@@ -24,6 +25,12 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\gpio_types.h"
+#include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\adc_types.h"
+#include "C:\Users\allan\esp\esp-idf\esp-idf\components\esp_adc\include\esp_adc\adc_oneshot.h"
+
+#include "timer.h"
+
 const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 
 #define TICK(x) (((x) / 0.33) * OSCILLATOR_MHZ)   // Distance in clock ticks
@@ -33,7 +40,6 @@ const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 
 static void  unit_test(unsigned int mode);
 static bool_t sample_calculations(unsigned int mode, unsigned int sample);
-static void  log_sensor(int sensor);
 extern int   json_clock[4];
 
 extern void sound_test(void);
@@ -129,7 +135,7 @@ void self_test
         random_delay = esp_random() % 6000;   // Pick a random delay time in us
         printf("\r\nRandom clock test: %dus. All outputs must be the same. ", random_delay);
         trip_timers();
-        delayMicroseconds(random_delay);  // Delay a random time
+//        delayMicroseconds(random_delay);  // Delay a random time
       }
   
       while ( !is_running() )
@@ -236,15 +242,15 @@ void self_test
       printf("\r\nRamping the LED");
       for (i=0; i != 256; i++)
       {
-        analogWrite(LED_PWM, i);
+//       analogWrite(LED_PWM, i);
         delay(ONE_SECOND/50);
       }
       for (i=255; i != -1; i--)
       {
-        analogWrite(LED_PWM, i);
+//        analogWrite(LED_PWM, i);
         delay(ONE_SECOND/50);
       }
-      analogWrite(LED_PWM, 0);
+//      analogWrite(LED_PWM, 0);
       printf(" Done\r\n");
       break;
 
@@ -331,10 +337,11 @@ void self_test
    case T_WIFI_BROADCAST:
     serial_to_all("Type ! to exit ", ALL); 
     ch = 0;
+    i = 0;
+    timer_new(&sample, 100000);
     while( ch != '!' )
     {
-      i = millis() / 1000;
-      if ( (i % 60) == 0 )
+      if ( (sample % 60) == 0 )
       {
         sprintf(s, "\r\n%d:%d ", i/60, i % 60);
         serial_to_all(s, ALL);
@@ -345,6 +352,7 @@ void self_test
       serial_to_all(s, ALL);
       }
     }
+    timer_delete(&sample);
     sprintf(s, "\r\nDone");
    break;
    
@@ -472,12 +480,11 @@ void self_test
  
  bool_t POST_counters(void)
  {
-   unsigned int i, j;            // Iteration counter
-   unsigned int random_delay;    // Delay duration
-   unsigned int sensor_status;   // Sensor status
-   int          x;               // Time difference (signed)
-   bool_t       test_passed;     // Record if the test failed
-   long         now;             // Current time
+   unsigned int  i, j;            // Iteration counter
+   unsigned long random_delay;    // Delay duration
+   unsigned int  sensor_status;   // Sensor status
+   int           x;               // Time difference (signed)
+   bool_t        test_passed;     // Record if the test failed
    
 /*
  * The test only works on V2.2 and higher
@@ -536,16 +543,16 @@ void self_test
     stop_timers();                      // Get the circuit ready
     arm_timers();
     delay(1);  
-    random_delay = esp_random() % 6000; // Pick a random delay time in us
-    now = micros();                     // Grab the current time
+    random_delay = 0; // Pick a random delay time in us
     trip_timers();
     sensor_status = is_running();       // Remember all of the running timers
 
-    while ( micros() < (now + random_delay ) )
+    timer_new(&random_delay, esp_random() % 6000);
+    while ( random_delay )
     {
       continue;
     }
-    
+    timer_delete(&random_delay);
     stop_timers();
     if ( (sensor_status != 0x0F) && DLT(DLT_CRITICAL) )      // The circuit was triggered but not all
     {                                 // FFs latched
@@ -577,7 +584,7 @@ void self_test
       
       if ( (x > CLOCK_TEST_LIMIT) && DLT(DLT_CRITICAL) )     // The time should be positive and within limits
       { 
-        printf("Failed Clock Test. Counter: %c  Is: %d  Should be: %d   Delta: %d", nesw[j], read_counter(j), random_delay, x);
+        printf("Failed Clock Test. Counter: %c  Is: %d  Should be: %d   Delta: %d", nesw[j], read_counter(j), (int)random_delay, x);
         test_passed = false;          // since there is delay  in
       }                               // Turning off the counters
     }
@@ -660,8 +667,6 @@ void set_trip_point
     stay_forever = true;                                    // For a long time
   }
   arm_timers();                                             // Arm the flip flops for later
-  enable_face_interrupt();                                  // Arm the face sensor
-  disable_timer_interrupt();                                // Prevent the timer from overwriting
   face_strike = 0;
 
 /*
@@ -738,7 +743,6 @@ void set_trip_point
  /*
   * Return
   */
-  enable_timer_interrupt();
   return;
 }
 
@@ -777,7 +781,7 @@ static void unit_test(unsigned int mode)
     if ( sample_calculations(mode, i) )
     {
       compute_hit(&record[0]);
-      sensor_status = 0xF;        // Fake all sensors good
+//      sensor_status = 0xF;        // Fake all sensors good
       record[0].shot_number = shot_number++;
       send_score(&record[0]);
       delay(ONE_SECOND/2);        // Give the PC program some time to catch up
@@ -913,8 +917,7 @@ static bool_t sample_calculations
 
 void show_sensor_status
   (
-  unsigned int   sensor_status,
-  shot_record_t* shot
+  unsigned int   sensor_status
   )
 {
   unsigned int i;
@@ -926,20 +929,21 @@ void show_sensor_status
     if ( sensor_status & (1<<i) )   printf("%c", nesw[i]);
     else                            printf(".");
   }
-
+#if (0)
   if ( shot != 0 )
   {
-    printdf(" Timers:");
+    printf(" Timers:");
 
     for (i=N; i<=W; i++)
     {
-      printf(" %c:", nesw[i], shot->timer_count[i]); 
+      printf(" %c:%d", nesw[i], shot->timer_count[i]); 
     }
   }
-  
+#endif
+
   printf("  Face Strike: %d", face_strike);
   
-  printf("  V_Ref:%4.2f",TO_VOLTS(analogRead(V_REFERENCE)));
+//  printf("  V_Ref:%4.2f",TO_VOLTS(analogRead(V_REFERENCE)));
   
   printf("  Temperature: %4.2f", temperature_C());
   
@@ -997,14 +1001,12 @@ bool_t do_dlt
   unsigned int level
   )
 { 
-  char s[20], str[20];
-
   if ((level & (is_trace | DLT_CRITICAL)) == 0 )
   {
     return false;      // Send out if the trace is higher than the level 
   }
 
-  printf("\n\r%4.2fs",micros()/1000000.0 );
+ // printf("\n\r%4.2fs",micros()/1000000.0 );
 
   return true;
 }

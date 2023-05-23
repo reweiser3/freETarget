@@ -13,23 +13,23 @@
 #include "json.h"
 #include "token.h"
 #include "compute_hit.h"
+#include "nvs.h"
 #include "nonvol.h"
 #include "serial_io.h"
 #include "nvs_flash.h"
 #include "nvs.h"
-#include "driver/gpio.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\gpio_types.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\adc_types.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\esp_adc\include\esp_adc\adc_oneshot.h"
+#include "driver\gpio.h"
+#include "timer.h"
+#include "token.h"
+#include "analog_io.h"
 
 static void sw_state(unsigned int action);// Do something with the switches
 static void send_fake_score(void);        // Send a fake score to the PC
 
 static unsigned int dip_mask;             // Used if the MFS2 uses the DIP_0 or DIP_3
-static char aux_spool[128];               // Spooling buffer from the AUX port
-static char json_spool[64];               // Spool for JSON
-static unsigned int  aux_spool_in, aux_spool_out; // Pointer to the spool
-static unsigned int  json_spool_in, json_spool_out; // Pointer to the spool
 static long power_save;
 
 /*-----------------------------------------------------
@@ -60,7 +60,7 @@ unsigned int read_port(void)
   for (i=0; i != 8; i++)
     {
     return_value <<= 1;
-    return_value |= gpio_get_level(port_list[i]) & 1;
+    return_value |= get_in(port_list[i]) & 1;
     }
 
  /*
@@ -300,7 +300,7 @@ void set_LED
 /* 
  *  HAL Discrete IN
  */
-bool_t read_in(unsigned int port)
+bool_t get_in(unsigned int port)
 {
   return gpio_get_level(port);
 }
@@ -625,7 +625,7 @@ void blink_fault
 void multifunction_switch(void)
  {
     unsigned int  action;               // Action to happen
-    unsigned long now;
+    unsigned long wdt;
     
     if ( CALIBRATE )
     {
@@ -670,8 +670,8 @@ void multifunction_switch(void)
  * Delay for one second to detect a tap
  * Check to see if the switch has been pressed for the first time
  */
-  now = millis();
-  while ( (millis() - now) <= ONE_SECOND )
+  timer_new(&wdt, ONE_SECOND);
+  while ( wdt != 0 )
   {
     if ( DIP_SW_A )
     {
@@ -690,6 +690,7 @@ void multifunction_switch(void)
       set_LED(L('-', '-', '.'));
     }
   }
+  timer_delete(&wdt);
   
   if ( (DIP_SW_A == 0 )
         && (DIP_SW_B == 0 ) )             // Both switches are open? (tap)
@@ -805,7 +806,7 @@ static void sw_state
       break;
       
    case ON_OFF:                          // Turn the target off
-      bye();                              // Stay in the Bye state until a wake up event comes along
+      bye(0);                            // Stay in the Bye state until a wake up event comes along
       break;
       
     case LED_ADJUST:
@@ -935,27 +936,21 @@ void multifunction_display(void)
  *-----------------------------------------------------*/
 void digital_test(void)
 {
-  int i;
   double       volts;         // Reference Voltage
-  
+  volts = 0.0;
 /*
  * Read in the fixed digital inputs
  */
-  printf("\r\nTime: %4.2fs", (float)(micros()/1000000));
+//  printf("\r\nTime: %4.2fs", (float)(micros()/1000000));
   printf("\r\nBD Rev: %d", revision());       
   printf("\r\nDIP: 0x%02X", read_DIP(0)); 
   gpio_set_level(STOP_N, 0);
   gpio_set_level(STOP_N, 1);                        // Reset the fun flip flop
   printf("\r\nRUN FlipFlop: 0x%02X", is_running());   
-  printf("\r\nTemperature: %dC", temperature_C());
+  printf("\r\nTemperature: %4.2fdC", temperature_C());
   printf("\r\nSpeed of Sound: %4.2fmm/us", speed_of_sound(temperature_C(), json_rh));
   printf("\r\nV_REF: %4.f Volts", volts);
   printf("\r\n");
-
-/*
- * Read the port pins and report
- */
-  i=0;
 
  /*
   * Blink the LEDs and exit
@@ -991,7 +986,7 @@ void aquire(void)
   }
   stop_timers();                                    // Stop the counters
   read_timers(&record[this_shot].timer_count[0]);   // Record this count
-  record[this_shot].shot_time = FULL_SCALE - in_shot_timer; // Capture the time into the shot
+  record[this_shot].shot_time = 0;//FULL_SCALE - in_shot_timer; // Capture the time into the shot
   record[this_shot].face_strike = face_strike;      // Record if it's a face strike
   record[this_shot].sensor_status = is_running();   // Record the sensor status
   record[this_shot].shot_number = shot_number++;    // Record the shot number and increment
@@ -1022,7 +1017,7 @@ static void send_fake_score(void)
 { 
   static   shot_record_t shot;
     
-  shot.x = random(-json_sensor_dia/2.0, json_sensor_dia/2.0);
+  shot.x = 0 ; // esp_random() % (json_sensor_dia/2.0);
   shot.y = 0;
   shot.shot_number++;
   send_score(&shot);

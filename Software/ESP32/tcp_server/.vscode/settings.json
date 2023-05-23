@@ -3,7 +3,8 @@
   "idf.adapterTargetName": "esp32s3",
   "files.associations": {
     "sstream": "c",
-    "regex": "c"
+    "regex": "c",
+    "gpio.h": "c"
   },
   "idf.flashType": "UART"
 }

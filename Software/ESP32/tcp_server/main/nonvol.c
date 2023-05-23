@@ -11,6 +11,7 @@
  * ----------------------------------------------------*/
 #include "freETarget.h"
 #include "json.h"
+#include "nvs.h"
 #include "nonvol.h"
 #include "serial_io.h"
 
@@ -21,10 +22,12 @@
 #include "nvs_flash.h"
 #include "nvs.h"
 
+#include "timer.h"
+
 /*
  *  Local variables
  */
-extern nvs_handle_t my_handle;
+nvs_handle_t my_handle;
 
 /*----------------------------------------------------------------
  * 
@@ -95,14 +98,14 @@ void factory_nonvol
   unsigned int serial_number;             // Board serial number
   char         ch;
   unsigned int x;                         // Temporary Value
-  double       dx;                        // Temporarty Value
   unsigned int i;                         // Iteration Counter
   int          length;
-
-  non_vol_init = 0;
+  union pack nvm64;
+  
   serial_number = 0;
   gen_position(0); 
   x = 0;
+  nonvol_init = 0;
   nvs_set_u32(my_handle, "NONVOL_V_SET", nonvol_init);
   if ( new_serial_number == false )
   {
@@ -126,24 +129,24 @@ void factory_nonvol
         printf("\r\n%s \"\"", JSON[i].token);
         if ( JSON[i].non_vol != 0 )
         {
-          length = JSON[i].token & FLOAT_MASK;
+          length = JSON[i].convert & FLOAT_MASK;
           nvs_set_i32(my_handle, JSON[i].non_vol, length);                    // Zero out the text
         }
         break;
         
       case IS_INT32:
-        x = JSON[i].init_value;                            // Read in the value 
+        x = JSON[i].init_value;                                               // Read in the value 
         printf("\r\n%s %d", JSON[i].token, x);
         if ( JSON[i].non_vol != 0 )
         {
-          nvs_set_i32(my_handle, JSON[i].non_vol, x);                    // Read in the value
+          nvs_set_i32(my_handle, JSON[i].non_vol, x);                         // Read in the value
         }
         break;
 
       case IS_FLOAT:
-        dx = (double)JSON[i].init_value;
-        printf("\r\n%s %4.2f", JSON[i].token, dx);
-        nvs_set_i32(my_handle, JSON[i].non_vol, dx);                    // Read in the value
+        nvm64.double64 = (double)JSON[i].init_value;
+        printf("\r\n%s %4.2f", JSON[i].token, nvm64.double64);
+        nvs_set_i64(my_handle, JSON[i].non_vol, nvm64.int64);                    // Read in the value
         break;
     }
    i++;
@@ -296,13 +299,11 @@ void init_nonvol
 void read_nonvol(void)
 {
   long          nonvol_init;
-  unsigned int  i, j;          // Iteration Counter
+  unsigned int  i;             // Iteration Counter
   long          x;             // 32 bit number
-  double        dx;            // Floating point number
-  int           length;        // Length of input string
+  size_t        length;        // Length of input string
+  union pack    nvm64;         // Save a float as a long
 
-  esp_err_t err;
-  
   if ( DLT(DLT_CRITICAL) )
   {
     printf("read_nonvol()");
@@ -311,33 +312,19 @@ void read_nonvol(void)
 /*
  * Read the nonvol marker and if uninitialized then set up values
  */
-  err = nvs_flash_init();
-  if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
+  if ( nvs_flash_init() != 0 )
   {
     nvs_flash_erase();
     nvs_flash_init();
   }
 
-  err = nvs_open(NAME_SPACE, NVS_READWRITE, &my_handle);
-  if (err != ESP_OK)
+  if (nvs_open(NAME_SPACE, NVS_READWRITE, &my_handle) != ESP_OK)
   {
     DLT(DLT_CRITICAL);
     printf("read_nonvol(): Failed to open NVM");
   }
         
-  err = nvs_get_i32(my_handle, "NONVOL_INIT", &nonvol_init);
-  switch (err)
-  {
-    case ESP_OK:
-      break;
-
-      case ESP_ERR_NVS_NOT_FOUND:
-        printf("The value is not initialized yet!\n");
-        break;
-   
-      default :
-        printf("Error (%s) reading!\n", esp_err_to_name(err));
-  }
+  nvs_get_i32(my_handle, "NONVOL_INIT", &nonvol_init);
   
   if ( nonvol_init != INIT_DONE)                       // EEPROM never programmed
   {
@@ -393,13 +380,8 @@ void read_nonvol(void)
           break;
 
         case IS_FLOAT:
-          nvs_get_i32(my_handle, JSON[i].non_vol, &x);       // Read in the value
-          dx = (double)x;
-          for (j=0; j != (JSON[i].convert & FLOAT_MASK); j++)
-          {
-            dx *= 10.0d;
-          }
-          *JSON[i].d_value = dx;
+          nvs_get_i64(my_handle, JSON[i].non_vol, (int64_t*)&nvm64.int64);       // Read in the value as an iny
+          *JSON[i].d_value = nvm64.double64;
           break;
       }
    }

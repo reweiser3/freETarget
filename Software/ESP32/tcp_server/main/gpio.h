@@ -35,6 +35,8 @@ void digital_test(void);                                  // Execute the digital
 void paper_on_off(bool_t on);                             // Turn the motor on or off
 void rapid_green(unsigned int state);                     // Drive the GREEN light
 void rapid_red(unsigned int state);                       // Drive the RED light
+void multifunction_display(void);                         // Display the MFS settings as text
+bool_t  get_in(unsigned int port);                        // HAL read bit input
 
 /*
  *  Port Definitions
@@ -98,10 +100,10 @@ void rapid_red(unsigned int state);                       // Drive the RED light
  * DIP Switch Use. 
  */
 //                      From DIP                   From Software
-#define CALIBRATE       ((gpio_get_level(DIP_3) == 0)    + 0)   // 1 Go to Calibration Mode
-#define DIP_SW_A        ((gpio_get_level(DIP_2) == 0)    + 0)   // 2 When CALIBRATE is asserted, use lower trip point
-#define DIP_SW_B        ((gpio_get_level(DIP_1) == 0)    + 0)   // 4 When CALIBRATE is asserted, use higher trip point
-#define VERBOSE_TRACE   ((gpio_get_level(DIP_0) == 0)    + 0)   // 8 Show the verbose software trace
+#define CALIBRATE       ((get_in(DIP_3) == 0)    + 0)   // 1 Go to Calibration Mode
+#define DIP_SW_A        ((get_in(DIP_2) == 0)    + 0)   // 2 When CALIBRATE is asserted, use lower trip point
+#define DIP_SW_B        ((get_in(DIP_1) == 0)    + 0)   // 4 When CALIBRATE is asserted, use higher trip point
+#define VERBOSE_TRACE   ((get_in(DIP_0) == 0)    + 0)   // 8 Show the verbose software trace
 
 #define VSET_PWM     8          // VREF setting
 #define CTS_U        7

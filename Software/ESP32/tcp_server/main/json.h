@@ -18,7 +18,7 @@ typedef struct  {
   int          init_value;    // Initial Value
 } json_message_t;
 
-extern json_message_t JSON[];
+extern const json_message_t JSON[];
 
 #define IS_VOID       0x00       // Value is a void
 #define IS_TEXT       0x80       // Value is a string
@@ -28,6 +28,9 @@ extern json_message_t JSON[];
 #define IS_FIXED      0x08       // The value cannot be changed
 #define IS_MASK       (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FIXED  )
 #define FLOAT_MASK    ((~IS_MASK) & 0xFF)    // Scaling factor
+
+#define SSID_SIZE     32          // Reserve 32 bytes for SSID
+#define  PWD_SIZE     32          // Reserve 32 bytes for Password
 
 void reset_JSON(void);            // Clear the JSON input buffer
 bool_t read_JSON(void);           // Scan the serial port looking for JSON input

@@ -13,16 +13,19 @@
 #include "math.h"
 #include "gpio.h"
 #include "analog_io.h"
+#include "nvs.h"
 #include "nonvol.h"
 #include "serial_io.h"
 #include "nvs_flash.h"
 #include "nvs.h"
+#include "driver/gpio.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\gpio_types.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\adc_types.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\esp_adc\include\esp_adc\adc_oneshot.h"
+#include "timer.h"
 
 void set_vset_PWM(unsigned int pwm);
-extern nvs_handle_t my_handle;
+
 /*----------------------------------------------------------------
  * 
  * function: set_LED_PWM()
@@ -57,7 +60,7 @@ void set_LED_PWM_now
   }
 
   old_LED_percent = new_LED_percent;
-  analogWrite(LED_PWM, old_LED_percent * 256 / 100);  // Write the value out
+  // analogWrite(LED_PWM, old_LED_percent * 256 / 100);  // Write the value out
   
   return;
 }
@@ -90,7 +93,7 @@ void set_LED_PWM                                  // Theatre lighting
  */
   while ( new_LED_percent != old_LED_percent )  // Change in the brightness level?
   {
-    analogWrite(LED_PWM, old_LED_percent * 256 / 100);  // Write the value out
+    //analogWrite(LED_PWM, old_LED_percent * 256 / 100);  // Write the value out
     
     if ( new_LED_percent < old_LED_percent )
     {
@@ -101,7 +104,7 @@ void set_LED_PWM                                  // Theatre lighting
       old_LED_percent++;                        // Ramp the value up
     }
 
-    delay(ONE_SECOND/50);                       // Worst case, take 2 seconds to get there
+    delay((unsigned long)ONE_SECOND/50);                       // Worst case, take 2 seconds to get there
   }
   
 /*
@@ -126,7 +129,7 @@ void set_LED_PWM                                  // Theatre lighting
  *--------------------------------------------------------------*/
 unsigned int read_reference(void)
 {
-  return analogRead(V_REFERENCE);
+  return 0; // analogRead(V_REFERENCE);
 }
 
 /*----------------------------------------------------------------
@@ -159,7 +162,7 @@ unsigned int revision(void)
 /* 
  *  Read the resistors and determine the board revision
  */
-  revision =  version[analogRead(ANALOG_VERSION) * 16 / 1024];
+  revision =   version[0]; // analogRead(ANALOG_VERSION) * 16 / 1024];
 
 /*
  * Fake the revision if it is undefined
@@ -180,33 +183,6 @@ unsigned int revision(void)
   return revision;
 }
 
-/*----------------------------------------------------------------
- * 
- * function: max_analog
- * 
- * brief: Return the value of the largest analog input
- * 
- * return: Largest analog voltage from the sensor channels
- * 
- *--------------------------------------------------------------*/
-unsigned int max_analog(void)
-{
-  unsigned int return_value;
-
-  return_value = analogRead(NORTH_ANA);
-
-  if ( analogRead(EAST_ANA) > return_value ) 
-    return_value = analogRead(EAST_ANA);
-
-  if ( analogRead(SOUTH_ANA) > return_value ) 
-    return_value = analogRead(SOUTH_ANA);
-
-  if ( analogRead(WEST_ANA) > return_value ) 
-    return_value = analogRead(WEST_ANA);
-
-  return return_value;
-  
-}
 
 /*----------------------------------------------------------------
  * 
@@ -231,7 +207,8 @@ double temperature_C(void)
   int raw;                // Allow for negative temperatures
 
   raw = 0xffff;
-   
+ #if (0)
+
 /*
  *  Point to the temperature register
  */
@@ -252,6 +229,8 @@ double temperature_C(void)
     {
     raw |= 0xFF00;      // Sign extend
     }
+
+#endif 
 
 /*
  *  Return the temperature in C
@@ -285,7 +264,7 @@ double temperature_C(void)
   )
 {
   value &= MAX_PWM;
-  analogWrite(vset_PWM, value);
+  // analogWrite(vset_PWM, value);
   return;
 }
 
@@ -326,7 +305,7 @@ double temperature_C(void)
   cycle_count = 0;
   while ( 1 )
   {
-    vref_raw = analogRead(V_REFERENCE);
+    vref_raw = 0; // analogRead(V_REFERENCE);
     vref_error = vref_desired - vref_raw;
     pwm -= vref_error/4;
     if ( pwm > 255 )

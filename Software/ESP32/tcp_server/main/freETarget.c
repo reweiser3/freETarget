@@ -10,6 +10,7 @@
 #include "compute_hit.h"
 #include "analog_io.h"
 #include "json.h"
+#include "nvs.h"
 #include "nonvol.h"
 #include "mechanical.h"
 #include "diag_tools.h"
@@ -24,7 +25,6 @@
 /*
  *  Function Prototypes
  */
-       void   bye(void);                // Say good night Gracie
 static long   tabata(bool_t reset_time);// Tabata state machine
 static unsigned int set_mode(void);     // Set the target running mode
 static unsigned int arm(void);          // Arm the circuit for a shot
@@ -130,8 +130,6 @@ void freeETarget_init(void)
     printf("Starting timers");
   }
 
-  enable_timer_interrupt();
-     
 /*
  * Initialize the WiFi or token ring if available
  */
@@ -237,7 +235,7 @@ void freeETarget_task (void)
   if ( (json_power_save != 0 ) 
        && (power_save == 0) )                         // Time in minutes
   {
-    bye();                                            // Dim the lights
+    bye(0);                                           // Dim the lights
     power_save = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L;   // Came back. 
     state = SET_MODE;                                 // Reset everything just in case
   }
@@ -307,10 +305,6 @@ void freeETarget_task (void)
  {
   unsigned int i;
 
-  if ( VERBOSE_TRACE )
-  {
-    is_trace = DLT_DIAG;
-  }
   rapid_on  = 0;                    // Turn off the timer
     
   for (i=0; i != SHOT_STRING; i++)
@@ -354,6 +348,7 @@ void freeETarget_task (void)
  * the Tabata or Rapid fire feature is enabled
  *
  *--------------------------------------------------------------*/
+static unsigned long blink = 0;
 unsigned int arm(void)
 {
   face_strike = 0;                  // Reset the face strike count
@@ -372,6 +367,7 @@ unsigned int arm(void)
     {
       printf("Waiting...");
     }  
+    timer_new(&blink, ONE_SECOND);
     return WAIT;                   // Fall through to WAIT
   }
 
@@ -428,6 +424,8 @@ unsigned int arm(void)
  *--------------------------------------------------------------*/
 unsigned int wait(void)
 {
+  static int blink_on_off = 0;
+
 /*
  * Monitor the WiFi and blink if WiFi is present but not connected
  * Set RDY to solid red if there is a connection to the PC client
@@ -439,13 +437,18 @@ unsigned int wait(void)
   }
   else
   {
-    if ( (millis() / 1000) & 1 )       // Otherwise blink the RDY light
+    if ( blink == 0 )
     {
-      set_LED(LED_READY);
-    }
-    else
-    {
-      set_LED(LED_OFF);
+      blink = ONE_SECOND;
+      blink_on_off ^= 1;
+      if ( blink_on_off )       // Otherwise blink the RDY light
+      {
+        set_LED(LED_READY);
+      }
+      else
+      {
+        set_LED(LED_OFF);
+      }
     }
   }
 
@@ -455,7 +458,7 @@ unsigned int wait(void)
   if ( (json_rapid_enable == 1)         // The rapid fire timer has been turned on
           && (rapid_on != 0) )          // And there is a defined interval
   {
-    if (millis() >= rapid_on)           // Do this until the timer expires
+    if (rapid_on)           // Do this until the timer expires
     {
       set_LED_PWM_now(0);
 
@@ -524,7 +527,7 @@ unsigned int reduce(void)
   {   
     if ( DLT(DLT_APPLICATION) )
     {
-      printf("Reducing shot: %d \n\rTrigger: ", last_shot);
+//      printf("Reducing shot: %d \n\rTrigger: ", last_shot);
       show_sensor_status(record[last_shot].sensor_status);
     }
 
@@ -979,7 +982,7 @@ void rapid_enable
  * when not in use
  * 
  *--------------------------------------------------------------*/
-void bye(void)
+void bye(unsigned int x)
 {
 /*
  * The BYE function does not work if we are a token ring.

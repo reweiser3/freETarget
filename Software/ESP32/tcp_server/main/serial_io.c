@@ -168,7 +168,7 @@ void serial_flush
 
 /*-----------------------------------------------------
  * 
- * function: get_chars
+ * function: serial_getch
  * 
  * brief:    Read one or more of the serial ports
  * 
@@ -178,7 +178,7 @@ void serial_flush
  *
  * 
  *-----------------------------------------------------*/
-char get_chars
+char serial_getch
   (
     bool_t console,       // Read the console
     bool_t aux,           // Read the AUX port

@@ -208,3 +208,19 @@ unsigned int timer_new
   return 0;
   
 }
+
+/*-----------------------------------------------------
+ * 
+ * function: delay()
+ * 
+ * brief:    Waste Time
+ *  
+ * return:   Nothing
+ * 
+ *-----------------------------------------------------
+ *
+ *----------------------------------------------------*/
+void delay (unsigned long time_delay)
+{
+  return;
+}
