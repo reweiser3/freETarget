@@ -8,6 +8,8 @@
 #ifndef _GPIO_H_
 #define _GPIO_H_
 
+#include "freETarget.h"
+
 /*
  * Global functions
  */
@@ -23,7 +25,8 @@ void trip_timers(void);
 bool_t read_in(unsigned int port);                        // Read the selected port
 void read_timers(unsigned int* timer_counts);             // Read and return the counter registers
 void drive_paper(void);                                   // Turn on the paper motor
-void enable_face_interrupt();                             // Turn on the face strike interrupt
+void aquire(void);                                        // Read the clock registers
+// void enable_face_interrupt();                             // Turn on the face strike interrupt
 void disable_face_interrupt(void);                        // Turn off the face strike interrupt
 void enable_sensor_interrupt();                           // Turn on the sensor interrupt
 void disable_sensor_interrupt(void);                      // Turn off the sensor strike interrupt
@@ -69,7 +72,7 @@ bool_t  get_in(unsigned int port);                        // HAL read bit input
 #define RUN_WEST    28                    // PA6
 #define RUN_W_MASK  (1<<6)
 #define RUN_A_MASK  (RUN_N_MASK + RUN_E_MASK + RUN_S_MASK + RUN_W_MASK)
-#define RUN_PORT    PINA
+#define RUN_PORT    29
 
 #define QUIET       29
 #define RCLK        40

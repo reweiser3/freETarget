@@ -84,19 +84,22 @@ void freeETarget_init(void)
  *  Setup the serial port
  */
   serial_io_init();
+  while (1)
+  {
   POST_version();                         // Show the version string on all ports
+  }
   
   read_nonvol();
 
 /*
  *  Set up the port pins
  */
-  init_gpio();  
+//  init_gpio();  
   set_LED('*', '.', '.');                 // Hello World
 
   init_sensors();
-  init_analog_io();
-  init_timer();
+//  init_analog_io();
+ // init_timer();
   timer_new(&keep_alive,    (unsigned long)json_keep_alive * ONE_SECOND); // Keep alive timer
   timer_new(&state_timer,   0);                                           // Free running state timer
   timer_new(&in_shot_timer, FULL_SCALE);                                  // Time inside of the shot window
@@ -135,7 +138,7 @@ void freeETarget_init(void)
  */
 
    set_LED('*', '*', '.');                 // Hello World
-   esp01_init();                         // Prepare the WiFi channel if installed
+//   esp01_init();                         // Prepare the WiFi channel if installed
    
 /*
  * Ready to go
@@ -191,7 +194,7 @@ void freeETarget_task (void)
   switch (json_token )
   {
     case TOKEN_WIFI:
-      esp01_receive();
+//      esp01_receive();
       break;
 
     case TOKEN_MASTER:
@@ -214,11 +217,6 @@ void freeETarget_task (void)
       break;
   }
     
-  if ( read_JSON() )
-  {
-    power_save = (long)json_power_save * 60L * (long)ONE_SECOND;        // Reset the power down timer if something comes in
-  }
-
 /*
  * Take care of the TCPIP keep alive
  */
@@ -354,7 +352,7 @@ unsigned int arm(void)
   face_strike = 0;                  // Reset the face strike count
   if ( json_send_miss )
   {
-    enable_face_interrupt();        // Turn on the face strike interrupt
+//    enable_face_interrupt();        // Turn on the face strike interrupt
   }
 
   stop_timers();
@@ -430,7 +428,7 @@ unsigned int wait(void)
  * Monitor the WiFi and blink if WiFi is present but not connected
  * Set RDY to solid red if there is a connection to the PC client
  */
-  if ( ((json_token == TOKEN_WIFI) && ((esp01_is_present() == false) || esp01_connected() ))         // If the esp01 is not present, or connected
+  if ( (json_token == TOKEN_WIFI)         // If the esp01 is not present, or connected
           || ((json_token != TOKEN_WIFI) && (my_ring != TOKEN_UNDEF)) )
   {
     set_LED(LED_READY);                 // to a client, then the RDY light is steady on
@@ -1077,7 +1075,7 @@ static void send_keep_alive(void)
   char str[32];
   static int keep_alive_count = 0;
 
-  if ( esp01_connected() )
+//  if ( esp01_connected() )
   {
     sprintf(str, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);
     serial_to_all(str, TCPIP);

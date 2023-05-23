@@ -7,6 +7,8 @@
  * ----------------------------------------------------*/
 #include "gpio.h"
 #include "json.h"
+#include "diag_tools.h"
+#include "stdio.h"
 
 /*
  * Definitions
@@ -62,7 +64,6 @@ static unsigned int isr_state = PORT_STATE_IDLE;// Current aquisition state
 void freeETarget_timer(void)
 {
   unsigned int pin;                             // Value read from the port
-  unsigned char ch;                             // Byte input
   unsigned int  i;                              // Iteration counter
 
 /*
@@ -111,14 +112,6 @@ void freeETarget_timer(void)
       break;
   }
 
-/*
- * Spool the AUX input
- */
-  while ( AUX_SERIAL.available() )
-  {
-    ch = AUX_SERIAL.read();     
-    aux_spool_put(ch);
-  }
 
 /*
  * Refresh the timers

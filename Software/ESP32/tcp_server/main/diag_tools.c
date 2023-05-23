@@ -123,8 +123,12 @@ void self_test
  * Test 2, 3, Test the timing circuit
  */
     case T_TRIGGER:                       // Show the timer values (Wait for analog input)
-      printf("\r\nWaiting for Trigger\r\n");
     case T_CLOCK:                        // Show the timer values (Trigger input)
+      if ( test == T_TRIGGER )
+      {
+        printf("\r\nWaiting for Trigger\r\n");
+      }
+
       stop_timers();
       arm_timers();
 
@@ -261,7 +265,7 @@ void self_test
       printf("\r\nFace strike test\n\r");
       face_strike = 0;                        // Reset the interrupt count
       sample = 0;
-      enable_face_interrupt();
+//      enable_face_interrupt();
       ch = 0;
       
       while ( ch != '!' )
@@ -299,7 +303,6 @@ void self_test
  * TEST 17 Dump NonVol
  */
    case T_NONVOL:
-    dump_nonvol();
    break;
 
   
@@ -376,15 +379,6 @@ void self_test
  * Test 28 Cycle the LEds
  */
   case T_LED_CYCLE:
-    i = 0;
-    while ( !json_spool_available() )                     // Keep blinking the LEDs
-    {
-      set_LED( (i>>0) & 1, (i>>1) & 1, (i>>2)&1 );
-      delay(ONE_SECOND/2);
-      i++;
-      token_poll();                                       // Until something arrives
-    }
-    printf("\n\rDone");
     break;
   }
  
@@ -645,9 +639,9 @@ static void start_over(void)    // Start the test over again
 {
   stop_timers();
   arm_timers();                 // Reset the latch state
-  enable_face_interrupt();      // Turn on the face strike interrupt
+//  enable_face_interrupt();      // Turn on the face strike interrupt
   face_strike = 0;              // Reset the face strike count
-  enable_face_interrupt();      // Turning it on above creates a fake interrupt with a disable
+//  enable_face_interrupt();      // Turning it on above creates a fake interrupt with a disable
   return;
 }
 

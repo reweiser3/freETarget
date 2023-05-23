@@ -66,7 +66,6 @@ void check_nonvol(void)
   nvs_get_u32(my_handle, "NONVOL_PS_VERSION", &nonvol_init);
   if ( nonvol_init != PS_VERSION )                    // Is what is in memory not the same as now
   {
-    backup_nonvol();                                  // Copy what we have 
     update_nonvol(nonvol_init);                       // Then update the version
   }
   
@@ -153,10 +152,6 @@ void factory_nonvol
  }
   printf("\r\nDone\r\n");
   
-/*    
- *      Make a backup of the settings
- */  backup_nonvol();
-
 /*    
  *     Test the board only if it is a factor init
  */

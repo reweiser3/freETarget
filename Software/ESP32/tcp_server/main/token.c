@@ -94,8 +94,7 @@ void token_init(void)
 /*
  * If not in token ring mode or WiFi is present,do nothing
  */
-  if ( (json_token == TOKEN_WIFI)                 // Not in token ring mode
-    || (esp01_is_present() == 1) )                // In WiFi mode
+  if (json_token == TOKEN_WIFI)                 // Not in token ring mode
   {
     return;
   }
@@ -150,10 +149,10 @@ void token_poll(void)
   switch ( json_token )
   {
     case TOKEN_WIFI:                                  // No token ring installed
-      while ( aux_spool_available() )                  // Is there something waiting for us?
+      while ( serial_available(AUX) )                 // Is there something waiting for us?
       {
-          token = aux_spool_read();                    //  Pick it up
-          json_spool_put(token);                       //  and save it for our own use
+          token = serial_getch(AUX);                    //  Pick it up
+          char_to_all(token, AUX);                    //  and save it for our own use
       }  
       break;
  
@@ -165,15 +164,14 @@ void token_poll(void)
       {
         token = serial_getch(AUX);                    //  Pick it up
         char_to_all(token, AUX);                      //  Pass it along
-        json_spool_put(token);                        //  and save it for our own use
       }     
                                   
 /*
  * Handle local token ring traffic
  */
-    while ( aux_spool_available() )
+    while ( serial_available(AUX) )
     {
-      token = aux_spool_read();
+      token = serial_getch(AUX);
       if (DLT(DLT_INFO) )                             // and not in trace mode (DIAG jumper installed)
       {
         printf("Master Rx: 0x%2X  %d", token, token);
@@ -242,9 +240,9 @@ void token_poll(void)
  * Regular node
  */
   case TOKEN_SLAVE:
-    while( aux_spool_available() )
+    while( serial_available(AUX) )
     {
-      token = aux_spool_read();
+      token = serial_getch(AUX);
       if (DLT(DLT_INFO) )                                   // and not in trace mode (DIAG jumper installed)
       {
         printf("Slave Rx: 0x%02X %d", token, token);
@@ -291,7 +289,7 @@ void token_poll(void)
         char_to_all(token, AUX);                            // Send it to the next guy
         if ( whos_ring == TOKEN_UNDEF)                      // and the ring is not in use
         {      
-          json_spool_put(token);                            // Ring in broadcast
+          char_to_all(token, AUX);                                 // Ring in broadcast
         }                                
       }
     }
@@ -326,8 +324,7 @@ int token_take(void)
 /*
  * If not in token ring mode or WiFi is present,do nothing
  */
-  if ( (json_token == TOKEN_WIFI)                 // Not in token ring mode
-    || (esp01_is_present() == 1) )                // In WiFi mode
+  if (json_token == TOKEN_WIFI)                 // Not in token ring mode
   {
     return 0;
   }
@@ -375,8 +372,7 @@ int token_give(void)
 /*
  * If not in token ring mode or WiFi is present,do nothing
  */
-  if ( (json_token == TOKEN_WIFI)                 // Not in token ring mode
-    || (esp01_is_present() == 1) )                // In WiFi mode
+  if (json_token == TOKEN_WIFI)                 // Not in token ring mode
   {
     return 0;
   }
@@ -430,7 +426,6 @@ int token_available(void)
  * If not in token ring mode or WiFi is present,do nothing
  */
   if ( (json_token == TOKEN_WIFI)                 // Not in token ring mode
-    || (esp01_is_present() == 1)                  // In WiFi mode
     || ((whos_ring == my_ring ) && (my_ring != TOKEN_UNDEF)))  // Or the ring belong to me
   {
     return 1;

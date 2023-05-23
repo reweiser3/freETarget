@@ -8,6 +8,8 @@
 #ifndef _JSON_H_
 #define _JSON_H_
 
+#include "freETarget.h"
+
 typedef struct  {
   char*             token;    // JSON token string, ex "RADIUS": 
   int*              value;    // Where value is stored 
@@ -33,7 +35,7 @@ extern const json_message_t JSON[];
 #define  PWD_SIZE     32          // Reserve 32 bytes for Password
 
 void reset_JSON(void);            // Clear the JSON input buffer
-bool_t read_JSON(void);           // Scan the serial port looking for JSON input
+void freeETarget_json(void);      // Task to scan the serial port looking for JSON input
 void show_echo(void);             // Display the settings
 
 extern int    json_dip_switch;    // DIP switch overwritten by JSON message

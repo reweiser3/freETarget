@@ -19,14 +19,6 @@ char serial_getch(bool_t console, bool_t aux, bool_t tcpip);            // Read 
 unsigned int serial_available(bool_t console, bool_t aux, bool_t tcpip);// Find out how much is waiting for us
 void serial_flush(bool_t console, bool_t aux, bool_t tcpip);            // Get rid of everything
 
-char aux_spool_read(void);                                // Read something from the AUX spool
-int  aux_spool_available(void);                           // Is there something in the AUX spool
-void aux_spool_put(char ch);                              // Put something into the  AUX spoolunsigned int serial_available(bool_t console, bool_t aux, bool_t tcpip);// Find out how much is waiting for us
-
-char json_spool_read(void);                               // Read something from the AUX spool
-int  json_spool_available(void);                          // Is there something in the AUX spool
-void json_spool_put(char ch);                             // Put something into the  AUX spool
-
 /*
  *  Definitions
  */

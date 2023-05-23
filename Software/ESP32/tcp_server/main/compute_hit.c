@@ -530,11 +530,8 @@ void send_score
   double real_x, real_y;          // Shot location in mm X, Y before remap
   double radius;
   double angle;
-  unsigned int volts;
   char   str[256];                // String holding buffers
   unsigned long   wdt;            // Watch dog Timer
-
-  volts = 0;
   
   if ( DLT(DLT_DIAG) )
   {
@@ -634,15 +631,6 @@ void send_score
   {
     sprintf(str, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)s[N].count, (int)s[E].count, (int)s[S].count, (int)s[W].count);
     serial_to_all(str, ALL);
-  }
-#endif
-
-#if ( S_MISC ) 
-  if ( json_token == TOKEN_WIFI )
-  {
-    volts = 0; //analogRead(V_REFERENCE);
-//    sprintf(str, ", \"V_REF\":%4.2f, \"Temp\":%4.2f, , \"VERSION\":%s", TO_VOLTS(volts), temperature_C(), SOFTWARE_VERSION);
-//    serial_to_all(str, ALL);
   }
 #endif
 
