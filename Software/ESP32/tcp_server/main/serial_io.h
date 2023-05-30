@@ -25,6 +25,6 @@ void serial_flush(bool_t console, bool_t aux, bool_t tcpip);            // Get r
 #define CONSOLE true,  false, false
 #define AUX     false, true,  false
 #define TCPIP   false, false, true
-#define ALL     true,  true,  true
+#define ALL     true,  false, false
 
 #endif

@@ -25,6 +25,7 @@
 #include "timer.h"
 #include "token.h"
 #include "analog_io.h"
+#include "esp_timer.h"
 
 static void sw_state(unsigned int action);// Do something with the switches
 static void send_fake_score(void);        // Send a fake score to the PC
@@ -941,7 +942,7 @@ void digital_test(void)
 /*
  * Read in the fixed digital inputs
  */
-//  printf("\r\nTime: %4.2fs", (float)(micros()/1000000));
+  printf("\r\nTime: %4.2fs", (float)(esp_timer_get_time()/1000000));
   printf("\r\nBD Rev: %d", revision());       
   printf("\r\nDIP: 0x%02X", read_DIP(0)); 
   gpio_set_level(STOP_N, 0);

@@ -21,6 +21,12 @@
 #include "math.h"
 #include "esp_random.h"
 #include "serial_io.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "C:\Users\allan\esp\esp-idf\esp-idf\components\freertos\FreeRTOS-Kernel\include\freertos\mpu_wrappers.h"
+#include "esp_timer.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 /*
  *  Function Prototypes
@@ -33,6 +39,7 @@ static unsigned int reduce(void);       // Reduce the shot data
 static unsigned int finish(void);       // Finish uip and start over
 static void send_keep_alive(void);      // Send out at TCPIP message    
 static bool_t discard_shot(void);       // In TabataThrow away the shot
+static void freeETarget_task(void);
 
 /*
  *  Variables
@@ -53,10 +60,11 @@ unsigned int  tabata_state;             // Tabata state
 unsigned int  shot_number;              // Shot Identifier
 volatile unsigned long  in_shot_timer;  // Time inside of the shot window
 
-static volatile unsigned long  keep_alive;      // Keep alive timer
-static volatile unsigned long  state_timer;     // Free running state timer
-static volatile unsigned long  power_save;      // Power save timer
-static volatile unsigned long  token_tick;      // Token ring watchdog
+static volatile unsigned long  keep_alive;        // Keep alive timer
+static volatile unsigned long  state_timer;       // Free running state timer
+static volatile unsigned long  power_save;        // Power save timer
+static volatile unsigned long  token_tick;        // Token ring watchdog
+static esp_timer_handle_t freETarget_json_handle; // Handle to the JSON task
 
 const char* names[] = { "TARGET",                                                                                           //  0
                         "1",      "2",        "3",     "4",      "5",       "6",       "7",     "8",     "9",      "10",    //  1
@@ -84,13 +92,11 @@ void freeETarget_init(void)
  *  Setup the serial port
  */
   serial_io_init();
-  while (1)
-  {
   POST_version();                         // Show the version string on all ports
-  }
-  
-  read_nonvol();
 
+  read_nonvol();
+  
+#if (0)
 /*
  *  Set up the port pins
  */
@@ -150,8 +156,14 @@ void freeETarget_init(void)
   serial_flush(ALL);                      // Get rid of everything
   
   DLT(DLT_CRITICAL); 
+#endif
   printf("Finished startup\n\r");
-  show_echo();
+
+//  esp_timer_create("freeETarget_json", &freETarget_json_handle );
+//  esp_timer_start_periodic(&freETarget_json_handle, 1);
+ //   xTaskCreate(freeETarget_task,  "freeETarget_task", 4096, (void*)0, 5, NULL);
+//    xTaskCreate(freeETarget_timer, "freeETarget_timer", 4096, (void*)AF_INET6, 5, NULL);
+
   return;
 }
 
@@ -181,6 +193,12 @@ char* loop_name[] = {"SET_MODE", "ARM", "WAIT", "AQUIRE", "REDUCE", "FINISH" };
 
 void freeETarget_task (void)
 {
+  while (1)
+  {
+    printf("T");
+    vTaskDelay(10000);
+  }
+  
 /*
  * First thing, handle polled devices
  */

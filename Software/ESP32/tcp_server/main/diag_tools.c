@@ -30,6 +30,7 @@
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\esp_adc\include\esp_adc\adc_oneshot.h"
 
 #include "timer.h"
+#include "esp_timer.h"
 
 const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 
@@ -1000,7 +1001,7 @@ bool_t do_dlt
     return false;      // Send out if the trace is higher than the level 
   }
 
- // printf("\n\r%4.2fs",micros()/1000000.0 );
+  printf("\n\r%10.6fs ",esp_timer_get_time()/1000000.0 );
 
   return true;
 }

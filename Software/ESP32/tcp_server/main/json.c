@@ -21,6 +21,7 @@
 #include "serial_io.h"
 #include "mechanical.h"
 #include "timer.h"
+#include "esp_timer.h"
 
 /*
  *  Function Prototypes
@@ -167,6 +168,8 @@ const json_message_t JSON[] = {
   {"\"SC\":",             &json_clock[S],                    0,                IS_INT32,  0,                0,                       0 },    //
   {"\"WC\":",             &json_clock[W],                    0,                IS_INT32,  0,                0,                       0 },    //
 #endif
+  {0,                     0,                                 0,                0,         0,                0,                       0 },    //
+
 };
 
 int instr(char* s1, char* s2);
@@ -542,7 +545,7 @@ void show_echo(void)
           break;
 
         case IS_FLOAT:
-          sprintf(s, "%s %4.2f, \r\n", JSON[i].token, *JSON[i].d_value);
+          sprintf(s, "%s %6.2f, \r\n", JSON[i].token, *JSON[i].d_value);
           break;
       }
       serial_to_all(s, ALL);
@@ -561,8 +564,8 @@ void show_echo(void)
   sprintf(s, "\"TRACE\": %d, \n\r", is_trace);                                          // TRUE to if trace is enabled
   serial_to_all(s, ALL);
 
-//  sprintf(s, "\"RUNNING_MINUTES\": %d, \n\r", millis()/1000/60);                        // On Time
-//  serial_to_all(s, ALL);
+  sprintf(s, "\"RUNNING_MINUTES\": %10.6f, \n\r", esp_timer_get_time()/100000.0/60.0);                        // On Time
+  serial_to_all(s, ALL);
   
   sprintf(s, "\"TEMPERATURE\": %4.2f, \n\r", temperature_C());                          // Temperature in degrees C
   serial_to_all(s, ALL);

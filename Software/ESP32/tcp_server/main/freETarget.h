@@ -72,7 +72,6 @@
 void rapid_enable(unsigned int enable);               // Rapid fire enable state
 void hello(void);                                     // Say Hello World
 void freeETarget_init(void);                          // Get the target software ready
-void freeETarget_task(void);                          // Cyclic target task
 void freeETarget_json(void);                          // Cyclic JSON parser
 void freeETarget_timer(void);                         // High speed cyclic task
 void bye(unsigned int);                                       // Shut down and say goodbye

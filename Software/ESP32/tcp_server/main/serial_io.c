@@ -267,11 +267,15 @@ void serial_to_all
  */
   if ( console )
   {
-    uart_write_bytes(uart_console, (const char *) str, len);
+    printf("%s", str);
   }
   if ( aux )
   {
     uart_write_bytes(uart_aux, (const char *) str, len);
+  }
+  if ( tcpip )
+  {
+
   }
 
 /*
