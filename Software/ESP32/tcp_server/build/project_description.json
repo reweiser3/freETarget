@@ -6,7 +6,7 @@
     "config_defaults":    "",
     "app_elf":            "tcp_server.elf",
     "app_bin":            "tcp_server.bin",
-    "git_revision":       "v5.0",
+    "git_revision":       "v5.0-dirty",
     "target":             "esp32s3",
     "rev":                "",
     "phy_data_partition": "",

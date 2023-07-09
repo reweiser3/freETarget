@@ -94,13 +94,13 @@ void freeETarget_init(void)
   serial_io_init();
   POST_version();                         // Show the version string on all ports
 
-  read_nonvol();
+//  read_nonvol();
   
 #if (0)
 /*
  *  Set up the port pins
  */
-//  init_gpio();  
+  init_io();  
   set_LED('*', '.', '.');                 // Hello World
 
   init_sensors();

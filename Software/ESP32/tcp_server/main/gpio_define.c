@@ -18,12 +18,14 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "driver/gpio.h"
+#include "driver/ledc.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\gpio_types.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\adc_types.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\esp_adc\include\esp_adc\adc_oneshot.h"
 
 #include "helpers.h"
 #include "gpio_define.h"
+#include "pwm.h"
 
 /*
  *  Generic Definitions
@@ -77,7 +79,6 @@ DIO_struct_t dio37 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                 // Mode
 DIO_struct_t dio38 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                 // Mode and Initial Value
 DIO_struct_t dio39 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                 // Can only be input
 
-#if ( CONFIG_IDF_TARGET_ESP32S2 )
 DIO_struct_t dio40 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
 DIO_struct_t dio41 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
 DIO_struct_t dio42 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
@@ -88,13 +89,10 @@ DIO_struct_t dio46 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode
 DIO_struct_t dio47 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
 DIO_struct_t dio48 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
 DIO_struct_t dio49 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
-#endif
 
 /*
  *  Analog IO usage
  */
-
-
 analogIO_struct_t adc1_ch0 = { ANALOG_IO, 0, {0, 0} };          // CHANNEL 1, ADC 0
 analogIO_struct_t adc1_ch1 = { ANALOG_IO, 0, {1, 0} };          // CHANNEL 1, ADC 1
 analogIO_struct_t adc1_ch2 = { ANALOG_IO, 0, {1, 0} };          // CHANNEL 1, ADC 2
@@ -117,6 +115,28 @@ analogIO_struct_t adc2_ch7 = { ANALOG_IO, 0, {1, 0} };          // CHANNEL 2, AD
 analogIO_struct_t adc2_ch8 = { ANALOG_IO, 0, {1, 0} };          // CHANNEL 2, ADC 8
 analogIO_struct_t adc2_ch9 = { ANALOG_IO, 0, {1, 0} };          // CHANNEL 2, ADC 9
 
+/*
+ *  Miscelaneous
+ */
+ledc_channel_config_t pwm0 = { };
+ledc_channel_config_t pwm1 = { };
+ledc_channel_config_t pwm2 = { };
+ledc_channel_config_t pwm3 = { };
+
+ledc_channel_config_t pwm4 = { };
+ledc_channel_config_t pwm5 = { };
+ledc_channel_config_t pwm6 = { };
+ledc_channel_config_t pwm7 = { };
+
+ledc_channel_config_t pwm8 = { };
+ledc_channel_config_t pwm9 = { };
+ledc_channel_config_t pwm10 = { };
+ledc_channel_config_t pwm11 = { };
+
+ledc_channel_config_t pwm12 = { };
+ledc_channel_config_t pwm13 = { };
+ledc_channel_config_t pwm14 = { };
+ledc_channel_config_t pwm15 = { };
 
 /*
  *  GOIO Usage
@@ -127,62 +147,46 @@ analogIO_struct_t adc2_ch9 = { ANALOG_IO, 0, {1, 0} };          // CHANNEL 2, AD
 
 gpio_struct_t gpio_table[] = {
 //   Name      Number       Assigned
-    {"GPIO0", GPIO_NUM_0,  NULL},   // RTC_GPIO0, GPIO0                       (Strapping EN)
-    {"GPIO1", GPIO_NUM_1,  NULL},   // RTC_GPIO1, GPIO1, TOUCH1, ADC1_CH0
-    {"GPIO2", GPIO_NUM_2,  NULL},   // RTC_GPIO2, GPIO2, TOUCH2, ADC1_CH1
-    {"GPIO3", GPIO_NUM_3,  NULL},   // RTC_GPIO3, GPIO3, TOUCH3, ADC1_CH2     (Strapping JTAG source)
-    {"GPIO4", GPIO_NUM_4,  NULL},   // RTC_GPIO4, GPIO4, TOUCH4, ADC1_CH3
-    {"GPIO5", GPIO_NUM_5,  NULL},   // RTC_GPIO5, GPIO5, TOUCH5, ADC1_CH4
-    {"GPIO6", GPIO_NUM_6,  NULL},   // RTC_GPIO6, GPIO6, TOUCH6, ADC1_CH5
-    {"GPIO7", GPIO_NUM_7,  NULL},   // RTC_GPIO7, GPIO7, TOUCH7, ADC1_CH6
-    {"GPIO8", GPIO_NUM_8,  NULL},   // RTC_GPIO8, GPIO8, TOUCH8, ADC1_CH7, SUBSPICS1
-    {"GPIO9", GPIO_NUM_9,  NULL},   // RTC_GPIO9, GPIO9, TOUCH9, ADC1_CH8, FSPIHD, SUBSPIHD
+    {"EN",     GPIO_NUM_0,  NULL},              // RTC_GPIO0, GPIO0                       (Strapping EN)
+    {"BD_REV", GPIO_NUM_4,  (void*)&adc1_ch3},  // BD_REV
+    {"D0",     GPIO_NUM_5,  (void*)&dio05},     // D0
+    {"D1",     GPIO_NUM_6,  (void*)&dio06},     // D1
+    {"D2",     GPIO_NUM_7,  (void*)&dio07},     // D2
+    {"D3",     GPIO_NUM_15, (void*)&dio15},     // D3
+    {"D4",     GPIO_NUM_16, (void*)&dio16},     // D4
 
-    {"GPIO10", GPIO_NUM_10, NULL},   // RTC_GPIO10, GPIO10, TOUCH10, ADC1_CH9, FSPICS0, FSPIIO4, SUBSPICS0
-    {"GPIO11", GPIO_NUM_11, NULL},   // RTC_GPIO11, GPIO11, TOUCH11, ADC2_CH0, FSPID, FSPIIO5, SUBSPID
-    {"GPIO12", GPIO_NUM_12, NULL},   // RTC_GPIO12, GPIO12, TOUCH12, ADC2_CH1, FSPICLK, FSPIIO6, SUBSPICLK
-    {"GPIO13", GPIO_NUM_13, NULL},   // RTC_GPIO13, GPIO13, TOUCH13, ADC2_CH2, FSPIQ, FSPIIO7, SUBSPIQ
-    {"GPIO14", GPIO_NUM_14, NULL},   // RTC_GPIO14, GPIO14, TOUCH14, ADC2_CH3, FSPIWP, FSPIDQS, SUBSPIWP
-    {"GPIO15", GPIO_NUM_15, NULL},   // RTC_GPIO15, GPIO15, U0RTS, ADC2_CH4, XTAL_32K_P
-    {"GPIO16", GPIO_NUM_16, NULL},   // RTC_GPIO16, GPIO16, U0CTS, ADC2_CH5, XTAL_32K_N
-    {"GPIO17", GPIO_NUM_17, NULL},   // RTC_GPIO17, GPIO17, U1TXD, ADC2_CH6
-    {"GPIO18", GPIO_NUM_18, NULL},   // RTC_GPIO18, GPIO18, U1RXD, ADC2_CH7, CLK_OUT3
-    {"GPIO19", GPIO_NUM_19, NULL},   // RTC_GPIO19, GPIO19, U1RTS, ADC2_CH8, CLK_OUT2, USB_D-
-    {"GPIO20", GPIO_NUM_20, NULL},   // RTC_GPIO20, GPIO20, U1CTS, ADC2_CH9, CLK_OUT1, USB_D+
+    {"ATX",    GPIO_NUM_17, NULL},              // ATX
+    {"ARX",    GPIO_NUM_18, NULL},              // ARX
+    {"C/R*",   GPIO_NUM_8,  (void*)&dio08},     // C/R*   Counters / Register *
+    {"USB_D-", GPIO_NUM_19, NULL},              // JTAG USB D-
+    {"USB_D+", GPIO_NUM_20, NULL},              // JTAG USB D+
+    {"USB_JTAG",GPIO_NUM_3, NULL},              // JTAG Strap to 3V3
+    {"ROM_MSG", GPIO_NUM_46,NULL},              // Enable ROM messages
+    {"A0",     GPIO_NUM_9,  (void*)&dio09},     // A0     Clock
+    {"A1",     GPIO_NUM_10, (void*)&dio10},     // A1     Clock
+    {"A2",     GPIO_NUM_11, (void*)&dio11},     // A2     CLOCK
+    {"PAPER",  GPIO_NUM_12, (void*)&dio12},     // PAPER  Drive
 
-    {"GPIO21", GPIO_NUM_21, NULL},   // RTC_GPIO21, GPIO21
-    {"GPIO22", GPIO_NUM_22, NULL},
-    {"GPIO23", GPIO_NUM_23, NULL},
+    {"VREF_FB", GPIO_NUM_1, (void*)&adc1_ch0},  // VREF_FB
+    {"LED_PWM", GPIO_NUM_2, (void*)&pwm0},      // LED_PWM
+    {"TXD",     GPIO_NUM_22, NULL},             // UART Transmit   Initialized in serial_io_init
+    {"RXD",     GPIO_NUM_23, NULL},             // UART Receive
+    {"V_PWM",   GPIO_NUM_42, (void*)&pwm1},     // V_REF PWM 
+    {"DIAG_C",  GPIO_NUM_41, (void*)&dio41},    // DIAG PIN C
+    {"DIAG_D",  GPIO_NUM_40, (void*)&dio40},    // DIAG PIN D
+    {"STOP*",   GPIO_NUM_39, (void*)&dio39},    // STOP Clock
+    {"CLK_CLR*",GPIO_NUM_29, (void*)&dio38},    // Clear Clock
 
-    {"GPIO25", GPIO_NUM_25, NULL},
-    {"GPIO26", GPIO_NUM_26, NULL},
-    {"GPIO27", GPIO_NUM_27, NULL},
-    {"GPIO28", GPIO_NUM_28, NULL},
-    {"GPIO29", GPIO_NUM_29, NULL},
-
-    {"GPIO30",    GPIO_NUM_30, NULL},
-    {"GPIO31",    GPIO_NUM_31, NULL},
-    {"GREEN_LED", GPIO_NUM_32, (void*)&dio32},
-    {"RED_LED",   GPIO_NUM_33, (void*)&dio33},
-    {"SW0",       GPIO_NUM_34, (void*)&dio34},
-    {"SW1",       GPIO_NUM_35, (void*)&dio35},
-    {"SW2",       GPIO_NUM_36, (void*)&dio36},     // GPIO38, FSPIWP, SUBSPIWP
-    {"GPIO37",    GPIO_NUM_37, NULL },             // GPIO38, FSPIWP, SUBSPIWP
-    {"GPIO38",    GPIO_NUM_38, NULL },             // GPIO38, FSPIWP, SUBSPIWP
-    {"SW3",       GPIO_NUM_39, (void*)&dio39},     // MTCK, GPIO39, CLK_OUT3, SUBSPICS1
-
-#if ( CONFIG_IDF_TARGET_ESP32S2 )
-    {"GPIO40", GPIO_NUM_40, NULL },   // MTDO, GPIO40, CLK_OUT1
-    {"GPIO41", GPIO_NUM_41, NULL },   // MTDI, GPIO41, CLK_OUT1
-    {"GPIO42", GPIO_NUM_42, NULL },   // MTMS, GPIO42
-    {"GPIO43", GPIO_NUM_43, NULL },
-    {"GPIO44", GPIO_NUM_44, NULL },   // U0RXD, GPIO44, CLK_OUT2
-    {"GPIO45", GPIO_NUM_45, NULL },   // GPIO45                                     (Strapping VDD_SPI)
-    {"GPIO46", GPIO_NUM_46, NULL },   //                                            (Strapping BOOT, ROM Message)
-    {"GPIO47", GPIO_NUM_47, NULL },   // SPICLK_P_DIFF, GPIO47, SUBSPICLK_P_DIFF
-    {"GPIO48", GPIO_NUM_48, NULL },   // SPICLK_N_DIFF, GPIO48, SUBSPICLK_N_DIFF
-    {"GPIO49", GPIO_NUM_49, NULL },
-#endif
+    {"D5",      GPIO_NUM_37, (void*)&dio37},    // D5
+    {"D6",      GPIO_NUM_36, (void*)&dio36},    // D6
+    {"D7",      GPIO_NUM_35, (void*)&dio35},    // D7
+    {"BOOT",    GPIO_NUM_0,  NULL},             // Hold in BOOT
+    {"STATUS",  GPIO_NUM_45, (void*)&dio45},    // Status LEDs
+    {"FACE",    GPIO_NUM_48, (void*)&dio48},    // Face Strike
+    {"SPARE1",  GPIO_NUM_47, (void*)&dio47},    // Spare 1
+    {"SPARE2",  GPIO_NUM_21, (void*)&dio21},    // Spare 2 
+    {"SDA",     GPIO_NUM_38, NULL },            // SDA
+    {"SCL",     GPIO_NUM_39, NULL},             // SCL
     {0, 0, 0 } 
 };
 
@@ -240,9 +244,13 @@ void gpio_init(void)
 
                 case ANALOG_IO:
 #if (0)
-                adc_oneshot_new_unit(gpio_table[i].config[CONFIG], &analogIO_table[i].config[HANDLE]);
-                adc_oneshot_config_channel(gpio_table[i].config[CONFIG], &analogIO_table[i].config[HANDLE]));
+                    adc_oneshot_new_unit(gpio_table[i].config[CONFIG], &analogIO_table[i].config[HANDLE]);
+                    adc_oneshot_config_channel(gpio_table[i].config[CONFIG], &analogIO_table[i].config[HANDLE]);
 #endif
+                    break;
+
+                case PWM_OUT:
+                    pwm_init((ledc_channel_config_t*)gpio_table[i].gpio_uses, gpio_table[i].gpio_number);
                     break;
             }
         }
