@@ -21,28 +21,8 @@
 #define PWM_DUTY_100           ((1 << PWM_DUTY_RES) - 1)   // 100% duty cycle
 #define LEDC_FREQUENCY          (5000) // Frequency in Hertz. Set frequency at 5 kHz
 
-/*
-*/
-ledc_timer_config_t pwm_timer = {
-    .speed_mode       = PWM_MODE,
-    .timer_num        = PWM_TIMER,
-    .duty_resolution  = PWM_DUTY_RES,
-    .freq_hz          = PWM_FREQUENCY,  // Set output frequency at 5 kHz
-    .clk_cfg          = PWMC_AUTO_CLK
-    };
+static int pwm_ready = 0;       // Set to 1 when the hardware is programmed
 
-
-    // Prepare and then apply the LEDC PWM channel configuration
-    ledc_channel_config_t pwm_channel = {
-        .speed_mode     = LEDC_MODE,
-        .channel        = LEDC_CHANNEL,
-        .timer_sel      = LEDC_TIMER,
-        .intr_type      = LEDC_INTR_DISABLE,
-        .gpio_num       = LEDC_OUTPUT_IO,
-        .duty           = 0, // Set duty to 0%
-        .hpoint         = 0
-    };
-    ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
 
 /*************************************************************************
  * 
@@ -66,8 +46,11 @@ void pwm_init
 /*
  * Configure the timer channel
  */
-    ESP_ERROR_CHECK(ledc_timer_config(&pwm_timer));     // Setup the timer
-
+    if ( !pwm_ready )
+    {
+        ESP_ERROR_CHECK(ledc_timer_config(&pwm_timer));     // Setup the timer
+        pwm_ready = 1;
+    }
 /*
  * Configure the output port
  */
@@ -108,8 +91,10 @@ void pwm_set
 {
     // Set the LEDC peripheral configuration
     example_ledc_init();
-    // Set duty to 50%
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL, LEDC_DUTY));
+    
+    // Set duty cycle
+    ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, channel, percent));
+
     // Update duty to apply the new value
-    ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL));
+    ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, channelL));
 }

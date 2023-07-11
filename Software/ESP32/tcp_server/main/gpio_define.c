@@ -26,6 +26,7 @@
 #include "helpers.h"
 #include "gpio_define.h"
 #include "pwm.h"
+#include "i2c.h"
 
 /*
  *  Generic Definitions
@@ -35,19 +36,19 @@
  *  Digital IO definitions
  */
 
-DIO_struct_t dio00 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
-DIO_struct_t dio01 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
-DIO_struct_t dio02 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
-DIO_struct_t dio03 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
-DIO_struct_t dio04 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
-DIO_struct_t dio05 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
-DIO_struct_t dio06 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
-DIO_struct_t dio07 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
-DIO_struct_t dio08 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
-DIO_struct_t dio09 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
+DIO_struct_t dio00 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                  // Mode and Initial Value
+DIO_struct_t dio01 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                  // Mode and Initial Value
+DIO_struct_t dio02 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                  // Mode and Initial Value
+DIO_struct_t dio03 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                  // Mode and Initial Value
+DIO_struct_t dio04 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                  // Mode and Initial Value
+DIO_struct_t dio05 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                  // Mode and Initial Value
+DIO_struct_t dio06 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                  // Mode and Initial Value
+DIO_struct_t dio07 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                  // Mode and Initial Value
+DIO_struct_t dio08 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                  // Mode and Initial Value
+DIO_struct_t dio09 = { DIGITAL_IO, GPIO_MODE_OUTPUT, 0};                  // Mode and Initial Value
 
-DIO_struct_t dio10 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
-DIO_struct_t dio11 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
+DIO_struct_t dio10 = { DIGITAL_IO, GPIO_MODE_OUTPUT, 0};                  // Mode and Initial Value
+DIO_struct_t dio11 = { DIGITAL_IO, GPIO_MODE_OUTPUT, 0};                  // Mode and Initial Value
 DIO_struct_t dio12 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
 DIO_struct_t dio13 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
 DIO_struct_t dio14 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
@@ -70,14 +71,14 @@ DIO_struct_t dio29 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode
 
 DIO_struct_t dio30 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                 // Mode and Initial Value
 DIO_struct_t dio31 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                 // Mode and Initial Value
-DIO_struct_t dio32 = { DIGITAL_IO, GPIO_MODE_OUTPUT, 0};                 // Mode and Initial Value
-DIO_struct_t dio33 = { DIGITAL_IO, GPIO_MODE_OUTPUT, 0};                 // Mode and Initial Value
+DIO_struct_t dio32 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                 // Mode and Initial Value
+DIO_struct_t dio33 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                 // Mode and Initial Value
 DIO_struct_t dio34 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                 // Can only be input
 DIO_struct_t dio35 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                 // Can only be input
 DIO_struct_t dio36 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                 // Can only be input
 DIO_struct_t dio37 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                 // Mode and Initial Value
-DIO_struct_t dio38 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                 // Mode and Initial Value
-DIO_struct_t dio39 = { DIGITAL_IO, GPIO_MODE_INPUT,  0};                 // Can only be input
+DIO_struct_t dio38 = { DIGITAL_IO, GPIO_MODE_OUTPUT, 0};                 // Mode and Initial Value
+DIO_struct_t dio39 = { DIGITAL_IO, GPIO_MODE_OUTPUT, 0};                 // Can only be input
 
 DIO_struct_t dio40 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
 DIO_struct_t dio41 = { DIGITAL_IO, GPIO_MODE_INPUT, 0};                  // Mode and Initial Value
@@ -116,27 +117,14 @@ analogIO_struct_t adc2_ch8 = { ANALOG_IO, 0, {1, 0} };          // CHANNEL 2, AD
 analogIO_struct_t adc2_ch9 = { ANALOG_IO, 0, {1, 0} };          // CHANNEL 2, ADC 9
 
 /*
- *  Miscelaneous
+ *  PWM Control
  */
-ledc_channel_config_t pwm0 = { };
-ledc_channel_config_t pwm1 = { };
-ledc_channel_config_t pwm2 = { };
-ledc_channel_config_t pwm3 = { };
+pwm_struct_t pwm0 = { PWM_OUT, 0};
+pwm_struct_t pwm1 = { PWM_OUT, 0};
+pwm_struct_t pwm2 = { PWM_OUT, 0};
+pwm_struct_t pwm3 = { PWM_OUT, 0};
 
-ledc_channel_config_t pwm4 = { };
-ledc_channel_config_t pwm5 = { };
-ledc_channel_config_t pwm6 = { };
-ledc_channel_config_t pwm7 = { };
-
-ledc_channel_config_t pwm8 = { };
-ledc_channel_config_t pwm9 = { };
-ledc_channel_config_t pwm10 = { };
-ledc_channel_config_t pwm11 = { };
-
-ledc_channel_config_t pwm12 = { };
-ledc_channel_config_t pwm13 = { };
-ledc_channel_config_t pwm14 = { };
-ledc_channel_config_t pwm15 = { };
+I2C_struct_t i2c = { I2C_PORT, GPIO_NUM_38, GPIO_NUM_39 };
 
 /*
  *  GOIO Usage
@@ -185,7 +173,7 @@ gpio_struct_t gpio_table[] = {
     {"FACE",    GPIO_NUM_48, (void*)&dio48},    // Face Strike
     {"SPARE1",  GPIO_NUM_47, (void*)&dio47},    // Spare 1
     {"SPARE2",  GPIO_NUM_21, (void*)&dio21},    // Spare 2 
-    {"SDA",     GPIO_NUM_38, NULL },            // SDA
+    {"SDA",     GPIO_NUM_38, (void*)&i2c},      // SDA
     {"SCL",     GPIO_NUM_39, NULL},             // SCL
     {0, 0, 0 } 
 };
@@ -223,17 +211,16 @@ void gpio_init(void)
                     break;
 
                 case DIGITAL_IO:
+                    gpio_set_direction(gpio_table[i].gpio_number, ((DIO_struct_t*)(gpio_table[i].gpio_uses))->mode);
                     switch (((DIO_struct_t*)(gpio_table[i].gpio_uses))->mode)
                     {
                         case GPIO_MODE_INPUT:
-                            gpio_set_direction(gpio_table[i].gpio_number, ((DIO_struct_t*)(gpio_table[i].gpio_uses))->mode);
                             break;
 
                         case GPIO_MODE_OUTPUT:
                         case GPIO_MODE_OUTPUT_OD:
                         case GPIO_MODE_INPUT_OUTPUT_OD:
                         case GPIO_MODE_INPUT_OUTPUT:
-                            gpio_set_direction(gpio_table[i].gpio_number, ((DIO_struct_t*)(gpio_table[i].gpio_uses))->mode);
                             gpio_set_level(gpio_table[i].gpio_number, ((DIO_struct_t*)(gpio_table[i].gpio_uses))->initial_value);
                             break;
 
@@ -251,6 +238,10 @@ void gpio_init(void)
 
                 case PWM_OUT:
                     pwm_init((ledc_channel_config_t*)gpio_table[i].gpio_uses, gpio_table[i].gpio_number);
+                    break;
+
+                case I2C_PORT:
+                    i2c_init(((I2C_struct_t*)(gpio_table[i].gpio_uses))->gpio_number_SDA, ((I2C_struct_t*)(gpio_table[i].gpio_uses))->gpio_number_SCL );
                     break;
             }
         }

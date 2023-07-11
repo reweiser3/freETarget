@@ -98,30 +98,41 @@ typedef enum gpio_type {
     ANALOG_IO,                                              // GPIO is used for Analog IO
     SERIAL_AUX,                                             // GPIO is used as Serial auxilary port
     PWM_OUT,                                                // GPIO is used as a PWM port
-    SPI_PORT                                                // GPIO is used as a SPI port
+    I2C_PORT                                                // GPIO is used as a i2c port
 } gpio_type_t;
 
 typedef struct DIO_struct  {
-    gpio_type_t     type;                                    // What type of structure am I
-    int             mode;                                    // Mode used by the DIO
-    int             initial_value;                           // Value set on initialization
+    gpio_type_t     type;                              // What type of structure am I
+    int             mode;                              // Mode used by the DIO
+    int             initial_value;                     // Value set on initialization
 } DIO_struct_t;
 
 typedef struct analogIO_struct  {
-    gpio_type_t                 type;                   // What type of structure am I
-    int                         adc_handle;             // Handle given by OS
-    int                         adc_config[2];          // Channel setup
+    gpio_type_t     type;                               // What type of structure am I
+    int             adc_handle;                         // Handle given by OS
+    int             adc_config[2];                      // Channel setup
 } analogIO_struct_t;
 
 typedef struct serialIO_struct  {
-    gpio_type_t             type;                        // What type of structure am I
-    int serial_config[4];                                // baud, parity, length, stop bits
+    gpio_type_t     type;                                // What type of structure am I
+    int             serial_config[4];                    // baud, parity, length, stop bits
 } serialIO_struct_t;
 
+typedef struct I2C_struct  {
+    gpio_type_t     type;                               // What type of structure am I
+    int             gpio_number_SDA;                    // Number associated with SDA
+    int             gpio_number_SCL;                    // Number associated with SDA
+} I2C_struct_t;
+
+typedef struct pwm_struct  {
+    gpio_type_t     type;                                // What type of structure am I
+    int             gpio_number;                         // Number associated with SDA
+} pwm_struct_t;
+
 typedef struct gpio_struct  {
-    char* gpio_name;                            // GPIO name
-    int   gpio_number;                          // Number associated with GPIO
-    void* gpio_uses;                            // Pointer to IO specific structure
+    char* gpio_name;                                     // GPIO name
+    int   gpio_number;                                   // Number associated with GPIO
+    void* gpio_uses;                                     // Pointer to IO specific structure
 } gpio_struct_t;
 
 extern gpio_struct_t gpio_table[];              // List of available devices
