@@ -33,6 +33,14 @@ static void send_fake_score(void);        // Send a fake score to the PC
 static unsigned int dip_mask;             // Used if the MFS2 uses the DIP_0 or DIP_3
 static long power_save;
 
+/* 
+ *  HAL Discrete IN
+ */
+bool_t get_in(unsigned int port)
+{
+  return gpio_get_level(port);
+}
+
 /*-----------------------------------------------------
  * 
  * function: read_port
@@ -84,40 +92,12 @@ unsigned int read_port(void)
  * 
  *-----------------------------------------------------*/
 
-int direction_register[] = {NORTH_HI, NORTH_LO, EAST_HI, EAST_LO, SOUTH_HI, SOUTH_LO, WEST_HI, WEST_LO};
-
 unsigned int read_counter
   (
   unsigned int direction         // What direction are we reading?
   )
 {
-  int i;
-  unsigned int return_value_LO, return_value_HI;     // 16 bit port value
-  
-/*
- *  Reset all of the address bits
- */
-  for (i=0; i != 8; i++)
-  {
-    gpio_set_level(direction_register[i], 1);
-  }
-  gpio_set_level(RCLK,  1);   // Prepare to read
-  
-/*
- *  Set the direction line to low
- */
-  gpio_set_level(direction_register[direction * 2 + 0], 0);
-  return_value_HI = read_port();
-  gpio_set_level(direction_register[direction * 2 + 0], 1);
-  
-  gpio_set_level(direction_register[direction * 2 + 1], 0);
-  return_value_LO = read_port();
-  gpio_set_level(direction_register[direction * 2 + 1], 1);
-
-/*
- *  All done, return
- */
-  return (return_value_HI << 8) + return_value_LO;
+  return 0;
 }
 
 /*-----------------------------------------------------
@@ -161,21 +141,13 @@ unsigned int is_running (void)
  *-----------------------------------------------------*/
 void arm_timers(void)
 {
-  gpio_set_level(CLOCK_START, 0);   // Make sure Clock start is OFF
-  gpio_set_level(STOP_N, 0);        // Reset the flip flop to stop the timers
-  gpio_set_level(RCLK,   0);        // Set READ CLOCK to LOW
-  gpio_set_level(QUIET,  1);        // Arm the counter
-  gpio_set_level(CLR_N,  0);        // Reset the counters 
-  gpio_set_level(CLR_N,  1);        // Remove the counter reset 
-  gpio_set_level(STOP_N, 1);        // Let the counters run
+
   
   return;
 }
 
 void clear_running(void)          // Reset the RUN flip Flop
 {
-  gpio_set_level(STOP_N, 0);        // Reset RUN outputs on the Flip Flop
-  gpio_set_level(STOP_N, 1);        // Set the RUN outputs to active
 
   return;
 }
@@ -185,8 +157,6 @@ void clear_running(void)          // Reset the RUN flip Flop
  */
 void stop_timers(void)
 {
-  gpio_set_level(STOP_N,0);   // Stop the counters
-  gpio_set_level(QUIET, 0);   // Kill the oscillator 
   return;
 }
 
@@ -195,9 +165,6 @@ void stop_timers(void)
  */
 void trip_timers(void)
 {
-  gpio_set_level(CLOCK_START, 0);
-  gpio_set_level(CLOCK_START, 1);     // Trigger the clocks from the D input of the FF
-  gpio_set_level(CLOCK_START, 0);
 
   return;
 }
@@ -298,13 +265,7 @@ void set_LED
   return;  
   }
 
-/* 
- *  HAL Discrete IN
- */
-bool_t get_in(unsigned int port)
-{
-  return gpio_get_level(port);
-}
+
 
 /*-----------------------------------------------------
  * 

@@ -4,7 +4,16 @@
   "files.associations": {
     "sstream": "c",
     "regex": "c",
-    "gpio.h": "c"
+    "gpio.h": "c",
+    "adc_types.h": "c",
+    "array": "cpp",
+    "chrono": "cpp",
+    "compare": "cpp",
+    "functional": "cpp",
+    "ratio": "cpp",
+    "tuple": "cpp",
+    "type_traits": "cpp",
+    "utility": "cpp"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM4"

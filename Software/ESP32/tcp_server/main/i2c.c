@@ -1,17 +1,14 @@
 /*************************************************************************
  * 
- * file: gpio_init.c
+ * file: i2c.c
  * 
- * description:  Initialize all of the GPIO pins
+ * description:  Simple I2C driver for freeETarget
  * 
  **************************************************************************
  *
- * This file sets up the configuration of ALL of the GPIOs in one place
+ * This file manges the I2C driver
  * 
- * It contains definitions for all gpios even if they are not used in thie
- * particular implemenation.  The final table gpio_table contains a list of
- * the GPIOs and a link to the initialization table used for that particular
- * pin
+ * See: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/i2c.html
  * 
  ***************************************************************************/
 #include <stdio.h>
@@ -28,12 +25,6 @@ static const char *TAG = "i2c-simple-example";
 #define I2C_MASTER_RX_BUF_DISABLE   0                          /*!< I2C master doesn't need buffer */
 #define I2C_MASTER_TIMEOUT_MS       1000
 
-#define MPU9250_SENSOR_ADDR                 0x68        /*!< Slave address of the MPU9250 sensor */
-#define MPU9250_WHO_AM_I_REG_ADDR           0x75        /*!< Register addresses of the "who am I" register */
-
-#define MPU9250_PWR_MGMT_1_REG_ADDR         0x6B        /*!< Register addresses of the power managment register */
-#define MPU9250_RESET_BIT                   7
-
 i2c_config_t i2c_configuratino = {
     .mode = I2C_MODE_MASTER,
     .sda_pullup_en = GPIO_PULLUP_ENABLE,
@@ -44,7 +35,12 @@ i2c_config_t i2c_configuratino = {
 /**
  * @brief Read a sequence of bytes from a MPU9250 sensor registers
  */
-esp_err_t i2c_read(uint8_t reg_addr, uint8_t *data, size_t length)
+esp_err_t i2c_read
+(
+    uint8_t  reg_addr,              // I2C device address
+    uint8_t* data,                  // Buffer to be sent
+    size_t   length                 // Number of bytes to be sent
+)
 {
     return i2c_master_write_read_device(I2C_MASTER_NUM, MPU9250_SENSOR_ADDR, &reg_addr, 1, data, length, I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
 }

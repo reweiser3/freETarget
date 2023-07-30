@@ -177,6 +177,7 @@ CLEAN_UP:
 void app_main(void)
 {
     ESP_ERROR_CHECK(nvs_flash_init());
+#if(0)
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
@@ -194,6 +195,7 @@ void app_main(void)
     xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET6, 5, NULL);
 #endif
 
+#endif
 
 /*
  *  Start FreeETarget

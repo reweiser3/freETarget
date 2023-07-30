@@ -64,25 +64,20 @@
  *  Schematic Capture
  */
 
-#define D0  GPIO_NUM_10
-#define D1  GPIO_NUM_11
-#define D2  GPIO_NUM_12
-#define D3  GPIO_NUM_13
-#define D4  GPIO_NUM_14
-#define D5  GPIO_NUM_15
-#define D6  GPIO_NUM_16
-#define D7  GPIO_NUM_17
+#define D0  GPIO_NUM_05
+#define D1  GPIO_NUM_06
+#define D2  GPIO_NUM_07
+#define D3  GPIO_NUM_15
+#define D4  GPIO_NUM_16
+#define D5  GPIO_NUM_37
+#define D6  GPIO_NUM_36
+#define D7  GPIO_NUM_35
 
 #define RCLK GPIO_NUM_18
 
-#define NORTH_HI GPIO_NUM1
-#define NORTH_LO GPIO_NUM2
-#define EAST_HI  GPIO_NUM1
-#define EAST_LO  GPIO_NUM2
-#define SOUTH_HI GPIO_NUM4
-#define SOUTH_LO GPIO_NUM5
-#define WEST_HI  GPIO_NUM6 
-#define WEST_LO  GPIO_NUM6 
+#define A0  GPIO_NUM09
+#define A1  GPIO_NUM10
+#define A2  GPIO_NUM11
 
 
 /*
@@ -94,11 +89,12 @@ void gpio_init(void);
  * Type defs
  */
 typedef enum gpio_type {
-    DIGITAL_IO,                                             // GPIO is used for igital IO
-    ANALOG_IO,                                              // GPIO is used for Analog IO
-    SERIAL_AUX,                                             // GPIO is used as Serial auxilary port
-    PWM_OUT,                                                // GPIO is used as a PWM port
-    I2C_PORT                                                // GPIO is used as a i2c port
+    DIGITAL_IO,                                        // GPIO is used for igital IO
+    ANALOG_IO,                                         // GPIO is used for Analog IO
+    SERIAL_AUX,                                        // GPIO is used as Serial auxilary port
+    PWM_OUT,                                           // GPIO is used as a PWM port
+    I2C_PORT,                                          // GPIO is used as a i2c port
+    PCNT                                               // GPIO is used as a Pulse Counter
 } gpio_type_t;
 
 typedef struct DIO_struct  {
@@ -109,6 +105,7 @@ typedef struct DIO_struct  {
 
 typedef struct analogIO_struct  {
     gpio_type_t     type;                               // What type of structure am I
+    int             gpio;                               // What GPIO is it assigned to
     int             adc_handle;                         // Handle given by OS
     int             adc_config[2];                      // Channel setup
 } analogIO_struct_t;
@@ -124,10 +121,20 @@ typedef struct I2C_struct  {
     int             gpio_number_SCL;                    // Number associated with SDA
 } I2C_struct_t;
 
-typedef struct pwm_struct  {
+typedef struct PWM_struct  {
+    gpio_type_t     type;                               // What type of structure am I
+    int             gpio_number;                        // Number associated with PWM
+    int             initial_value;                      // Starting value (percent)
+} PWM_struct_t;
+
+typedef struct PCNT_struct  {
     gpio_type_t     type;                                // What type of structure am I
-    int             gpio_number;                         // Number associated with SDA
-} pwm_struct_t;
+    int             pcnt_control;                        // Number associated with PCNT control
+    int             pcnt_signal;                         // Number associated with PCNT signal
+    int             pcnt_low;                            // Low limit
+    int             pcnt_high;                           // Hight limit
+    int             pcnt_unit;                           // What unit to use
+} PCNT_struct_t;
 
 typedef struct gpio_struct  {
     char* gpio_name;                                     // GPIO name

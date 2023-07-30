@@ -1,4 +1,4 @@
-idf_component_register(SRCS "tcp_server.c"
+idf_component_register(SRCS "pcnt.c" "tcp_server.c"
                     "freETarget.c"
                     "diag_tools.c"
                     "token.c"
@@ -11,4 +11,6 @@ idf_component_register(SRCS "tcp_server.c"
                     "serial_io.c"
                     "gpio_define.c"
                     "timer.c"
+                    "pwm.c"
+                    "pcnt.c"
                     INCLUDE_DIRS ".")
