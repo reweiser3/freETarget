@@ -7,6 +7,7 @@
  *-------------------------------------------------------
  *
  * See https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/nvs_flash.html
+  * 
  * 
  * ----------------------------------------------------*/
 #include "freETarget.h"
@@ -93,7 +94,6 @@ void factory_nonvol
    bool_t new_serial_number
   )
 {
-  unsigned int nonvol_init;               // Initialization token
   unsigned int serial_number;             // Board serial number
   char         ch;
   unsigned int x;                         // Temporary Value
@@ -104,8 +104,7 @@ void factory_nonvol
   serial_number = 0;
   gen_position(0); 
   x = 0;
-  nonvol_init = 0;
-  nvs_set_u32(my_handle, "NONVOL_V_SET", nonvol_init);
+  nvs_set_u32(my_handle, "NONVOL_V_SET", 0);
   if ( new_serial_number == false )
   {
     nvs_set_u32(my_handle, "NONVOL_V_SET", serial_number);
@@ -155,6 +154,7 @@ void factory_nonvol
 /*    
  *     Test the board only if it is a factor init
  */
+#if(0)
   if ( new_serial_number )
   {
     printf("\r\n Testing motor drive ");
@@ -173,6 +173,7 @@ void factory_nonvol
  * Set the trip point
  */
   set_trip_point(0);                      // And stay forever in the set trip mode
+#endif
 
 /*
  * Ask for the serial number.  Exit when you get !
@@ -184,7 +185,7 @@ void factory_nonvol
     serial_flush(ALL);
     
     printf("\r\nSerial Number? (ex 223! or x))");
-    while (i)
+    while (1)
     {
       if ( serial_available(CONSOLE) != 0 )
       {
@@ -195,7 +196,7 @@ void factory_nonvol
           printf(" Setting Serial Number to: %d", serial_number);
           break;
         }
-        if ( ch == 'x' )
+        if ( (ch == 'x') || (ch == 'X') )
         {
           break;
         }
@@ -208,16 +209,13 @@ void factory_nonvol
 /*
  * Initialization complete.  Mark the init done
  */
-  nonvol_init = PS_VERSION;
-  nvs_set_i32(my_handle, NONVOL_PS_VERSION, nonvol_init); // Write in the version number
-
-  nonvol_init = INIT_DONE;
-  nvs_set_i32(my_handle, NONVOL_INIT, nonvol_init);
+//  nvs_set_i32(my_handle, NONVOL_PS_VERSION, PS_VERSION); // Write in the version number
+//  nvs_set_i32(my_handle, NONVOL_INIT, INIT_DONE);
 
 /*
  * Read the NONVOL and print the results
  */
-  read_nonvol();                          // Read back the new values
+//  read_nonvol();                          // Read back the new values
   show_echo();                            // Display these settings
   
 /*

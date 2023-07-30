@@ -40,7 +40,7 @@ static unsigned int finish(void);       // Finish uip and start over
 static void send_keep_alive(void);      // Send out at TCPIP message    
 static bool_t discard_shot(void);       // In TabataThrow away the shot
 static void freeETarget_task(void);
-
+extern void gpio_init(void);
 /*
  *  Variables
  */
@@ -93,15 +93,15 @@ void freeETarget_init(void)
  */
   serial_io_init();
   POST_version();                         // Show the version string on all ports
-
-//  read_nonvol();
+  gpio_init();  
+  set_LED('R', '.', '.');                 // Hello World
+  read_nonvol();
   
 #if (0)
 /*
  *  Set up the port pins
  */
-  init_io();  
-  set_LED('*', '.', '.');                 // Hello World
+
 
   init_sensors();
 //  init_analog_io();

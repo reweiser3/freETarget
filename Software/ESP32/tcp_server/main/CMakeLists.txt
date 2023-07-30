@@ -13,4 +13,5 @@ idf_component_register(SRCS "pcnt.c" "tcp_server.c"
                     "timer.c"
                     "pwm.c"
                     "pcnt.c"
+                    "i2c.c"
                     INCLUDE_DIRS ".")
