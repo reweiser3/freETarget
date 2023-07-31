@@ -65,33 +65,36 @@ void pcnt_init
     unit_config[this_unit].low_limit = 0;
     unit_config[this_unit].high_limit = 0xffff;
     pcnt_unit[this_unit] = NULL;
-    ESP_ERROR_CHECK(pcnt_new_unit(&unit_config[this_unit], &pcnt_unit[this_unit]));
+    pcnt_new_unit(&unit_config[this_unit], &pcnt_unit[this_unit]);
 
 /*
  *  Setup the glitch filter
  */
     filter_config[this_unit].max_glitch_ns = 10;
-    ESP_ERROR_CHECK(pcnt_unit_set_glitch_filter(pcnt_unit[this_unit], &filter_config[this_unit]));
+    pcnt_unit_set_glitch_filter(pcnt_unit[this_unit], &filter_config[this_unit]);
 
 /*
- *  Setup the channel
+ *  Setup the channel.  Only Channel A is used.  B is left idle
  */
     pcnt_chan_a[this_unit] = NULL;
-    chan_a_config[this_unit].edge_gpio_num = pcnt->pcnt_signal;
-    chan_a_config[this_unit].level_gpio_num = pcnt->pcnt_control;
-    ESP_ERROR_CHECK(pcnt_new_channel(pcnt_unit[this_unit], &chan_a_config[this_unit], &pcnt_chan_a[this_unit]));
+    chan_a_config[this_unit].edge_gpio_num = pcnt->pcnt_signal;     // Counter
+    chan_a_config[this_unit].level_gpio_num = pcnt->pcnt_control;   // Enable 
+    pcnt_new_channel(pcnt_unit[this_unit], &chan_a_config[this_unit], &pcnt_chan_a[this_unit]);
 
     pcnt_chan_b[this_unit] = NULL;
     chan_b_config[this_unit].edge_gpio_num = pcnt->pcnt_signal;
     chan_b_config[this_unit].level_gpio_num = pcnt->pcnt_control;
-    ESP_ERROR_CHECK(pcnt_new_channel(pcnt_unit[this_unit], &chan_b_config[this_unit], &pcnt_chan_b[this_unit]));
+    pcnt_new_channel(pcnt_unit[this_unit], &chan_b_config[this_unit], &pcnt_chan_b[this_unit]);
+
 /*
- *  Setup the control
+ *  Setup the control.  Count only when the control is HIGH.
  */
-    ESP_ERROR_CHECK(pcnt_channel_set_edge_action(pcnt_chan_a[this_unit], PCNT_CHANNEL_EDGE_ACTION_INCREASE, PCNT_CHANNEL_EDGE_ACTION_HOLD));
-    ESP_ERROR_CHECK(pcnt_channel_set_level_action(pcnt_chan_a[this_unit], PCNT_CHANNEL_LEVEL_ACTION_HOLD, PCNT_CHANNEL_LEVEL_ACTION_INVERSE));
-    ESP_ERROR_CHECK(pcnt_channel_set_edge_action(pcnt_chan_b[this_unit], PCNT_CHANNEL_EDGE_ACTION_HOLD, PCNT_CHANNEL_EDGE_ACTION_HOLD));
-    ESP_ERROR_CHECK(pcnt_channel_set_level_action(pcnt_chan_b[this_unit], PCNT_CHANNEL_LEVEL_ACTION_HOLD, PCNT_CHANNEL_LEVEL_ACTION_HOLD));
+//                                Channel                       Rising Edge                        Falling Edge
+    pcnt_channel_set_edge_action( pcnt_chan_a[this_unit], PCNT_CHANNEL_EDGE_ACTION_INCREASE, PCNT_CHANNEL_EDGE_ACTION_HOLD);  // Counter
+//                                Channel                        When High                          When Low
+    pcnt_channel_set_level_action(pcnt_chan_a[this_unit], PCNT_CHANNEL_LEVEL_ACTION_KEEP, PCNT_CHANNEL_LEVEL_ACTION_HOLD); // Control
+    pcnt_channel_set_edge_action( pcnt_chan_b[this_unit], PCNT_CHANNEL_EDGE_ACTION_HOLD,  PCNT_CHANNEL_EDGE_ACTION_HOLD);       // Not Used
+    pcnt_channel_set_level_action(pcnt_chan_b[this_unit], PCNT_CHANNEL_LEVEL_ACTION_HOLD, PCNT_CHANNEL_LEVEL_ACTION_HOLD);    // Not Used
 
 /*
  *  All done, return
