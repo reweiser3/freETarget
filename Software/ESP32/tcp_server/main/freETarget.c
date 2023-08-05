@@ -94,7 +94,7 @@ void freeETarget_init(void)
   serial_io_init();
   POST_version();                         // Show the version string on all ports
   gpio_init();  
-  set_LED('R', '.', '.');                 // Hello World
+  set_LED(LED_HELLO_WORLD);               // Hello World
   read_nonvol();
   
 #if (0)
@@ -115,13 +115,11 @@ void freeETarget_init(void)
 /*
  * Initialize variables
  */
-   set_LED('.', '.', '*');                // Hello World
    tabata(true);                          // Reset the Tabata timers
   
 /*
  * Run the power on self test
  */
-  set_LED('*', '.', '*');                 // Hello World
   while ( (POST_counters() == false)      // If the timers fail
               && !DLT(DLT_CRITICAL))      // and not in trace mode (DIAG jumper installed)
   {
@@ -132,7 +130,6 @@ void freeETarget_init(void)
 /* 
  *  Setup the timer
  */
-  set_LED('.', '*', '.');                 // Hello World
 
   if ( DLT(DLT_CRITICAL) )
   {
@@ -142,14 +139,11 @@ void freeETarget_init(void)
 /*
  * Initialize the WiFi or token ring if available
  */
-
-   set_LED('*', '*', '.');                 // Hello World
 //   esp01_init();                         // Prepare the WiFi channel if installed
    
 /*
  * Ready to go
  */ 
-  set_LED('*', '*', '*');                 // Hello World
   set_LED_PWM(json_LED_PWM);
   POST_LEDs();                            // Cycle the LEDs
   set_LED(LED_READY);                     // to a client, then the RDY light is steady on
@@ -573,7 +567,7 @@ unsigned int reduce(void)
       {
         printf("Shot miss...\r\n");
       }
-      blink_fault(SHOT_MISS);
+      set_LED(LED_MISS);
       send_miss(&record[last_shot]);
       rapid_green(0);
       rapid_red(1);                                             // Show a miss

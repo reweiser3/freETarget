@@ -50,30 +50,23 @@ bool_t  do_dlt(unsigned int level);                     // Diagnostics Log and T
  * LED status messages
  */
 // Normal operation        RDY Light On
-#define LED_RESET         L('.', '.', '.') // 0 Force them all off
-#define LED_READY         L('*', '.', '.') //   The shot is ready to go
-#define LED_OFF           L('.', '-', '-') // 1  Turn off the READY light
-#define LED_TABATA_ON     L('-', '*', '-') // 2  Tabata is ready to go, leave the others alone
-#define LED_TABATA_OFF    L('-', '.', '-') //    Tabata is turned off, leave the others alone
-#define LED_DONE          L('*', '*', '*') // 7  A shot has been detected
-#define LED_WIFI_SEND     L('.', '.', '*') // 4  There is something going over the WiFi
-#define LED_HELLO         L('*', '.', '*') // 5  Hello World
+#define LED_RESET         "   "             // Force them all off
+#define LED_READY         "G--"             // The shot is ready to go
+#define LED_OFF           " --"             // Turn off the READY light
+#define LED_TABATA_ON     "--G"             // Tabata is ready to go, leave the others alone
+#define LED_TABATA_OFF    "-- "             // Tabata is turned off, leave the others alone
+#define LED_HIT           "-G-"             // A shot has been detected
+#define LED_MISS          "-R-"             // Last shot was a miss
+#define LED_WIFI_SEND     "--B"             // There is something going over the WiFi
+#define LED_WIFI_DONE     "-- "             // Finished sending
+#define LED_HELLO_WORLD   "RWB"             // Hello World
 
 // Sensor failed while waiting for a shot X Light On
-#define NORTH_FAILED       L('.', '*', '.') // 2 North sensor failed
-#define EAST_FAILED        L('.', '*', '*') // 6 East sensor failed
-#define SOUTH_FAILED       L('*', '*', '*') // 7 South sensor failed
-#define WEST_FAILED        L('*', '*', '.') // 3 West sensor failed
+#define NORTH_FAILED       "RR-"            // North sensor failed
+#define EAST_FAILED        "RB-"            // East sensor failed
+#define SOUTH_FAILED       "RG-"            // South sensor failed
+#define WEST_FAILED        "RRW"            // 3 West sensor failed
 
-// Spare                   Y light On
-
-#define UNUSED_2           L('*', '-', '*')
-
-// Blinking fault message
-#define POST_COUNT_FAILED  0b001            // LED fault code
-#define VREF_OVER_UNDER    0b010            // Trip point over or under spec
-#define UNUSED_3           0b100
-#define SHOT_MISS          0b000            // Shot missed
 
 /*
  * Tracing 

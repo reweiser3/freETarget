@@ -104,12 +104,12 @@ static void diag_delay(int x) ;     // Insert a delay
 const json_message_t JSON[] = {
 //    token                 value stored in RAM     double stored in RAM        convert    service fcn()     NONVOL location      Initial Value
   {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT32,  0,                NONVOL_SENSOR_ANGLE,    45 },    // Locate the sensor angles
-//  {"\"BYE\":",            0,                                 0,                IS_VOID,   &bye,                             0,       0 },    // Shut down the target
+  {"\"BYE\":",            0,                                 0,                IS_VOID,  (void *)&bye,                      0,       0 },    // Shut down the target
   {"\"CAL\":",            0,                                 0,                IS_VOID,   &set_trip_point,                  0,       0 },    // Enter calibration mode
   {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT32,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
   {"\"DELAY\":",          0,                                 0,                IS_INT32,  &diag_delay,                      0,       0 },    // Delay TBD seconds
   {"\"DOPPLER\":",        0,                     &json_doppler,                IS_FLOAT,  0,                NONVOL_DOPPLER, (7.0d/(700.0d * 700.0d))},    // Adjust timing based on Doppler Inverse SQ
- // {"\"ECHO\":",           0,                                 0,                IS_VOID,   &show_echo,                       0,       0 },    // Echo test
+  {"\"ECHO\":",           0,                                 0,                IS_VOID,   (void*)&show_echo,                0,       0 },    // Echo test
   {"\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT32,  0,                NONVOL_FACE_STRIKE,      5 },    // Face Strike Count 
   {"\"FOLLOW_THROUGH\":", &json_follow_through,              0,                IS_INT32,  0,                NONVOL_FOLLOW_THROUGH,   0 },    // Three second follow through
   {"\"INIT\":",           0,                                 0,                IS_INT32,  &init_nonvol,     NONVOL_INIT,             0 },    // Initialize the NONVOL memory

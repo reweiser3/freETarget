@@ -63,21 +63,7 @@
 /*
  *  Schematic Capture
  */
-
-#define D0  GPIO_NUM_05
-#define D1  GPIO_NUM_06
-#define D2  GPIO_NUM_07
-#define D3  GPIO_NUM_15
-#define D4  GPIO_NUM_16
-#define D5  GPIO_NUM_37
-#define D6  GPIO_NUM_36
-#define D7  GPIO_NUM_35
-
-#define RCLK GPIO_NUM_18
-
-#define A0  GPIO_NUM09
-#define A1  GPIO_NUM10
-#define A2  GPIO_NUM11
+#define RUN_STOP GPIO_NUM_05 
 
 
 /*

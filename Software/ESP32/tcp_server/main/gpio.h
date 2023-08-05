@@ -17,7 +17,7 @@ void init_gpio(void);                                     // Initialize the GPIO
 void arm_timers(void);                                    // Make the board ready
 void clear_running(void);                                 // Clear the run flip flop 
 unsigned int is_running(void);                            // Return a bit mask of running sensors 
-void set_LED(int state_RDY, int state_X, int state_y);    // Manage the LEDs
+void set_LED(char* new_state);                            // Manage the LEDs
 unsigned int read_DIP(unsigned int dip_mask);             // Read the DIP switch register
 unsigned int read_counter(unsigned int direction);
 void stop_timers(void);                                   // Turn off the counter registers

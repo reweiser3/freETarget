@@ -33,6 +33,13 @@ static void send_fake_score(void);        // Send a fake score to the PC
 static unsigned int dip_mask;             // Used if the MFS2 uses the DIP_0 or DIP_3
 static long power_save;
 
+typedef struct led_struct {
+  long  colour;                           // Bits to send to the LED
+  int   blink;                            // TRUE if blinking enabled
+  }  led_struct_t;
+
+led_struct_t leds[3];
+
 /* 
  *  HAL Discrete IN
  */
@@ -41,42 +48,6 @@ bool_t get_in(unsigned int port)
   return gpio_get_level(port);
 }
 
-/*-----------------------------------------------------
- * 
- * function: read_port
- * 
- * brief: Read 8 bits from a port
- * 
- * return: Eight bits returned from the port
- * 
- *-----------------------------------------------------
- *
- * To make the byte I/O platform independent, this
- * function reads the bits in one-at-a-time and collates
- * them into a single byte for return
- * 
- *-----------------------------------------------------*/
-int port_list[] = { D0, D1, D2, D3, D4, D5, D6, D7};
-
-unsigned int read_port(void)
-{
-  int i;
-  int return_value = 0;
-
-/*
- *  Loop and read in all of the bits
- */
-  for (i=0; i != 8; i++)
-    {
-    return_value <<= 1;
-    return_value |= get_in(port_list[i]) & 1;
-    }
-
- /*
-  * Return the result 
-  */
-  return (return_value & 0x00ff);
-}
 
 /*-----------------------------------------------------
  * 
@@ -210,60 +181,74 @@ unsigned int read_DIP
  *
  * The state of the LEDs can be turned on or off 
  * 
- * -1 '-' Leave alone
- *  0 '.' Turn LED off
- *  1 '*' Turn LED on
+ * 'R' - Set the LED to Red'
+ * '-' - Leave the LED alone
  *  
- *  The macro L(RDY, X, Y) defines 
  * 
  *-----------------------------------------------------*/
+#define RED   0xFF0000
+#define GREEN 0x00FF00
+#define BLUE  0x0000FF
+#define WHITE 0xFFFFFF
+#define OFF   0x000000 
+
 void set_LED
   (
-    int state_RDY,        // State of the Rdy LED
-    int state_X,          // State of the X LED
-    int state_Y           // State of the Y LED
-    )
+    char* new_state       // New LED colours
+  )
 { 
-  switch (state_RDY)
+  int i;
+
+  i=0;
+
+  while (*new_state != 0)
   {
-    case 0:
-    case '.':
-        gpio_set_level(LED_RDY, 1 );
-        break;
-    
-    case 1:
-    case '*':
-        gpio_set_level(LED_RDY, 0 );
-        break;
-  }
-  
-  switch (state_X)
-  {
-    case 0:
-    case '.':
-        gpio_set_level(LED_X, 1 );
-        break;
-    
-    case 1:
-    case '*':
-        gpio_set_level(LED_X, 0 );
-        break;
+    if ( *new_state != '-' )
+    {
+      leds[i].blink = 0;
+      switch (*new_state)
+      {
+        case '-':             // Leave this LED alone  
+        break;              
+
+        case 'r':               // RED LED
+          leds[i].blink = 1;    // Turn on Blinking
+        case 'R':
+          leds[i].colour = RED;
+          break;
+
+        case 'g':               // GREEN LED
+          leds[i].blink = 1;    // Turn on Blinking
+        case 'G':
+          leds[i].colour = GREEN;
+          break;
+
+        case 'b':
+          leds[i].blink = 1;
+        case 'B':
+          leds[i].colour = BLUE;
+          break;
+
+        case 'w':
+          leds[i].blink = 1;
+        case 'W':
+          leds[i].colour = WHITE;
+          break;
+
+        case ' ':
+          leds[i].colour = OFF;
+          break;
+      }
+    }
+    i++;
+    new_state++;
   }
 
-  switch (state_Y)
-  {
-    case 0:
-    case '.':
-        gpio_set_level(LED_Y, 1 );
-        break;
-    
-    case 1:
-    case '*':
-        gpio_set_level(LED_Y, 0 );
-        break;
-  }
+/*
+ *  All done, return
+ */
   return;  
-  }
+}
 
 
 
@@ -460,32 +445,6 @@ void paper_on_off                               // Function to turn the motor on
   return;
  }
 
- /*
- * Common function to indicate a fault // Cycle LEDs 5x
- */
-void blink_fault
-  (                                        
-  unsigned int fault_code                 // Fault code to blink
-  )
-{
-  unsigned int i;
-
-  for (i=0; i != 3; i++)
-  {
-    set_LED(fault_code & 4, fault_code & 2, fault_code & 1);  // Blink the LEDs to show an error
-    delay(ONE_SECOND/4);
-    fault_code = ~fault_code;
-    set_LED(fault_code & 4, fault_code & 2, fault_code & 1);                    // Blink the LEDs to show an error
-    delay(ONE_SECOND/4);
-    fault_code = ~fault_code;
-  }
-
- /*
-  * Finished
-  */
-  return;
-}
-
 /*-----------------------------------------------------
  * 
  * function: multifunction_init
@@ -637,19 +596,19 @@ void multifunction_switch(void)
   {
     if ( DIP_SW_A )
     {
-      set_LED(L('-', '*', '-'));
+      set_LED("--G");
     }
     else
     {
-      set_LED(L('-', '.', '-'));
+      set_LED("-- ");
     }
     if ( DIP_SW_B )
     {
-      set_LED(L('-', '-', '*'));
+      set_LED("-G-");
     }
     else
     {
-      set_LED(L('-', '-', '.'));
+      set_LED("- -");
     }
   }
   timer_delete(&wdt);

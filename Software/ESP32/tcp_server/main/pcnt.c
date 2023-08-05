@@ -90,11 +90,11 @@ void pcnt_init
  *  Setup the control.  Count only when the control is HIGH.
  */
 //                                Channel                       Rising Edge                        Falling Edge
-    pcnt_channel_set_edge_action( pcnt_chan_a[this_unit], PCNT_CHANNEL_EDGE_ACTION_INCREASE, PCNT_CHANNEL_EDGE_ACTION_HOLD);  // Counter
+    pcnt_channel_set_edge_action( pcnt_chan_a[this_unit], PCNT_CHANNEL_EDGE_ACTION_INCREASE, PCNT_CHANNEL_EDGE_ACTION_HOLD);    // Counter
 //                                Channel                        When High                          When Low
-    pcnt_channel_set_level_action(pcnt_chan_a[this_unit], PCNT_CHANNEL_LEVEL_ACTION_KEEP, PCNT_CHANNEL_LEVEL_ACTION_HOLD); // Control
+    pcnt_channel_set_level_action(pcnt_chan_a[this_unit], PCNT_CHANNEL_LEVEL_ACTION_KEEP, PCNT_CHANNEL_LEVEL_ACTION_HOLD);      // Control
     pcnt_channel_set_edge_action( pcnt_chan_b[this_unit], PCNT_CHANNEL_EDGE_ACTION_HOLD,  PCNT_CHANNEL_EDGE_ACTION_HOLD);       // Not Used
-    pcnt_channel_set_level_action(pcnt_chan_b[this_unit], PCNT_CHANNEL_LEVEL_ACTION_HOLD, PCNT_CHANNEL_LEVEL_ACTION_HOLD);    // Not Used
+    pcnt_channel_set_level_action(pcnt_chan_b[this_unit], PCNT_CHANNEL_LEVEL_ACTION_HOLD, PCNT_CHANNEL_LEVEL_ACTION_HOLD);      // Not Used
 
 /*
  *  All done, return

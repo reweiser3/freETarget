@@ -451,7 +451,6 @@ void esp01_test(void)
 /*
  * Initialize the WiFi if available
  */
-   set_LED('*', '*', '.');                 // Hello World
    printf("\r\nReinitializing esp01\r\n"); 
    esp01_init();                           // Prepare the WiFi channel if installed
    
