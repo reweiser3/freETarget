@@ -49,24 +49,41 @@ bool_t  do_dlt(unsigned int level);                     // Diagnostics Log and T
 /*
  * LED status messages
  */
-// Normal operation        RDY Light On
+
 #define LED_RESET         "   "             // Force them all off
 #define LED_READY         "G--"             // The shot is ready to go
-#define LED_OFF           " --"             // Turn off the READY light
+#define LED_READY_OFF     " --"             // Turn off the READY light
 #define LED_TABATA_ON     "--G"             // Tabata is ready to go, leave the others alone
 #define LED_TABATA_OFF    "-- "             // Tabata is turned off, leave the others alone
+#define LED_RAPID_ON      "--G"             // Rapidfire course of fire on
+#define LED_RAPID_OFF     "-- "             // Rapidfire course of fire off
 #define LED_HIT           "-G-"             // A shot has been detected
 #define LED_MISS          "-R-"             // Last shot was a miss
 #define LED_WIFI_SEND     "--B"             // There is something going over the WiFi
 #define LED_WIFI_DONE     "-- "             // Finished sending
 #define LED_HELLO_WORLD   "RWB"             // Hello World
 
-// Sensor failed while waiting for a shot X Light On
-#define NORTH_FAILED       "RR-"            // North sensor failed
-#define EAST_FAILED        "RB-"            // East sensor failed
-#define SOUTH_FAILED       "RG-"            // South sensor failed
-#define WEST_FAILED        "RRW"            // 3 West sensor failed
+// Fault Codes
+#define LED_FAULT          "R--"            // Generic fault
+#define LED_NORTH_FAILED   "RRR"            // North sensor failed
+#define LED_EAST_FAILED    "RRG"            // East sensor failed
+#define LED_SOUTH_FAILED   "RRB"            // South sensor failed
+#define LED_WEST_FAILED    "RRW"            // 3 West sensor failed
 
+#define LED_FAIL_A         "RGR"            // 
+#define LED_FAIL_B         "RGG"            // 
+#define LED_FAIL_C         "RGB"            // 
+#define LED_FAIL_D         "RGW"            // 
+
+#define LED_FAIL_E         "RBR"            // 
+#define LED_FAIL_F         "RBG"            // 
+#define LED_FAIL_G         "RBB"            // 
+#define LED_FAIL_H         "RBW"            // 
+
+#define LED_FAIL_I         "RWR"            // 
+#define LED_FAIL_J         "RWG"            // 
+#define LED_FAIL_K         "RWB"            // 
+#define LED_FAIL_L         "RWW"            // 
 
 /*
  * Tracing 

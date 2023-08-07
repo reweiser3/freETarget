@@ -26,6 +26,10 @@
 #include "token.h"
 #include "analog_io.h"
 #include "esp_timer.h"
+#include "sdkconfig.h"
+#include "led_strip.h"
+#include "led_strip_types.h"
+#include "gpio_define.h"
 
 static void sw_state(unsigned int action);// Do something with the switches
 static void send_fake_score(void);        // Send a fake score to the PC
@@ -34,8 +38,10 @@ static unsigned int dip_mask;             // Used if the MFS2 uses the DIP_0 or 
 static long power_save;
 
 typedef struct led_struct {
-  long  colour;                           // Bits to send to the LED
-  int   blink;                            // TRUE if blinking enabled
+  int red;                                // Bits to send to the LED
+  int green;
+  int blue;
+  int blink;                              // TRUE if blinking enabled
   }  led_struct_t;
 
 led_struct_t leds[3];
@@ -184,7 +190,6 @@ unsigned int read_DIP
  * 'R' - Set the LED to Red'
  * '-' - Leave the LED alone
  *  
- * 
  *-----------------------------------------------------*/
 #define RED   0xFF0000
 #define GREEN 0x00FF00
@@ -206,37 +211,38 @@ void set_LED
     if ( *new_state != '-' )
     {
       leds[i].blink = 0;
+      leds[i].red = 0;
+      leds[i].green = 0;
+      leds[i].blue = 0;          // Turn off the LED
       switch (*new_state)
       {
-        case '-':             // Leave this LED alone  
-        break;              
-
         case 'r':               // RED LED
           leds[i].blink = 1;    // Turn on Blinking
         case 'R':
-          leds[i].colour = RED;
+          leds[i].red   = 0xff;
           break;
 
         case 'g':               // GREEN LED
           leds[i].blink = 1;    // Turn on Blinking
         case 'G':
-          leds[i].colour = GREEN;
+          leds[i].green = 0xff;
           break;
 
         case 'b':
           leds[i].blink = 1;
         case 'B':
-          leds[i].colour = BLUE;
+          leds[i].blue  = 0xff;
           break;
 
         case 'w':
           leds[i].blink = 1;
         case 'W':
-          leds[i].colour = WHITE;
+          leds[i].red   = 0xff;
+          leds[i].green = 0xff;
+          leds[i].blue   = 0xff;
           break;
 
-        case ' ':
-          leds[i].colour = OFF;
+        case ' ':             // The LEDs are already off
           break;
       }
     }
@@ -245,12 +251,19 @@ void set_LED
   }
 
 /*
+ *  Send out the new settings
+ */
+  for (i=0; i != sizeof(leds) / sizeof(led_struct_t); i++)
+  {
+    led_strip_set_pixel(led_strip, i, leds[i].red, leds[i].green, leds[i].blue);
+  }
+  led_strip_refresh(led_strip);
+
+/*
  *  All done, return
  */
   return;  
 }
-
-
 
 /*-----------------------------------------------------
  * 

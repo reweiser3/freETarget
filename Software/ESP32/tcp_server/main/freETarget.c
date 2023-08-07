@@ -387,25 +387,25 @@ unsigned int arm(void)
   if ( sensor_status & TRIP_EAST  )
   {
     printf("\r\n{ \"Fault\": \"NORTH\" }");
-    set_LED(NORTH_FAILED);           // Fault code North
+    set_LED(LED_NORTH_FAILED);           // Fault code North
     delay(ONE_SECOND);
   }
   if ( sensor_status & TRIP_EAST  )
   {
     printf("\r\n{ \"Fault\": \"EAST\" }");
-    set_LED(EAST_FAILED);           // Fault code East
+    set_LED(LED_EAST_FAILED);           // Fault code East
     delay(ONE_SECOND);
   }
   if ( sensor_status & TRIP_SOUTH )
   {
     printf("\n\r{ \"Fault\": \"SOUTH\" }");
-    set_LED(SOUTH_FAILED);         // Fault code South
+    set_LED(LED_SOUTH_FAILED);         // Fault code South
     delay(ONE_SECOND);
   }
   if ( sensor_status & TRIP_WEST )
   {
     printf("\r\n{ \"Fault\": \"WEST\" }");
-    set_LED(WEST_FAILED);         // Fault code West
+    set_LED(LED_WEST_FAILED);         // Fault code West
     delay(ONE_SECOND);
   }
 
@@ -457,7 +457,7 @@ unsigned int wait(void)
       }
       else
       {
-        set_LED(LED_OFF);
+        set_LED(LED_READY_OFF);
       }
     }
   }

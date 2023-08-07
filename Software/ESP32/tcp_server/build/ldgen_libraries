@@ -60,5 +60,6 @@ C:/Users/allan/Documents/freETarget/Software/ESP32/tcp_server/build/esp-idf/touc
 C:/Users/allan/Documents/freETarget/Software/ESP32/tcp_server/build/esp-idf/ulp/libulp.a
 C:/Users/allan/Documents/freETarget/Software/ESP32/tcp_server/build/esp-idf/usb/libusb.a
 C:/Users/allan/Documents/freETarget/Software/ESP32/tcp_server/build/esp-idf/wifi_provisioning/libwifi_provisioning.a
+C:/Users/allan/Documents/freETarget/Software/ESP32/tcp_server/build/esp-idf/espressif__led_strip/libespressif__led_strip.a
 C:/Users/allan/Documents/freETarget/Software/ESP32/tcp_server/build/esp-idf/main/libmain.a
 C:/Users/allan/Documents/freETarget/Software/ESP32/tcp_server/build/esp-idf/protocol_examples_common/libprotocol_examples_common.a

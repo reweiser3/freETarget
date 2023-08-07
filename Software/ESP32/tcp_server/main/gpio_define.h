@@ -80,7 +80,9 @@ typedef enum gpio_type {
     SERIAL_AUX,                                        // GPIO is used as Serial auxilary port
     PWM_OUT,                                           // GPIO is used as a PWM port
     I2C_PORT,                                          // GPIO is used as a i2c port
-    PCNT                                               // GPIO is used as a Pulse Counter
+    PCNT,                                              // GPIO is used as a Pulse Counter
+    LED_STRIP                                          // GPIO is used to drives a LED strip 
+
 } gpio_type_t;
 
 typedef struct DIO_struct  {
@@ -128,6 +130,8 @@ typedef struct gpio_struct  {
     void* gpio_uses;                                     // Pointer to IO specific structure
 } gpio_struct_t;
 
-extern gpio_struct_t gpio_table[];              // List of available devices
-
+extern gpio_struct_t gpio_table[];                      // List of available devices
+extern led_strip_config_t        led_strip_config;      // 3 LEDs on the board
+extern led_strip_rmt_config_t    rmt_config;            // 10MHz
+extern led_strip_handle_t        led_strip;
 #endif

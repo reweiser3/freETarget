@@ -16,6 +16,8 @@
 #include <stdio.h>
 #include "driver/pulse_cnt.h"
 #include "esp_err.h"
+#include "led_strip.h"
+#include "led_strip_types.h"
 #include "gpio_define.h"
 #include "pcnt.h"
 

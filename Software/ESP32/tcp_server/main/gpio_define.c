@@ -23,11 +23,14 @@
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\gpio_types.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\adc_types.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\esp_adc\include\esp_adc\adc_oneshot.h"
+#include "led_strip.h"
 
 #include "helpers.h"
 #include "pwm.h"
 #include "i2c.h"
 #include "pcnt.h"
+#include "led_strip.h"
+#include "led_strip_types.h"
 #include "gpio_define.h"
 
 /*
@@ -141,6 +144,13 @@ PCNT_struct_t pcnt6 = { .type=PCNT, .pcnt_unit = 6, .pcnt_signal = GPIO_NUM_8, .
 PCNT_struct_t pcnt7 = { .type=PCNT, .pcnt_unit = 7, .pcnt_signal = GPIO_NUM_8, .pcnt_control = GPIO_NUM_11 };
 
 /*
+ *  LED Strip
+ */
+led_strip_config_t        led_strip_config = {  .max_leds = 3 };           // 3 LEDs on the board
+led_strip_rmt_config_t    rmt_config       = {.resolution_hz = 10 * 1000 * 1000}; // 10MHz
+led_strip_handle_t        led_strip;
+
+/*
  *  GPIO Usage
  *
  *  This table contains the use of each of the individual pins
@@ -183,7 +193,7 @@ gpio_struct_t gpio_table[] = {
     {"C",            GPIO_NUM_36, (void*)&dio36},    // Auxilary Input C
     {"D",            GPIO_NUM_35, (void*)&dio35},    // Auxilary Input D
     {"BOOT",         GPIO_NUM_0,  NULL},             // Hold in BOOT
-    {"STATUS",       GPIO_NUM_45, (void*)&dio45},    // Status LEDs
+    {"STATUS",       GPIO_NUM_45, (void*)&led_strip_config},// Status LEDs
     {"SPARE0",       GPIO_NUM_48, (void*)&dio48},    // SPARE 0
     {"SPARE1",       GPIO_NUM_47, (void*)&dio47},    // Spare 1
     {"SPARE2",       GPIO_NUM_21, (void*)&dio21},    // Spare 2 
@@ -260,7 +270,11 @@ void gpio_init(void)
 
                 case PCNT:
                     pcnt_init((PCNT_struct_t*)(gpio_table[i].gpio_uses));
-                    break;              
+                    break;             
+
+                case LED_STRIP: 
+                    led_strip_config.strip_gpio_num = gpio_table[i].gpio_number;
+                    led_strip_new_rmt_device(&led_strip_config, &rmt_config, &led_strip);
                 
             }
         }
