@@ -287,7 +287,7 @@ void read_timers
 
   for (i=N; i<=W; i++)
   {
-    *(timer_ptr + i) = read_counter(i);
+    *(timer_ptr + i) = read_pcnt(i);
   }
 
   return;

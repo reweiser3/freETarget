@@ -52,7 +52,15 @@ uart_config_t uart_aux_config =
 const int uart_aux_size= (1024 * 2);
 QueueHandle_t uart_aux_queue;
 
-/*-----------------------------------------------------
+static char tcpip_in[1024];       // TCPIP input buffer
+static int  in_in_ptr  = 0;       // Queue pointers
+static int  in_out_ptr = 0;       
+
+static char tcpip_out[1024];      // TCPOP output buffer
+static char out_in_ptr  = 0;      // Queue pointers
+static char out_out_ptr = 0;
+
+/******************************************************************************
  * 
  * function: serial_io_init
  * 
@@ -60,12 +68,12 @@ QueueHandle_t uart_aux_queue;
  * 
  * return: None
  * 
- *-----------------------------------------------------
+ *******************************************************************************
  *
  * The serial port is initialized and the interrupt 
  * driver assigned
  * 
- *-----------------------------------------------------*/
+ ******************************************************************************/
 
 void serial_io_init(void)
 {
@@ -87,12 +95,20 @@ void serial_io_init(void)
   uart_driver_install(UART_NUM_1, uart_aux_size,      uart_aux_size,     10, &uart_aux_queue, 0);
 
 /*
+ *  Prepare the TCPIP queues
+ */
+  in_in_ptr   = 0;      // Queue pointers
+  in_out_ptr  = 0;       
+  out_in_ptr  = 0;      // Queue pointers
+  out_out_ptr = 0;
+
+/*
  * All done, return
  */  
   return;
 }
 
-/*-----------------------------------------------------
+/*******************************************************************************
  * 
  * function: serial_available
  * 
@@ -100,10 +116,10 @@ void serial_io_init(void)
  * 
  * return:   Number of characters in all of the ports
  * 
- *-----------------------------------------------------
+ *******************************************************************************
  *
  * 
- *-----------------------------------------------------*/
+ ******************************************************************************/
 unsigned int serial_available
 (
   bool_t console,    // TRUE if reading console
@@ -111,8 +127,8 @@ unsigned int serial_available
   bool_t tcpip       // TRUE if checking the TCPIP port
 )
 {
-  unsigned int n_available;
-  unsigned int length;
+  int n_available;
+  int length;
 
   n_available = 0;
 
@@ -128,12 +144,24 @@ unsigned int serial_available
     n_available += length;
   }
 
+  if ( tcpip )
+  {
+    if (in_in_ptr != in_out_ptr )
+    {
+      length = in_in_ptr - in_out_ptr;
+      if ( length < 0 )
+      {
+        length += sizeof(tcpip_in)
+      }
+      n_available += length;
+  }
+
   return n_available;
 }
 
 
 
-/*-----------------------------------------------------
+/*******************************************************************************
  * 
  * function: serial_flush
  * 
@@ -141,10 +169,10 @@ unsigned int serial_available
  * 
  * return:   Number of characters in all of the ports
  * 
- *-----------------------------------------------------
+ *******************************************************************************
  *
  * 
- *-----------------------------------------------------*/
+ ********************************************************************************/
 void serial_flush
 (
   bool_t console,    // TRUE if reading console
@@ -162,11 +190,16 @@ void serial_flush
     uart_flush(uart_aux);
   }
 
+  if ( tcpip )
+  {
+    in_in_ptr  = 0;
+    in_out_ptr = 0;
+  }
   return;
 }
 
 
-/*-----------------------------------------------------
+/*******************************************************************************
  * 
  * function: serial_getch
  * 
@@ -174,10 +207,10 @@ void serial_flush
  * 
  * return:   Next character in the  selected serial port
  * 
- *-----------------------------------------------------
+ *******************************************************************************
  *
  * 
- *-----------------------------------------------------*/
+ *******************************************************************************-*/
 char serial_getch
   (
     bool_t console,       // Read the console
@@ -210,11 +243,23 @@ char serial_getch
   }
 
 /*
+ *  Bring in the TCPIP bytes
+ */
+  if ( tcpiop )
+  {
+    if ( in_in_ptr != in_out_ptr )
+    {
+      ch = tcpip_in[in_out_ptr];
+      in_out_ptr = (in_out_ptr+1) % sizeof(tcpip_in);
+    }
+    return ch;
+  }
+/*
  * Got nothing
  */
   return 0;
 }
-/*-----------------------------------------------------
+/*******************************************************************************
  * 
  * function: serial_to_all
  * 
@@ -222,12 +267,12 @@ char serial_getch
  * 
  * return:   None
  * 
- *-----------------------------------------------------
+ *******************************************************************************
  *
  * Send a string to all of the serial devices that are 
  * in use. 
  * 
- *-----------------------------------------------------*/
+ ******************************************************************************/
  void char_to_all
  (
     char ch,
@@ -275,11 +320,51 @@ void serial_to_all
   }
   if ( tcpip )
   {
-
+    while(len)
+    {
+      tcpip_out[out_out_ptr] = *str;
+      str++;
+      out_out_ptr = (out_out_ptr + 1) % sizeof(tcpip_out);
+    }
   }
 
 /*
  * All done
  */
   return;
+}
+
+/*******************************************************************************
+ * 
+ * function: serial_to_tcpip
+ * 
+ * brief:    Get waiting bytes for the tcpip
+ * 
+ * return:   Buffer updated
+ * 
+ *******************************************************************************
+ *
+ * Called from the TCPIP driver, this function returns the requested number
+ * of bytes back to the TCPIP handler for output
+ * 
+ ******************************************************************************/
+int serial_to_tcpip
+(
+  char* buffer,         // Where to return the bytes
+  int   length          // Maximum transfer size
+)
+{
+  int i;
+
+  i=0;
+  while ( length )
+  {
+    *buffer = tcpip_out[out_out_ptr];
+    out_out_ptr = (out_out_ptr+1) % sizeof(tcpip_out);
+    length--;
+    i++;
+  }
+
+  return i;
+
 }

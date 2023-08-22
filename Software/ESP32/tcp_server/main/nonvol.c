@@ -10,18 +10,21 @@
   * 
  * 
  * ----------------------------------------------------*/
+#include <stdio.h>
 #include "freETarget.h"
 #include "json.h"
-#include "nvs.h"
+
 #include "nonvol.h"
-#include "serial_io.h"
+//#include "serial_io.h"
 
-#include "gpio.h"
-#include "diag_tools.h"
-#include "stdio.h"
 
+
+#include "esp_system.h"
 #include "nvs_flash.h"
 #include "nvs.h"
+
+//#include "gpio.h"
+#include "diag_tools.h"
 
 #include "timer.h"
 
@@ -30,6 +33,184 @@
  */
 nvs_handle_t my_handle;
 
+
+/*----------------------------------------------------------------
+ * 
+ * functoon: read_nonvol
+ * 
+ * brief: Read nonvol and set up variables
+ * 
+ * return: Nonvol values copied to RAM
+ * 
+ *---------------------------------------------------------------
+ *
+ * Read the nonvol into RAM.  
+ * 
+ * If the results is uninitalized then force the factory default.
+ * Then check for out of bounds and reset those values
+ *
+ *------------------------------------------------------------*/
+void read_nonvol(void)
+{
+  long          nonvol_init;
+  unsigned int  i;             // Iteration Counter
+  long          x;             // 32 bit number
+  size_t        length;        // Length of input string
+  union pack    nvm64;         // Save a float as a long
+  esp_err_t     err;           // ESP32 error type
+
+  if ( DLT(DLT_CRITICAL) )
+  {
+    printf("read_nonvol()");
+  }
+  
+  
+/*******************************************************************************/
+
+    // Initialize NVS
+    err = nvs_flash_init();
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        // NVS partition was truncated and needs to be erased
+        // Retry nvs_flash_init
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        err = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK( err );
+
+    // Open
+    printf("\n");
+    printf("Opening Non-Volatile Storage (NVS) handle... ");
+
+    err = nvs_open(NAME_SPACE, NVS_READWRITE, &my_handle);
+    if ((err != ESP_OK)
+          && DLT(DLT_CRITICAL) )
+    {
+        printf("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+    }
+        // Read
+        printf("Reading restart counter from NVS ... ");
+        int32_t restart_counter = 0; // value will default to 0, if not set yet in NVS
+        err = nvs_get_i32(my_handle, "restart_counter", &restart_counter);
+        switch (err) {
+            case ESP_OK:
+                printf("Done\n");
+                printf("Restart counter = %d\n", restart_counter);
+                break;
+            case ESP_ERR_NVS_NOT_FOUND:
+                printf("The value is not initialized yet!\n");
+                break;
+            default :
+                printf("Error (%s) reading!\n", esp_err_to_name(err));
+        }
+
+        // Write
+        printf("Updating restart counter in NVS ... ");
+        restart_counter++;
+        err = nvs_set_i32(my_handle, "restart_counter", restart_counter);
+        printf((err != ESP_OK) ? "Failed!\n" : "Done\n");
+
+        // Commit written value.
+        // After setting any values, nvs_commit() must be called to ensure changes are written
+        // to flash storage. Implementations may write to storage at other times,
+        // but this is not guaranteed.
+        printf("Committing updates in NVS ... ");
+        err = nvs_commit(my_handle);
+        printf((err != ESP_OK) ? "Failed!\n" : "Done\n");
+
+        // Close
+        nvs_close(my_handle);
+    }
+
+
+
+/*
+ * Read the nonvol marker and if uninitialized then set up values
+ */
+
+  if (nvs_open(NAME_SPACE, NVS_READWRITE, &my_handle) != ESP_OK)
+  {
+    DLT(DLT_CRITICAL);
+    printf("read_nonvol(): Failed to open NVM");
+  }
+        
+  nvs_get_i32(my_handle, "NONVOL_INIT", &nonvol_init);
+  
+  if ( nonvol_init != INIT_DONE)                       // EEPROM never programmed
+  {
+    factory_nonvol(true);                              // Force in good values
+  }
+
+  nvs_get_i32(my_handle, "NVM_SERIAL_NO", &nonvol_init);
+
+  if ( nonvol_init == (-1) )                          // Serial Number never programmed
+  {
+    factory_nonvol(true);                             // Force in good values
+  }
+
+  nvs_get_i32(my_handle, "NVM_PS_VERSION", &nonvol_init);
+  if ( nonvol_init != PS_VERSION )                    // persistent storage version
+  {
+    update_nonvol(nonvol_init);
+  }
+  
+/*
+ * Use the JSON table to initialize the local variables
+ */
+ i=0;
+ while ( JSON[i].token != 0 )
+ {
+   if ( (JSON[i].value != 0) || (JSON[i].d_value != 0)  )    // There is a value stored in memory
+   {
+     switch ( JSON[i].convert & IS_MASK )
+     {
+        case IS_VOID:
+          break;
+          
+        case IS_TEXT:
+        case IS_SECRET:
+          if ( JSON[i].non_vol != 0 )                           // Is persistent storage enabled?
+          {
+            length = JSON[i].convert & FLOAT_MASK;
+            nvs_get_str(my_handle, JSON[i].non_vol, (char*)JSON[i].value, &length);
+          }
+          break;
+
+        case IS_INT32:
+        case IS_FIXED:
+          if ( JSON[i].non_vol != 0 )                          // Is persistent storage enabled?
+          {
+            nvs_get_i32(my_handle, JSON[i].non_vol, &x);       // Read in the value
+            *JSON[i].value = x;
+          }
+          else
+          {
+            *JSON[i].value = JSON[i].init_value;              // Persistent storage is not enabled, force a known value
+          }
+          break;
+
+        case IS_FLOAT:
+          nvs_get_i64(my_handle, JSON[i].non_vol, (int64_t*)&nvm64.int64);       // Read in the value as an iny
+          *JSON[i].d_value = nvm64.double64;
+          break;
+      }
+   }
+   i++;
+ }
+
+/*
+ * Go through and verify that the special cases are taken care of
+ */
+  multifunction_switch();                                   // Look for an override on the target type
+  
+/*
+ * All done, begin the program
+ */
+  return;
+}
+
+
+
+#if(0)
 /*----------------------------------------------------------------
  * 
  * funciton: check_nonvol
@@ -75,6 +256,7 @@ void check_nonvol(void)
  */
   return;
 }
+#endif
 
 /*----------------------------------------------------------------
  * 
@@ -209,9 +391,14 @@ void factory_nonvol
 /*
  * Initialization complete.  Mark the init done
  */
-//  nvs_set_i32(my_handle, NONVOL_PS_VERSION, PS_VERSION); // Write in the version number
-//  nvs_set_i32(my_handle, NONVOL_INIT, INIT_DONE);
-
+  nvs_set_i32(my_handle, NONVOL_PS_VERSION, PS_VERSION); // Write in the version number
+  nvs_set_i32(my_handle, NONVOL_INIT, INIT_DONE);
+  if ( nvs_commit(my_handle) 
+    && DLT(DLT_CRITICAL) )
+  {
+    printf("Failed to write factory defaults to NONVOL");
+  }
+  
 /*
  * Read the NONVOL and print the results
  */
@@ -235,8 +422,8 @@ void factory_nonvol
  * return: None
  *---------------------------------------------------------------
  *
- * init_nonvol requires an arguement == 1234 before the 
- * initialization command will be executed.
+ * {"INIT":1234} Reset but leave serial number alone
+ * {"INIT":1235} Reset and prompt for new serial number
  * 
  * The variable NONVOL_INIT is corrupted. and the values
  * copied out of the JSON[] table.  If the serial number has
@@ -272,126 +459,6 @@ void init_nonvol
 
   return;
 }
-
-/*----------------------------------------------------------------
- * 
- * funciton: read_nonvol
- * 
- * brief: Read nonvol and set up variables
- * 
- * return: Nonvol values copied to RAM
- * 
- *---------------------------------------------------------------
- *
- * Read the nonvol into RAM.  
- * 
- * If the results is uninitalized then force the factory default.
- * Then check for out of bounds and reset those values
- *
- *------------------------------------------------------------*/
-void read_nonvol(void)
-{
-  long          nonvol_init;
-  unsigned int  i;             // Iteration Counter
-  long          x;             // 32 bit number
-  size_t        length;        // Length of input string
-  union pack    nvm64;         // Save a float as a long
-
-  if ( DLT(DLT_CRITICAL) )
-  {
-    printf("read_nonvol()");
-  }
-  
-/*
- * Read the nonvol marker and if uninitialized then set up values
- */
-  if ( nvs_flash_init() != 0 )
-  {
-    nvs_flash_erase();
-    nvs_flash_init();
-  }
-
-  if (nvs_open(NAME_SPACE, NVS_READWRITE, &my_handle) != ESP_OK)
-  {
-    DLT(DLT_CRITICAL);
-    printf("read_nonvol(): Failed to open NVM");
-  }
-        
-  nvs_get_i32(my_handle, "NONVOL_INIT", &nonvol_init);
-  
-  if ( nonvol_init != INIT_DONE)                       // EEPROM never programmed
-  {
-    factory_nonvol(true);                              // Force in good values
-  }
-
-  nvs_get_i32(my_handle, "NVM_SERIAL_NO", &nonvol_init);
-
-  if ( nonvol_init == (-1) )                          // Serial Number never programmed
-  {
-    factory_nonvol(true);                             // Force in good values
-  }
-
-  nvs_get_i32(my_handle, "NVM_PS_VERSION", &nonvol_init);
-  if ( nonvol_init != PS_VERSION )                    // persistent storage version
-  {
-    update_nonvol(nonvol_init);
-  }
-  
-/*
- * Use the JSON table to initialize the local variables
- */
- i=0;
- while ( JSON[i].token != 0 )
- {
-   if ( (JSON[i].value != 0) || (JSON[i].d_value != 0)  )    // There is a value stored in memory
-   {
-     switch ( JSON[i].convert & IS_MASK )
-     {
-        case IS_VOID:
-          break;
-          
-        case IS_TEXT:
-        case IS_SECRET:
-          if ( JSON[i].non_vol != 0 )                           // Is persistent storage enabled?
-          {
-            length = JSON[i].convert & FLOAT_MASK;
-            nvs_get_str(my_handle, JSON[i].non_vol, (char*)JSON[i].value, &length);
-          }
-          break;
-
-        case IS_INT32:
-        case IS_FIXED:
-          if ( JSON[i].non_vol != 0 )                          // Is persistent storage enabled?
-          {
-            nvs_get_i32(my_handle, JSON[i].non_vol, &x);       // Read in the value
-            *JSON[i].value = x;
-          }
-          else
-          {
-            *JSON[i].value = JSON[i].init_value;              // Persistent storage is not enabled, force a known value
-          }
-          break;
-
-        case IS_FLOAT:
-          nvs_get_i64(my_handle, JSON[i].non_vol, (int64_t*)&nvm64.int64);       // Read in the value as an iny
-          *JSON[i].d_value = nvm64.double64;
-          break;
-      }
-   }
-   i++;
- }
-
-/*
- * Go through and verify that the special cases are taken care of
- */
-  multifunction_switch();                                   // Look for an override on the target type
-  
-/*
- * All done, begin the program
- */
-  return;
-}
-
 
 /*----------------------------------------------------------------
  * 
@@ -446,13 +513,11 @@ void update_nonvol
    }
    current_version = PS_VERSION;                            // Initialized, force in the current version
    nvs_set_i32(my_handle, NONVOL_PS_VERSION, current_version);
+   nvs_commit(my_handle);
+
    printf("\r\nDone\r\n");
   }
 
-/*
- * Look through the list of PS versions and see if we have initialized before
- * Old memory has a completly bogus verion number that is not in range
- */
 /*
  * Up to date, return
  */

@@ -93,16 +93,15 @@ void freeETarget_init(void)
  */
   serial_io_init();
   POST_version();                         // Show the version string on all ports
-  gpio_init();  
-  set_LED(LED_HELLO_WORLD);               // Hello World
+ // gpio_init();  
+ // set_LED(LED_HELLO_WORLD);               // Hello World
   read_nonvol();
   
 #if (0)
 /*
  *  Set up the port pins
  */
-
-
+  init_dac();
   init_sensors();
 //  init_analog_io();
  // init_timer();
@@ -151,8 +150,12 @@ void freeETarget_init(void)
   
   DLT(DLT_CRITICAL); 
 #endif
+
   printf("Finished startup\n\r");
 
+/*
+ * Start the tasks running
+ */
 //  esp_timer_create("freeETarget_json", &freETarget_json_handle );
 //  esp_timer_start_periodic(&freETarget_json_handle, 1);
  //   xTaskCreate(freeETarget_task,  "freeETarget_task", 4096, (void*)0, 5, NULL);

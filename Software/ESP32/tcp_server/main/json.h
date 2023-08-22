@@ -94,6 +94,8 @@ extern int    json_min_ring_time; // Time to wait for ringing to stop
 extern double json_doppler;       // Adjutment for inverse square
 extern int    json_token;         // Token ring setting
 extern int    json_multifunction2;// Multifunction Switch 2
+extern int    json_dac_low;       // Sensor Voltage Reference Low (mV)
+extern int    json_dac_high;      // Sensor Voltage Reference High (mV)
 #if (CLOCK_TEST)
 extern int    json_clock[4];      // Test clock
 #endif

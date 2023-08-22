@@ -68,4 +68,7 @@ void restore_nonvol(void);                        // Copyt the nonvol back
 #define NONVOL_MIN_RING_TIME  "MIN_RING_TIME"  // Minimum time for ringing to stop 
 #define NONVOL_DOPPLER        "DOPPLER"        // Compensation for signal fading
 #define NONVOL_TOKEN          "TOKEN"          // Token ring state
+#define NONVOL_DAC_LOW        "DAC_LOW"        // Sensor Reference Voltage low in mV
+#define NONVOL_DAC_HIGH       "DAC_HIGH"       // Sensor Reference Voltage high in mV
+
 #endif

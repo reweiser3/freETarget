@@ -95,6 +95,7 @@ void pcnt_init
     pcnt_channel_set_edge_action( pcnt_chan_a[this_unit], PCNT_CHANNEL_EDGE_ACTION_INCREASE, PCNT_CHANNEL_EDGE_ACTION_HOLD);    // Counter
 //                                Channel                        When High                          When Low
     pcnt_channel_set_level_action(pcnt_chan_a[this_unit], PCNT_CHANNEL_LEVEL_ACTION_KEEP, PCNT_CHANNEL_LEVEL_ACTION_HOLD);      // Control
+//  Not Used
     pcnt_channel_set_edge_action( pcnt_chan_b[this_unit], PCNT_CHANNEL_EDGE_ACTION_HOLD,  PCNT_CHANNEL_EDGE_ACTION_HOLD);       // Not Used
     pcnt_channel_set_level_action(pcnt_chan_b[this_unit], PCNT_CHANNEL_LEVEL_ACTION_HOLD, PCNT_CHANNEL_LEVEL_ACTION_HOLD);      // Not Used
 
@@ -102,4 +103,25 @@ void pcnt_init
  *  All done, return
  */
     return;
+}
+
+/*************************************************************************
+ * 
+ * function: pcnt_read()
+ * 
+ * description:  Read the pcnt register
+ * 
+ * return:   32 bit timer count
+ * 
+ **************************************************************************
+ *
+ * The PCNT registers are 16 bits long with an overflow counter
+ * 
+ **************************************************************************/
+unsigned long pcnt_read
+(
+    int which_unit                   // What timer to read
+)
+{
+    return pcnt_unit[which_unit].register;
 }

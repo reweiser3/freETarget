@@ -29,46 +29,19 @@ i2c_config_t i2c_configuration = {
     .master.clk_speed = I2C_MASTER_FREQ_HZ,
 };
 
-/**
- * @brief Read a sequence of bytes from a MPU9250 sensor registers
- */
-esp_err_t i2c_read
-(
-    uint8_t  device_addr,           // I2C Dewvice Address
-    uint8_t  reg_addr,              // I2C Register address
-    uint8_t* data,                  // Buffer to be sent
-    size_t   length                 // Number of bytes to be sent
-)
-{
-    return i2c_master_write_read_device(I2C_MASTER_NUM, device_addr, &reg_addr, 1, data, length, I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
-}
-
-/**
- * @brief Write a byte to a MPU9250 sensor register
- */
-esp_err_t i2c_write
-(
-    uint8_t device_addr,            // Device Address
-    uint8_t reg_addr,               // Register address
-    uint8_t* data,                  // Data to write
-     size_t length                  // Number of bytes to write
-)
-{
-    int i;
-    uint8_t write_buf[128];
-    
-    write_buf[0] = reg_addr;
-    for ( i =0; i != length; i++)
-    {
-        write_buf[i+1] = data[i];
-    }
-
-    return i2c_master_write_to_device(I2C_MASTER_NUM, device_addr, write_buf, sizeof(write_buf), I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
-}
-
-/**
- * @brief i2c master initialization
- */
+/*********************************************************************
+ * 
+ * @function: i2c_init
+ * 
+ * @brief:    Initialize the control
+ * 
+ * @return:   Success if it worked
+ * 
+ *********************************************************************
+ *
+ * Setup the registers for the I2C bus
+ * 
+ ********************************************************************/
 esp_err_t i2c_init
 (
     int    i2c_gpio_SDA,      // GPIO SPI belongs to
@@ -84,3 +57,62 @@ esp_err_t i2c_init
 
     return i2c_driver_install(i2c_master_port, i2c_configuration.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
 }
+
+/*********************************************************************
+ * 
+ * @function: i2c_read
+ * 
+ * @brief:    Read a sequence of bytes from an I2C registers
+ * 
+ * @return:   Read bytes from I2C and save to memory
+ * 
+ *********************************************************************
+ *
+ * The I2C transfer is set up and executed
+ * 
+ ********************************************************************/
+
+esp_err_t i2c_read
+(
+    uint8_t  device_addr,           // I2C Dewvice Address
+    uint8_t  reg_addr,              // I2C Register address
+    uint8_t* data,                  // Buffer to be sent
+    size_t   length                 // Number of bytes to be sent
+)
+{
+    return i2c_master_write_read_device(I2C_MASTER_NUM, device_addr, &reg_addr, 1, data, length, I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
+}
+
+
+/*********************************************************************
+ * 
+ * @function: i2c_write
+ * 
+ * @brief:    Write a sequence of bytes from an I2C registers
+ * 
+ * @return:   Read bytes from I2C and save to memory
+ * 
+ *********************************************************************
+ *
+ * The I2C transfer is set up and executed
+ * 
+ ********************************************************************/
+esp_err_t i2c_write
+(
+    uint8_t device_addr,            // Device Address
+    uint8_t* data,                  // Data to write
+     size_t length                  // Number of bytes to write
+)
+{
+    int i;
+    uint8_t write_buf[128];
+    
+    for ( i =0; i != length; i++)
+    {
+        write_buf[i] = data[i];
+    }
+
+    return i2c_master_write_to_device(I2C_MASTER_NUM, device_addr, write_buf, sizeof(write_buf), I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
+}
+
+

@@ -24,8 +24,7 @@
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\adc_types.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\esp_adc\include\esp_adc\adc_oneshot.h"
 #include "led_strip.h"
-
-#include "helpers.h"
+//#include "helpers.h"
 #include "pwm.h"
 #include "i2c.h"
 #include "pcnt.h"
