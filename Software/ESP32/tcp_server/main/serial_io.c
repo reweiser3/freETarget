@@ -57,8 +57,8 @@ static int  in_in_ptr  = 0;       // Queue pointers
 static int  in_out_ptr = 0;       
 
 static char tcpip_out[1024];      // TCPOP output buffer
-static char out_in_ptr  = 0;      // Queue pointers
-static char out_out_ptr = 0;
+static int  out_in_ptr  = 0;      // Queue pointers
+static int  out_out_ptr = 0;
 
 /******************************************************************************
  * 
@@ -318,6 +318,7 @@ void serial_to_all
   {
     uart_write_bytes(uart_aux, (const char *) str, len);
   }
+  
   if ( tcpip )
   {
     while(len)

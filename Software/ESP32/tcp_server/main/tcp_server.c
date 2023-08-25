@@ -23,6 +23,7 @@
 #include <lwip/netdb.h>
 
 #include "freETarget.h"
+#include "serial_io.h"
 
 #define PORT                        CONFIG_EXAMPLE_PORT
 #define KEEPALIVE_IDLE              CONFIG_EXAMPLE_KEEPALIVE_IDLE
@@ -66,7 +67,7 @@ static void tcp_server_io
         }
         else
         {
-            len -= to_serial(rx_buffer, len);
+            len -= tcpip_to_serial(rx_buffer, len);
         }[]
     }
     while ( len > 0 );
@@ -187,7 +188,7 @@ static void tcp_server_task
         }
         ESP_LOGI(TAG, "Socket accepted ip address: %s", addr_str);
 
-        do_retransmit(sock);
+        tcp_server_io(sock);
 
         shutdown(sock, 0);
         close(sock);

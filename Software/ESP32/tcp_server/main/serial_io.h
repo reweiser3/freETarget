@@ -18,6 +18,7 @@ char serial_gets(bool_t console, bool_t aux, bool_t tcpip);             // Read 
 char serial_getch(bool_t console, bool_t aux, bool_t tcpip);            // Read the selected port
 unsigned int serial_available(bool_t console, bool_t aux, bool_t tcpip);// Find out how much is waiting for us
 void serial_flush(bool_t console, bool_t aux, bool_t tcpip);            // Get rid of everything
+int serial_to_tcpip(char* buffer, int length);                          // Put serial data to the TCPIP port
 
 /*
  *  Definitions
