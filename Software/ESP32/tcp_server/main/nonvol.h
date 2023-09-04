@@ -12,6 +12,7 @@
 #define PS_UNINIT(x)     ( ((x) == 0xABAB) || ((x) == 0xFFFF))  // Uninitilized value
 
 #define NAME_SPACE "freETarget"
+
 extern nvs_handle_t my_handle;                    // Handle to NVS space
 
 /*

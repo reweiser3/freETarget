@@ -61,7 +61,6 @@
 
 #include "freETarget.h"
 #include "token.h"
-#include "esp-01.h"
 #include "diag_tools.h"
 #include "json.h"
 #include "stdio.h"

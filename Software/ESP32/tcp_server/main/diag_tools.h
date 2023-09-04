@@ -19,7 +19,7 @@ void    POST_version(void);                             // Show the version stri
 void    POST_LEDs(void);                                // Verify the LED operation
 bool_t  POST_counters(void);                            // Verify the counter operation
 void    POST_trip_point(void);                          // Display the set point
-void    set_trip_point(int v);                          // Calibrate the trip point
+void    set_trip_point(void);                           // Calibrate the trip point
 bool_t  do_dlt(unsigned int level);                     // Diagnostics Log and Trace
 
 #define T_HELP         0       // Help test

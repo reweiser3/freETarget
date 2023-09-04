@@ -68,7 +68,7 @@ static void tcp_server_io
         else
         {
             len -= tcpip_to_serial(rx_buffer, len);
-        }[]
+        }
     }
     while ( len > 0 );
 

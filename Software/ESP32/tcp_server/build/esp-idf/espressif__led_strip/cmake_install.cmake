@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/allan/Documents/freETarget/Software/ESP32/tcp_server/managed_components/espressif__led_strip
+# Install script for directory: C:/Users/allan/Documents/freETarget/Software/ESP32/tcp_server/components/espressif__led_strip
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

@@ -13,6 +13,7 @@
  * Global functions
  */
 void pcnt_init(PCNT_struct_t*  pcnt);       // pcnt Control
+unsigned long pcnt_read(int which_unit);    // Read timer contents
 
 /*
  * Typedefs

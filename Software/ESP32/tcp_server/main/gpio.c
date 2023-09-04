@@ -30,6 +30,7 @@
 #include "led_strip.h"
 #include "led_strip_types.h"
 #include "gpio_define.h"
+#include "pcnt.h"
 
 static void sw_state(unsigned int action);// Do something with the switches
 static void send_fake_score(void);        // Send a fake score to the PC
@@ -287,7 +288,7 @@ void read_timers
 
   for (i=N; i<=W; i++)
   {
-    *(timer_ptr + i) = read_pcnt(i);
+    *(timer_ptr + i) = pcnt_read(i);
   }
 
   return;
@@ -504,7 +505,7 @@ void paper_on_off                               // Function to turn the motor on
 
   if ( CALIBRATE )                      // Calibration jumper in?
   {
-    set_trip_point(0);
+    set_trip_point();
   }
 
   if ( DIP_SW_A && DIP_SW_B )           // Both switches closed?

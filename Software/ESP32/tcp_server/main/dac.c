@@ -35,13 +35,16 @@
 
 #include "timer.h"
 #include "esp_timer.h"
+#include "i2c.h"
+#include "dac.h"
 
 /*
  *  Definitions
  */
-#define DAC_FS    2048    // DAC Full Scale Voltage
 #define DAC_ADDR  0x60    // DAC I2C address
 #define DAC_WRITE 0x58    // Single write
+#define DAC_LOW   0x00    // Channel 0
+#define DAC_HIGH  0x01    // Channel 1
 
 /*----------------------------------------------------------------
  *
@@ -56,7 +59,7 @@
  * Set the output based on the JSON settings
  *  
  *--------------------------------------------------------------*/
-void init_init(void)
+void dac_init(void)
 {
     dac_write(DAC_LOW, json_dac_low);
     dac_write(DAC_HIGH, json_dac_high);
@@ -79,23 +82,21 @@ void init_init(void)
  *--------------------------------------------------------------*/
 void dac_write
 (
-  unsigned int channel,             // What register are we writing to
-  unsigned int value                // What value are we setting it to
+  unsigned int channel,               // What register are we writing to
+  float        value                  // What value are we setting it to
 )
 {
-  unsigned byte data[3];            // Bytes to send to the I2C
-  unsigned int  scaled_value;       // Value (12 bits) to the DAC
+  unsigned char data[3];              // Bytes to send to the I2C
+  unsigned int  scaled_value;         // Value (12 bits) to the DAC
 
-  scaled_value = 1024 * value / DAC_FS;
+  scaled_value = value / V_REF * DAC_FS;
 
   data[0] = DAC_WRITE + ((channel & 0x3) << 1) + 0; // Write, channel, update now
-  data[1] = 0x80                    // Internal 2.048 Volts
-                + 0x00              // Normal Power Down
-                + 0x00              // Gain x 1
-                + scaled_value >> 8;// Top 4 bits of the setting
-  data[2] = scaled_value & 0xff;    // Bottom 4 bits of the setting
-
-  control
+  data[1] = 0x80                      // Internal 2.048 Volts
+                + 0x00                // Normal Power Down
+                + 0x00                // Gain x 1
+                + (scaled_value >> 8);// Top 4 bits of the setting
+  data[2] = scaled_value & 0xff;      // Bottom 4 bits of the setting
 
   i2c_write(DAC_ADDR, data, sizeof(data) );
 

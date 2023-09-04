@@ -123,5 +123,5 @@ unsigned long pcnt_read
     int which_unit                   // What timer to read
 )
 {
-    return pcnt_unit[which_unit].register;
+    return 0; // pcnt_unit[which_unit].register;
 }

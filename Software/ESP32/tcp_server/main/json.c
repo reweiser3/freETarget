@@ -22,6 +22,9 @@
 #include "mechanical.h"
 #include "timer.h"
 #include "esp_timer.h"
+#include "dac.h"
+#include "nvs_flash.h"
+#include "nvs.h"
 
 /*
  *  Function Prototypes

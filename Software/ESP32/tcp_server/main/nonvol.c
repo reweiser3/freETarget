@@ -14,25 +14,20 @@
 #include "freETarget.h"
 #include "json.h"
 
-#include "nonvol.h"
 //#include "serial_io.h"
-
-
-
 #include "esp_system.h"
 #include "nvs_flash.h"
 #include "nvs.h"
 
 //#include "gpio.h"
 #include "diag_tools.h"
-
+#include "serial_io.h"
 #include "timer.h"
+#include "nonvol.h"
 
 /*
  *  Local variables
  */
-nvs_handle_t my_handle;
-
 
 /*----------------------------------------------------------------
  * 
@@ -63,65 +58,6 @@ void read_nonvol(void)
   {
     printf("read_nonvol()");
   }
-  
-  
-/*******************************************************************************/
-
-    // Initialize NVS
-    err = nvs_flash_init();
-    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        // NVS partition was truncated and needs to be erased
-        // Retry nvs_flash_init
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        err = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK( err );
-
-    // Open
-    printf("\n");
-    printf("Opening Non-Volatile Storage (NVS) handle... ");
-
-    err = nvs_open(NAME_SPACE, NVS_READWRITE, &my_handle);
-    if ((err != ESP_OK)
-          && DLT(DLT_CRITICAL) )
-    {
-        printf("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
-    }
-        // Read
-        printf("Reading restart counter from NVS ... ");
-        int32_t restart_counter = 0; // value will default to 0, if not set yet in NVS
-        err = nvs_get_i32(my_handle, "restart_counter", &restart_counter);
-        switch (err) {
-            case ESP_OK:
-                printf("Done\n");
-                printf("Restart counter = %d\n", restart_counter);
-                break;
-            case ESP_ERR_NVS_NOT_FOUND:
-                printf("The value is not initialized yet!\n");
-                break;
-            default :
-                printf("Error (%s) reading!\n", esp_err_to_name(err));
-        }
-
-        // Write
-        printf("Updating restart counter in NVS ... ");
-        restart_counter++;
-        err = nvs_set_i32(my_handle, "restart_counter", restart_counter);
-        printf((err != ESP_OK) ? "Failed!\n" : "Done\n");
-
-        // Commit written value.
-        // After setting any values, nvs_commit() must be called to ensure changes are written
-        // to flash storage. Implementations may write to storage at other times,
-        // but this is not guaranteed.
-        printf("Committing updates in NVS ... ");
-        err = nvs_commit(my_handle);
-        printf((err != ESP_OK) ? "Failed!\n" : "Done\n");
-
-        // Close
-        nvs_close(my_handle);
-    }
-
-
 
 /*
  * Read the nonvol marker and if uninitialized then set up values

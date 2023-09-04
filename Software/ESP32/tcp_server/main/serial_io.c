@@ -151,9 +151,10 @@ unsigned int serial_available
       length = in_in_ptr - in_out_ptr;
       if ( length < 0 )
       {
-        length += sizeof(tcpip_in)
+        length += sizeof(tcpip_in);
       }
       n_available += length;
+    }
   }
 
   return n_available;
@@ -221,7 +222,7 @@ char serial_getch
   char ch;
 
 /*
- Bring in the console bytes
+ * Bring in the console bytes
  */
   if ( console )
   {
@@ -245,7 +246,7 @@ char serial_getch
 /*
  *  Bring in the TCPIP bytes
  */
-  if ( tcpiop )
+  if ( tcpip )
   {
     if ( in_in_ptr != in_out_ptr )
     {

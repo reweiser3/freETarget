@@ -11,9 +11,8 @@
 #include "gpio.h"
 #include "diag_tools.h"
 #include "nvs.h"
-#include "nonvol.h"
 #include "nvs_flash.h"
-#include "nvs.h"
+#include "nonvol.h"
 #include "analog_io.h"
 #include "token.h"            // Time provided by the token ring
 #include "json.h"
@@ -31,6 +30,7 @@
 
 #include "timer.h"
 #include "esp_timer.h"
+#include "dac.h"
 
 const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 
@@ -39,13 +39,8 @@ const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 #define GRID_SIDE 25                              // Should be an odd number
 #define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
 
-static void  unit_test(unsigned int mode);
-static bool_t sample_calculations(unsigned int mode, unsigned int sample);
-extern int   json_clock[4];
-
-extern void sound_test(void);
-extern long in_shot_timer;
-extern nvs_handle_t my_handle;
+static int   get_int(void);         // Get an integer from the user
+static float get_float(void);       // Get a float from the user
 
 /*******************************************************************************
  *
@@ -66,15 +61,6 @@ void self_test
   unsigned int test                 // What test to execute
 )
 {
-  unsigned int i;
-  char         ch;
-  unsigned int sensor_status;       // Sensor running inputs
-  unsigned long sample;             // Sample used for comparison
-  unsigned int random_delay;        // Random sampe time
-  bool_t       pass;
-  shot_record_t shot;               // Shot history
-  char s[128];                      // Text buffer
-
 /*
  *  Update the timer
  */
@@ -93,23 +79,10 @@ void self_test
       printf("\r\n 1 - Digital inputs");
       printf("\r\n 2 - Counter values (internal trigger)");
       printf("\r\n 3 - Advance paper backer");
-      printf("\r\n 4 - Spiral Unit Test");
-      printf("\r\n 5 - Grid calibration pattern");
-      printf("\r\n 6 - One time calibration pattern");
-      printf("\r\n 7 - Grid calibration pattern");
-      printf("\r\n 8 - Aux port passthrough");
-      printf("\r\n 9 - Calibrate"); 
-      printf("\r\n10 - Transfer loopback");
-      printf("\r\n11 - Serial port test");
-      printf("\r\n12 - LED brightness test");
-      printf("\r\n13 - Face strike test");
-      printf("\r\n14 - WiFi test");
-      printf("\r\n16 - Send sample shot record");
-      printf("\r\n17 - Show WiFi status");
-      printf("\r\n18 - Send clock out of all serial ports");
-      printf("\r\n19 - Unit Test speed_of_sound()");
-      printf("\r\n20 - Token Ring Test()");
-      printf("\r\n21 - Count on the LEDs");
+      printf("\r\n 4 - LED brightness test");
+      printf("\r\n 5 - Face strike test");
+      printf("\r\n 6 - WiFi test");
+      printf("\r\n 7 - Count on the LEDs");
       printf("\r\n");
       break;
 
@@ -187,7 +160,7 @@ void self_test
 
 /*----------------------------------------------------------------
  * 
- * function: void POST_counteres()
+ * function: void POST_counters()
  * 
  * brief: Verify the counter circuit operation
  * 
@@ -222,11 +195,6 @@ void self_test
 /*
  * The test only works on V2.2 and higher
  */
-
-  if ( revision() < REV_300 )
-  {
-    return true;                      // Fake a positive response  
-  }
   
   if ( DLT(DLT_CRITICAL) )
   {
@@ -349,8 +317,8 @@ void self_test
     printf("POST trip point");
    }
    
-   set_trip_point(20);              // Show the trip point once (20 cycles used for blinking values)
-   set_LED(LED_RESET);               // Show test test Ending
+   set_trip_point();                // Show the trip point once (20 cycles used for blinking values)
+   set_LED(LED_RESET);              // Show test test Ending
    return;
  }
  
@@ -358,279 +326,52 @@ void self_test
  * 
  * function: set_trip_point
  * 
- * brief: Read the pot and display the voltage on the LEDs as a grey code
+ * brief:  Prompt the user for a voltage
  * 
- * return: Potentiometer set for the desired trip point
+ * return: None
  *----------------------------------------------------------------
  *
- * The various running registers and displays them for use
+ * The user is promted or a channel number and voltage.
+ * 
+ * These are validated and sent to the DAC driver for output
  *  
  *--------------------------------------------------------------*/
-#define CT(x) (1023l * (long)(x+25) / 5000l )   // 1/16 volt = 12.8 counts
-#define SPEC_RANGE   50            // Out of spec if within 50 couts of the rail
-#define BLINK        0x80
-#define NOT_IN_SPEC  0x40
-//                                         0           1         2       3         4        5        6        7        8        9        10      11        12          13      14          15
-const unsigned int volts_to_LED[] = { NOT_IN_SPEC,     1,    BLINK+1,    2,     BLINK+2,    3,    BLINK+3,    4,    BLINK+4,    5,    BLINK+5,    6,     BLINK+6,       7,   BLINK+7,  NOT_IN_SPEC, 0 };
-const unsigned int mv_to_counts[] = {   CT(350),    CT(400), CT(450), CT(500),  CT(550), CT(600), CT(650), CT(700), CT(750), CT(800), CT(900), CT(1000), CT(1100), CT(1200), CT(1300),   CT(5000),  0 };
+#define C_MAX   3             // V_REF set to 2.048 volts
+#define V_MAX   2.047         // Maximum voltage setting
 
-static void start_over(void)    // Start the test over again
+void set_trip_point(void)
 {
-  stop_timers();
-  arm_timers();                 // Reset the latch state
-//  enable_face_interrupt();      // Turn on the face strike interrupt
-  face_strike = 0;              // Reset the face strike count
-//  enable_face_interrupt();      // Turning it on above creates a fake interrupt with a disable
-  return;
-}
+  int   channel;              // DAC channel
+  float value;                // Voltage to write
 
-void set_trip_point
-  (
-  int pass_count                                            // Number of passes to allow before exiting (0==infinite)
-  )
-{
-  bool_t        stay_forever;                               // Stay forever if called with pass_count == 0;
-  
-  printf("Setting trip point. Type ! of cycle power to exit\r\n");
-
- // sensor_status = 0;                                        // No sensors have tripped
-  stay_forever = false;
-  if (pass_count == 0 )                                     // A pass count of 0 means stay
+/*
+ * Prompt for the settings
+ */
+  printf("\r\nChannel (0-3): ");
+  channel = get_int();
+  if ( (channel < 0 ) || (channel > C_MAX))
   {
-    stay_forever = true;                                    // For a long time
+    printf("/r/nInvalid channel");
+    return;
   }
-  arm_timers();                                             // Arm the flip flops for later
-  face_strike = 0;
 
-/*
- * Set the PWM at 50%
- */
-  json_vset_PWM = 128;
-  set_vset_PWM(json_vset_PWM);
-  nvs_set_i32(my_handle, NONVOL_VSET_PWM, json_vset_PWM);
-
-/*
- * Loop if not in spec, passes to display, or the CAL jumper is in
- */
-  while ( ( stay_forever )                                  // Passes to go
-          ||   ( CALIBRATE )                                // Held in place by DIP switch
-          ||   (pass_count != 0))                           // Wait here for N cycles
+  printf("\r\nVoltage (0-2.047): ");
+  value = get_float(); 
+  if ( (value < 0 ) || (value > V_MAX))
   {
+    printf("/r/nInvalid Voltage");
+    return;
+  }
+
 /*
- * Got to the end.  See if we are going to do this for a fixed time or forever
- */
-    switch (serial_getch(ALL))
-    {
-      case '!':                       // ! waiting in the serial port
-        printf("\r\nExiting calibration\r\n");
-        return;
+ *  Output the value
+ */  
+  dac_write(channel, value);
 
-      case 'B':
-      case 'b':                       // Blink the Motor Drive
-        printf("\r\nBlink Motor Drive\r\n");
-        paper_on_off(1);
-        delay(ONE_SECOND);
-        paper_on_off(0);
-        break;
-      
-      case 'W':
-      case 'w':                      // Test the WiFI
-        printf("\r\nTest WiFi");
-        break;
-        
-      case 'R':
-      case 'r':                       // Reset Cancel
-      case 'X':
-      case 'x':                       // X Cancel
-        start_over();
-        break;
-        
-      default:
-        break;
-    }
-    
-
-   show_sensor_status(is_running());
-   printf("\n\r");
-   if ( stay_forever )
-   {
-      if ( (is_running() == 0x0f) && (face_strike != 0) )
-      {
-        start_over();
-      }
-   }
-   else
-   {
-     if ( pass_count != 0 )             // Set for a finite loop?
-     {
-        pass_count--;                   // Decriment count remaining
-        if ( pass_count == 0 )          // And bail out when zero
-        {
-          return;
-        }
-      }
-   }
-   delay(ONE_SECOND/5);
- }
-
- /*
+/*
   * Return
   */
   return;
-}
-
-/*----------------------------------------------------------------
- *
- * function: unit_test
- *
- * brief: Setup a known target for sample calculations
- * 
- * return: None
- *
- *----------------------------------------------------------------
- * 
- * See excel spread sheet sample calculations.xls
- * 
- * Estimate 0.02mm / delta count   
- *   --> 400 counts -> 8mm
- *   
- *--------------------------------------------------------------*/
-
-/*
- * Prompt the user for a test number and execute the test.
- */
-static void unit_test(unsigned int mode)
-{
-  unsigned int i;
-  unsigned int shot_number;
-  
- /*
-  * Auto Generate spiral
-  */
-  init_sensors();
-  shot_number = 1;
-  for ( i = 0; i != TEST_SAMPLES; i++)
-  {
-    if ( sample_calculations(mode, i) )
-    {
-      compute_hit(&record[0]);
-//      sensor_status = 0xF;        // Fake all sensors good
-      record[0].shot_number = shot_number++;
-      send_score(&record[0]);
-      delay(ONE_SECOND/2);        // Give the PC program some time to catch up
-    }
-    if ( mode == T_ONCE )
-    {
-      break;
-    }
-  }
-
-/*
- * All done, return
- */
-  return;
-}
-
-/*----------------------------------------------------------------
- *
- * function: sample_calculations
- *
- * brief: Work out the clock values to generate a particular pattern
- *
- * return: TRUE to be compatable with other calcuation functions
- * 
- *----------------------------------------------------------------
- * 
- * This function is used to generate a test pattern that the
- * PC or Arduino software is compared to.
- *   
- *--------------------------------------------------------------*/
-/*
- * Fill up counters with sample values.  Return false if the sample does not exist
- */
-static bool_t sample_calculations
-  (
-  unsigned int mode,            // What test mode are we generating
-  unsigned int sample           // Current sample number
-  )
-{
-  double x, y;                  // Resulting target position
-  double angle;                 // Polar coordinates
-  double radius;
-  double polar;
-  int    ix, iy;
-  double grid_step;
-  shot_record_t shot;
-  
-  switch (mode)
-  {
-/*
- * Generate a single calculation
- */
-  case T_ONCE:
-    angle = 0;
-    radius =json_sensor_dia / sqrt(2.0d) / 2.0d;
-    
-    x = radius * cos(angle);
-    y = radius * sin(angle);
-    shot.timer_count[N] = RX(N, x, y);
-    shot.timer_count[E] = RX(E, x, y);
-    shot.timer_count[S] = RX(S, x, y);
-    shot.timer_count[W] = RX(W, x, y);
-    shot.timer_count[W] -= 200;              // Inject an error into the West sensor
-
-    printf("\r\nResult should be x: %4.2f  y: %4.2f  radius: %4.2f  angle: %4.2f", x, y, radius, angle * 180.0d / PI);
-    break;
-
- /*
- * Generate a spiral pattern
- */
-  default:
-  case T_SPIRAL:
-    angle = (PI_ON_4) / 5.0 * ((double)sample);
-    radius = 0.99d * (json_sensor_dia/2.0) / sqrt(2.0d) * (double)sample / TEST_SAMPLES;
-
-    x = radius * cos(angle);
-    y = radius * sin(angle);
-    shot.timer_count[N] = RX(N, x, y);
-    shot.timer_count[E] = RX(E, x, y);
-    shot.timer_count[S] = RX(S, x, y);
-    shot.timer_count[W] = RX(W, x, y);
-    break;
-
- /*
- * Generate a grid
- */
-  case T_GRID:
-    radius = 0.99d * (json_sensor_dia / 2.0d / sqrt(2.0d));                      
-    grid_step = radius * 2.0d / (double)GRID_SIDE;
-
-    ix = -GRID_SIDE/2 + (sample % GRID_SIDE);      // How many steps
-    iy = GRID_SIDE/2 - (sample / GRID_SIDE);
-
-    x = (double)ix * grid_step;                     // Compute the ideal X-Y location
-    y = (double)iy * grid_step;
-    polar = sqrt(sq(x) + sq(y));
-    angle = atan2(y, x) - (PI * json_sensor_angle / 180.0d);
-    x = polar * cos(angle);
-    y = polar * sin(angle);                        // Rotate it through the sensor position.
-
-    if ( sqrt(sq(x) + sq(y)) > radius )
-    {
-      return false;
-    }
-
-    shot.timer_count[N] = RX(N, x, y);
-    shot.timer_count[E] = RX(E, x, y);
-    shot.timer_count[S] = RX(S, x, y);
-    shot.timer_count[W] = RX(W, x, y);
-    break;   
-  }
-  
-/*
- * All done, return
- */
-  return true;
 }
 
 /*----------------------------------------------------------------
@@ -743,3 +484,252 @@ bool_t do_dlt
 
   return true;
 }
+
+/*----------------------------------------------------------------
+ *
+ * @function: get_int
+ *
+ * @brief:    Get an Int from the user
+ *
+ * @return:   Signed integer from the user
+ * 
+ *----------------------------------------------------------------
+ * 
+ * Poll the serial ports and parse the input to extract the number
+ * Illegal characters are ignored
+ *   
+ *--------------------------------------------------------------*/
+static int get_int(void)
+{
+  int  return_value;              // Number returned to user
+  char ch;                        // Working character
+  int  is_negative;               // Remember if we saw a -
+
+  return_value = 0;
+  is_negative  = 0;
+
+/*
+ * See if anything is waiting and if so, add it in
+ */
+  while (1)
+  {
+    if ( serial_available(ALL) == 0 )
+    {
+      continue;
+    } 
+
+    ch = serial_getch(ALL);
+/*
+ * Parse the stream
+ */
+    switch (ch)
+    {        
+      case '\n':                            // New line, 
+      case '\r':
+        if ( is_negative )
+        {
+          return_value = -return_value;
+        }
+        return return_value;                // return
+
+      case 0x08:                            // Backspace
+        return_value /= 10;                 // Discard the last entry
+        break;
+
+        
+      case '-':
+        is_negative = true;
+        break;
+
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+        ch -= '0';
+        return_value = (return_value * 10) + ch;
+        break;
+    }
+  }
+
+/*
+ * All done
+ */
+  return 0;
+}  
+
+/*----------------------------------------------------------------
+ *
+ * @function: get_float
+ *
+ * @brief:    Get a float from the user
+ *
+ * @return:   Signed float from the user
+ * 
+ *----------------------------------------------------------------
+ * 
+ * Poll the serial ports and parse the input to extract the number
+ * Illegal characters are ignored
+ *   
+ *--------------------------------------------------------------*/
+static float get_float(void)
+{
+  float  return_value;            // Number returned to user
+  int  mantissa;                  // Fractional portion
+  char ch;                        // Working character
+  int  is_negative;               // Remember if we saw a -
+  int  is_float;                  // TRUE if we have a float
+
+  return_value = 0;
+  is_negative  = 0;
+  mantissa     = 1;
+  is_float     = 0;
+
+/*
+ * See if anything is waiting and if so, add it in
+ */
+  while (1)
+  {
+    if ( serial_available(ALL) == 0 )
+    {
+      continue;
+    } 
+
+    ch = serial_getch(ALL);
+/*
+ * Parse the stream
+ */
+    switch (ch)
+    {        
+      case '\n':                            // New line, 
+      case '\r':
+        return_value /= (float)mantissa;
+        if ( is_negative )
+        {
+          return_value = -return_value;
+        }
+        return return_value;                // return
+
+      case 0x08:                            // Backspace
+        return_value /= 10;                 // Discard the last entry
+        if ( is_float && (mantissa != 1 ) )
+        {
+          mantissa /= 10;
+        }
+        break;
+
+      case '-':
+        is_negative = true;
+        break;
+  
+      case '.':
+        is_float = true;
+        mantissa = 1;
+        break;
+
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+        ch -= '0';
+        return_value = (return_value * 10.0) + (float)ch;
+        if ( is_float )
+        {
+          mantissa *= 10;
+        }
+        break;
+    }
+  }
+
+/*
+ * All done
+ */
+  return 0;
+}  
+/*----------------------------------------------------------------
+ *
+ * @function: get_text
+ *
+ * @brief:    Get an strng from the user
+ *
+ * @return:   Number of characters read
+ * 
+ *----------------------------------------------------------------
+ * 
+ * Poll the serial ports and parse the input to extract the text
+ *   
+ *--------------------------------------------------------------*/
+static int get_text
+(
+  char* dest,
+  int   size
+)
+{
+  int  in_count;                  // Character count returned to user
+  char ch;                        // Working character
+
+  if ( (dest == NULL) || (size == 0) )
+  {
+    return 0;                     // Return if the numbers are bad
+  }
+
+  in_count = 0;
+  *dest = 0;                      // Null terminate
+
+/*
+ * See if anything is waiting and if so, add it in
+ */
+  while (1)
+  {
+    if ( serial_available(ALL) == 0 )
+    {
+      continue;
+    } 
+
+    ch = serial_getch(ALL);
+/*
+ * Parse the stream
+ */
+    switch (ch)
+    {        
+      case '\n':                            // New line, 
+      case '\r':
+        return in_count;
+
+      case 0x08:                            // Backspace
+        if ( in_count != 0 )
+        {
+          dest--;                           // Go back one
+          *dest = 0;                        // and null terminate
+          in_count--;
+        }
+        break;
+
+      default:
+        *dest = ch;
+        dest++;
+        in_count++;
+        if ( in_count == size )
+        {
+          return in_count;
+        }
+        break;
+    }
+  }
+
+/*
+ * All done
+ */
+  return 0;
+}  
