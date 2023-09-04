@@ -28,6 +28,7 @@
 /*
  *  Local variables
  */
+nvs_handle_t my_handle;                    // Handle to NVS space
 
 /*----------------------------------------------------------------
  * 

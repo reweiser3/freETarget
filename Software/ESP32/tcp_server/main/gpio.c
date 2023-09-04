@@ -505,7 +505,7 @@ void paper_on_off                               // Function to turn the motor on
 
   if ( CALIBRATE )                      // Calibration jumper in?
   {
-    set_trip_point();
+    set_trip_point(0);
   }
 
   if ( DIP_SW_A && DIP_SW_B )           // Both switches closed?

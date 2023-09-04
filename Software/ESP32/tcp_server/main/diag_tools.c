@@ -317,7 +317,7 @@ void self_test
     printf("POST trip point");
    }
    
-   set_trip_point();                // Show the trip point once (20 cycles used for blinking values)
+   set_trip_point(0);                // Show the trip point once (20 cycles used for blinking values)
    set_LED(LED_RESET);              // Show test test Ending
    return;
  }
@@ -339,7 +339,7 @@ void self_test
 #define C_MAX   3             // V_REF set to 2.048 volts
 #define V_MAX   2.047         // Maximum voltage setting
 
-void set_trip_point(void)
+void set_trip_point(int x)
 {
   int   channel;              // DAC channel
   float value;                // Voltage to write

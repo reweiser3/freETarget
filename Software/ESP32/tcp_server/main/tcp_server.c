@@ -67,7 +67,7 @@ static void tcp_server_io
         }
         else
         {
-            len -= tcpip_to_serial(rx_buffer, len);
+ //           len -= tcpip_to_serial(rx_buffer, len);
         }
     }
     while ( len > 0 );
@@ -84,8 +84,7 @@ static void tcp_server_io
         }
         while (to_write > 0)
         {
-            written = send(sock, rx_buffer + (len - to_write), to_write, 0);
-            to_write -= written;
+            to_write -= send(sock, rx_buffer + (len - to_write), to_write, 0);
         }
     }
 /*

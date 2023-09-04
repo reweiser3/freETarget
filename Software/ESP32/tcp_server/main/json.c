@@ -88,6 +88,8 @@ int     json_rh;                    // Relative Humidity 0-1005
 int     json_min_ring_time;         // Time to wait for ringing to stop
 double  json_doppler;               // Adjust for dopper inverse square
 int     json_token;                 // Token ring state
+int     json_dac_low;               // Low Voltage DAC setting
+int     json_dac_high;              // High Voltage DAC setting
 
 #if ( CLOCK_TEST )
 int     json_clock[4];              // Storage for clock test
