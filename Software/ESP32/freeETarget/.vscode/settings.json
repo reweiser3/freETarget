@@ -1,0 +1,21 @@
+{
+  "C_Cpp.intelliSenseEngine": "Tag Parser",
+  "idf.adapterTargetName": "esp32s3",
+  "files.associations": {
+    "sstream": "c",
+    "regex": "c",
+    "gpio.h": "c",
+    "adc_types.h": "c",
+    "array": "cpp",
+    "chrono": "cpp",
+    "compare": "cpp",
+    "functional": "cpp",
+    "ratio": "cpp",
+    "tuple": "cpp",
+    "type_traits": "cpp",
+    "utility": "cpp"
+  },
+  "idf.flashType": "UART",
+  "idf.portWin": "COM6",
+  "C_Cpp.default.compilerPath": "c:\\Users\\allan\\esp\\esp-idf\\tools\\tools\\xtensa-esp32s3-elf\\esp-2022r1-11.2.0\\xtensa-esp32s3-elf\\bin\\xtensa-esp32s3-elf-gcc.exe"
+}
