@@ -2992,12 +2992,12 @@ Discarded input sections
  .bss           0x0000000000000000        0x0 esp-idf/main/libmain.a(speed_of_sound.c.obj)
  .text.sound_test
                 0x0000000000000000       0x67 esp-idf/main/libmain.a(speed_of_sound.c.obj)
- .literal.char_to_all
+ .literal.serial_putch
                 0x0000000000000000        0x4 esp-idf/main/libmain.a(serial_io.c.obj)
  .text          0x0000000000000000        0x0 esp-idf/main/libmain.a(serial_io.c.obj)
  .data          0x0000000000000000        0x0 esp-idf/main/libmain.a(serial_io.c.obj)
  .bss           0x0000000000000000        0x0 esp-idf/main/libmain.a(serial_io.c.obj)
- .text.char_to_all
+ .text.serial_putch
                 0x0000000000000000       0x1b esp-idf/main/libmain.a(serial_io.c.obj)
  .rodata.uart_aux_size
                 0x0000000000000000        0x4 esp-idf/main/libmain.a(serial_io.c.obj)
@@ -36367,7 +36367,7 @@ calloc                                            esp-idf/newlib/libnewlib.a(hea
 ceil                                              c:/users/allan/esp/esp-idf/tools/tools/xtensa-esp32s3-elf/esp-2022r1-11.2.0/xtensa-esp32s3-elf/bin/../lib/gcc/xtensa-esp32s3-elf/11.2.0/../../../../xtensa-esp32s3-elf/lib/no-rtti\libm.a(lib_a-s_ceil.o)
                                                   esp-idf/hal/libhal.a(spi_flash_hal.c.obj)
 cfree                                             esp-idf/newlib/libnewlib.a(heap.c.obj)
-char_to_all                                       esp-idf/main/libmain.a(serial_io.c.obj)
+serial_putch                                       esp-idf/main/libmain.a(serial_io.c.obj)
                                                   esp-idf/main/libmain.a(token.c.obj)
 cleanup_glue                                      c:/users/allan/esp/esp-idf/tools/tools/xtensa-esp32s3-elf/esp-2022r1-11.2.0/xtensa-esp32s3-elf/bin/../lib/gcc/xtensa-esp32s3-elf/11.2.0/../../../../xtensa-esp32s3-elf/lib/no-rtti\libc.a(lib_a-reent.o)
 clear_running                                     esp-idf/main/libmain.a(gpio.c.obj)

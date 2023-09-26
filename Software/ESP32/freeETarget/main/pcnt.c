@@ -59,13 +59,13 @@ void pcnt_init
 )
 {
     int this_unit;
-
+printf("\r\npcnt init %d\r\n", pcnt->pcnt_unit);
 /*
  * Setup the unit
  */
     this_unit = pcnt->pcnt_unit; 
-    unit_config[this_unit].low_limit = 0;
-    unit_config[this_unit].high_limit = 0xffff;
+    unit_config[this_unit].low_limit = -32767;
+    unit_config[this_unit].high_limit = 32767;
     pcnt_unit[this_unit] = NULL;
     pcnt_new_unit(&unit_config[this_unit], &pcnt_unit[this_unit]);
 

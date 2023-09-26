@@ -29,7 +29,6 @@ static unsigned long* timers[N_TIMERS]; // Active timer list
 static unsigned long isr_timer;         // Elapsed time counter
 static unsigned int isr_state = PORT_STATE_IDLE;// Current aquisition state
 
-
 /*-----------------------------------------------------
  * 
  * function: freeETarget_timer
@@ -61,74 +60,80 @@ static unsigned int isr_state = PORT_STATE_IDLE;// Current aquisition state
  * 
  *-----------------------------------------------------*/
 
-void freeETarget_timer(void)
+void freeETarget_timer
+(
+    void *pvParameters                          // 1ms Timer Task
+)
 {
   unsigned int pin;                             // Value read from the port
   unsigned int  i;                              // Iteration counter
 
+  while (1)
+  {
 /*
  * Decide what to do if based on what inputs are present
  */
-  pin = RUN_PORT & RUN_A_MASK;                 // Read in the RUN bits
+    pin = RUN_PORT & RUN_A_MASK;                 // Read in the RUN bits
 
 /*
  * Read the timer hardware based on the ISR state
  */
-  switch (isr_state)
-  {
-    case PORT_STATE_IDLE:                       // Idle, Wait for something to show up
-      if ( pin != 0 )                           // Something has triggered
-      { 
-        isr_timer = MAX_WAIT_TIME;              // Start the wait timer
-        isr_state = PORT_STATE_WAIT;            // Got something wait for all of the sensors tro trigger
-      }
-      break;
-          
-    case PORT_STATE_WAIT:                       // Something is present, wait for all of the inputs
-      if ( (pin == RUN_A_MASK)                  // We have all of the inputs
-          || (isr_timer == 0) )                 // or ran out of time.  Read the timers and restart
-      {
-        aquire();                               // Read the counters
-        clear_running();                        // Reset the RUN flip Flop
-        isr_timer = json_min_ring_time;         // Reset the timer
-        isr_state = PORT_STATE_DONE;            // and wait for the all clear
-      }
-      break;
-      
-    case PORT_STATE_DONE:                       // Waiting for the ringing to stop
-      if ( pin != 0 )                           // Something got latched
-      {
-        isr_timer = json_min_ring_time;
-        clear_running();                        // Reset and try later
-      }
-      else
-      {
-        if ( isr_timer == 0 )                   // Make sure there is no rigning
-        {
-          arm_timers();                         // and arm for the next time
-          isr_state = PORT_STATE_IDLE;          // and go back to idle
+    switch (isr_state)
+    {
+      case PORT_STATE_IDLE:                       // Idle, Wait for something to show up
+        if ( pin != 0 )                           // Something has triggered
+        { 
+          isr_timer = MAX_WAIT_TIME;              // Start the wait timer
+          isr_state = PORT_STATE_WAIT;            // Got something wait for all of the sensors tro trigger
         }
-      }
-      break;
-  }
-
+        break;
+          
+      case PORT_STATE_WAIT:                       // Something is present, wait for all of the inputs
+        if ( (pin == RUN_A_MASK)                  // We have all of the inputs
+            || (isr_timer == 0) )                 // or ran out of time.  Read the timers and restart
+        { 
+          aquire();                               // Read the counters
+          clear_running();                        // Reset the RUN flip Flop
+          isr_timer = json_min_ring_time;         // Reset the timer
+          isr_state = PORT_STATE_DONE;            // and wait for the all clear
+        }
+        break;
+      
+      case PORT_STATE_DONE:                       // Waiting for the ringing to stop
+        if ( pin != 0 )                           // Something got latched
+        {
+          isr_timer = json_min_ring_time;
+          clear_running();                        // Reset and try later
+        }
+        else
+        {
+          if ( isr_timer == 0 )                   // Make sure there is no rigning
+          {
+            arm_timers();                         // and arm for the next time
+            isr_state = PORT_STATE_IDLE;          // and go back to idle
+          } 
+        }
+        break;
+    }
 
 /*
  * Refresh the timers
  */
-  for (i=0; i != N_TIMERS; i++)
-  {
-    if ( (timers[i] != 0)
-        && ( *timers[i] != 0 ) )
+    for (i=0; i != N_TIMERS; i++)
     {
-      (*timers[i])--;
+      if ( (timers[i] != 0)
+          && ( *timers[i] != 0 ) )
+      {
+        (*timers[i])--;
+      }
     }
-  }
-  
+
 /*
- * Undo the mutex and return
+ * Timeout and loop again
  */
-  return;
+  vTaskDelay( json_delay );
+  }
+
 }
 
 

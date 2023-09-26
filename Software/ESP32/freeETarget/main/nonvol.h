@@ -29,7 +29,7 @@ void restore_nonvol(void);                        // Copyt the nonvol back
  * NON Vol Storage
  */
 
-#define NONVOL_INIT           0x0
+#define NONVOL_INIT           "NONVOL_INIT"    // Show when the INIT is done
 #define NONVOL_SENSOR_DIA     "SENSOR_DIA"     // Sensor diameter
 #define NONVOL_PAPER_TIME     "PAPER_TIME"     // Paper advance time
 #define NONVOL_CALIBRE_X10    "CALIBRE_X10"    // Pellet Calibre

@@ -31,6 +31,7 @@
 #include "led_strip.h"
 #include "led_strip_types.h"
 #include "gpio_define.h"
+#include "diag_tools.h"
 
 /*
  *  Generic Definitions
@@ -220,6 +221,10 @@ void gpio_init(void)
 {
     int i;
 
+    if ( DLT(DLT_CRITICAL) )
+    {
+        printf("gpio_init()\r\n");
+    }
 /*
  *  Loop and setup the GPIO
  */

@@ -20,6 +20,7 @@
 #include "driver/uart.h"
 #include "driver/gpio.h"
 #include "sdkconfig.h"
+#include "diag_tools.h"
 
 /*
  *  Serial IO port configuration
@@ -33,7 +34,8 @@ uart_config_t uart_console_config =
     .parity = UART_PARITY_DISABLE,
     .stop_bits = UART_STOP_BITS_1,
     .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
-    .rx_flow_ctrl_thresh = 122
+    .rx_flow_ctrl_thresh = 122,
+    .source_clk = UART_SCLK_DEFAULT
 };
 const int uart_console_size = (1024 * 2);
 QueueHandle_t uart_console_queue;
@@ -46,7 +48,8 @@ uart_config_t uart_aux_config =
     .parity = UART_PARITY_DISABLE,
     .stop_bits = UART_STOP_BITS_1,
     .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
-    .rx_flow_ctrl_thresh = 122
+    .rx_flow_ctrl_thresh = 122,
+    .source_clk = UART_SCLK_DEFAULT
 };
 
 const int uart_aux_size= (1024 * 2);
@@ -77,15 +80,12 @@ static int  out_out_ptr = 0;
 
 void serial_io_init(void)
 {
-  if ( DLT(DLT_CRITICAL) ) 
-  {
-    printf("serial_io_init()");  
-  }
 
 /*
  *  Setup the communications parameters
  */
   uart_param_config(uart_console, &uart_console_config);
+  setvbuf(stdout, NULL, _IONBF, 0);                         // Send something out as soon as you get it.
   uart_param_config(uart_aux,     &uart_aux_config);
 
 /*
@@ -255,6 +255,7 @@ char serial_getch
     }
     return ch;
   }
+
 /*
  * Got nothing
  */
@@ -274,7 +275,7 @@ char serial_getch
  * in use. 
  * 
  ******************************************************************************/
- void char_to_all
+ void serial_putch
  (
     char ch,
     bool_t console, 
@@ -282,12 +283,32 @@ char serial_getch
     bool_t tcpip
 )
 {
-  char str_a[2];
-  str_a[0] = ch;
-  str_a[1] = 0;
-  serial_to_all(str_a, console, aux, tcpip);
+
+/*
+ * Output to the devices
+ */
+  if ( console )
+  {
+    printf("%c", ch);
+  }
+
+  if ( aux )
+  {
+    uart_write_bytes(uart_aux, (const char *) &ch, 1);
+  }
+  
+  if ( tcpip )
+  {
+    tcpip_out[out_out_ptr] = ch;
+    out_out_ptr = (out_out_ptr + 1) % sizeof(tcpip_out);
+  }
+
+/*
+ * All done
+ */
   return;
- }
+}
+
  
 void serial_to_all
 (

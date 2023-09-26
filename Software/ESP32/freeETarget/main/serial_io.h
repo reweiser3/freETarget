@@ -13,7 +13,7 @@
  */
 void serial_io_init(void);                                // Initialize the Serial ports
 void serial_to_all(char* s, bool_t console, bool_t aux, bool_t tcpip);  // Multipurpose driver
-void char_to_all(char ch, bool_t console, bool_t aux, bool_t tcpip);    // Output a single character
+void serial_putch(char ch, bool_t console, bool_t aux, bool_t tcpip);   // Output a single character
 char serial_gets(bool_t console, bool_t aux, bool_t tcpip);             // Read from all of the ports
 char serial_getch(bool_t console, bool_t aux, bool_t tcpip);            // Read the selected port
 unsigned int serial_available(bool_t console, bool_t aux, bool_t tcpip);// Find out how much is waiting for us

@@ -74,8 +74,7 @@
 void rapid_enable(unsigned int enable);               // Rapid fire enable state
 void hello(void);                                     // Say Hello World
 void freeETarget_init(void);                          // Get the target software ready
-void freeETarget_timer(void);                         // High speed cyclic task
-void bye(unsigned int);                                       // Shut down and say goodbye
+void bye(unsigned int);                               // Shut down and say goodbye
 void hello(void);                                     // Wake up and say hello
 void tabata_enable(unsigned int enable);              // Arm the Tabata counters
 

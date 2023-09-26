@@ -41,7 +41,9 @@ extern void gpio_init(void);
 /*
  *  FreeRTOS Settings
  */
-const TickType_t json_delay = 100 / portTICK_PERIOD_MS; // Poll the serial port at 10Hz
+const TickType_t json_delay        = (100 / portTICK_PERIOD_MS); // Poll the serial port at 10Hz
+const TickType_t timer_delay       = (1 / portTICK_PERIOD_MS);   // Poll the timer every ms
+const TickType_t freeETarget_delay = (1 / portTICK_PERIOD_MS);   // Run FreeTimer every ms
 
 /*
  *  Variables
@@ -67,7 +69,6 @@ static volatile unsigned long  keep_alive;        // Keep alive timer
 static volatile unsigned long  state_timer;       // Free running state timer
 static volatile unsigned long  power_save;        // Power save timer
 static volatile unsigned long  token_tick;        // Token ring watchdog
-static esp_timer_handle_t freETarget_json_handle; // Handle to the JSON task
 
 const char* names[] = { "TARGET",                                                                                           //  0
                         "1",      "2",        "3",     "4",      "5",       "6",       "7",     "8",     "9",      "10",    //  1
@@ -95,19 +96,17 @@ void freeETarget_init(void)
  *  Setup the serial port
  */
   serial_io_init();
-//  POST_version();                         // Show the version string on all ports
- // gpio_init();  
+  POST_version();                         // Show the version string on all ports
+  gpio_init();  
  // set_LED(LED_HELLO_WORLD);               // Hello World
- // read_nonvol();
+  read_nonvol();
   
-#if (0)
 /*
  *  Set up the port pins
  */
-  init_dac();
+ // init_dac();
   init_sensors();
 //  init_analog_io();
- // init_timer();
   timer_new(&keep_alive,    (unsigned long)json_keep_alive * ONE_SECOND); // Keep alive timer
   timer_new(&state_timer,   0);                                           // Free running state timer
   timer_new(&in_shot_timer, FULL_SCALE);                                  // Time inside of the shot window
@@ -126,7 +125,6 @@ void freeETarget_init(void)
               && !DLT(DLT_CRITICAL))      // and not in trace mode (DIAG jumper installed)
   {
     printf("POST_2 Failed\r\n");          // Failed the test
-    blink_fault(POST_COUNT_FAILED);       // and try again
   }
   
 /* 
@@ -150,19 +148,12 @@ void freeETarget_init(void)
   POST_LEDs();                            // Cycle the LEDs
   set_LED(LED_READY);                     // to a client, then the RDY light is steady on
   serial_flush(ALL);                      // Get rid of everything
-  
-  DLT(DLT_CRITICAL); 
-#endif
 
-  printf("Finished startup\n\r");
+  DLT(DLT_CRITICAL); 
 
 /*
  * Start the tasks running
  */
-//  esp_timer_create("freeETarget_json", &freETarget_json_handle );
-//  esp_timer_start_periodic(&freETarget_json_handle, 1);
- //   xTaskCreate(freeETarget_task,  "freeETarget_task", 4096, (void*)0, 5, NULL);
-//    xTaskCreate(freeETarget_timer, "freeETarget_timer", 4096, (void*)AF_INET6, 5, NULL);
 
   return;
 }
@@ -193,110 +184,108 @@ char* loop_name[] = {"SET_MODE", "ARM", "WAIT", "AQUIRE", "REDUCE", "FINISH" };
 
 void freeETarget_task (void)
 {
-  while (1)
-  {
-    printf("T");
-    vTaskDelay(10000);
-  }
   
+  while(1)
+  {
 /*
  * First thing, handle polled devices
  */
-  multifunction_switch();         // Read the switches
-  tabata(false);                  // Update the Tabata state
+    multifunction_switch();         // Read the switches
+    tabata(false);                  // Update the Tabata state
   
 /*
  * Take care of any commands coming through
  */
 
-  switch (json_token )
-  {
-    case TOKEN_WIFI:
+    switch (json_token )
+    {
+      case TOKEN_WIFI:
 //      esp01_receive();
-      break;
+       break;
 
-    case TOKEN_MASTER:
-      if ( token_tick == 0)             // Time to check the token ring?
-      {
-        token_init();                   // Request an enumeration
-        if ( my_ring == TOKEN_UNDEF )
+      case TOKEN_MASTER:
+        if ( token_tick == 0)             // Time to check the token ring?
         {
-          token_tick = ONE_SECOND * 5;  //  Waiting to start up
+          token_init();                   // Request an enumeration
+          if ( my_ring == TOKEN_UNDEF )
+          {
+            token_tick = ONE_SECOND * 5;  //  Waiting to start up
+          }
+          else
+          {
+            token_tick = ONE_SECOND * 60; // Just check
+          }
         }
-        else
-        {
-          token_tick = ONE_SECOND * 60; // Just check
-        }
-      }
-      break;
+        break;
 
-    case TOKEN_SLAVE:
-      token_poll();                     // Check the token ring
-      break;
-  }
+      case TOKEN_SLAVE:
+        token_poll();                     // Check the token ring
+        break;
+    }
     
 /*
  * Take care of the TCPIP keep alive
  */
- if ( (json_keep_alive != 0)
-    && (keep_alive == 0) )              // Time in seconds
- {
-    send_keep_alive();
-    keep_alive = json_keep_alive * ONE_SECOND;
- }
+     if ( (json_keep_alive != 0)
+      && (keep_alive == 0) )              // Time in seconds
+    {
+      send_keep_alive();
+      keep_alive = json_keep_alive * ONE_SECOND;
+    }
 
 /*
  * Take care of the low power mode
  */
-  if ( (json_power_save != 0 ) 
-       && (power_save == 0) )                         // Time in minutes
-  {
-    bye(0);                                           // Dim the lights
-    power_save = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L;   // Came back. 
-    state = SET_MODE;                                 // Reset everything just in case
-  }
+    if ( (json_power_save != 0 ) 
+         && (power_save == 0) )                         // Time in minutes
+    {
+      bye(0);                                           // Dim the lights
+      power_save = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L;   // Came back. 
+      state = SET_MODE;                                 // Reset everything just in case
+    }
 
 /*
  * Cycle through the state machine
  */
-  if ( (state != old_state) 
-      && DLT(DLT_APPLICATION) )
-  {
-    printf("Loop State: %s", loop_name[state]);;
-  } 
-  old_state = state;
+    if ( (state != old_state) 
+        && DLT(DLT_APPLICATION) )
+    {
+      printf("Loop State: %s", loop_name[state]);;
+    } 
+    old_state = state;
   
-  switch (state)
-  {
+    switch (state)
+    {
 /*
  *  Check for special operating modes
  */
-  default:
-  case SET_MODE:    // Start of the loop
-    state = set_mode();
-    break;
+    default:
+    case SET_MODE:    // Start of the loop
+      state = set_mode();
+      break;
 
-  case ARM:         // Arm the circuit
-    state = arm();
-    break;
+    case ARM:         // Arm the circuit
+      state = arm();
+      break;
 
-  case WAIT:        // Wait for the shot to appear
-    state = wait();
-    break;
+    case WAIT:        // Wait for the shot to appear
+      state = wait();
+      break;
 
-  case REDUCE:     // Reduce the result of one or more shots
-    state = reduce();
-    break;
+    case REDUCE:     // Reduce the result of one or more shots
+      state = reduce();
+      break;
 
-  case FINISH:     // Finish up the cycle by movint the witness paper
-    state = finish();
-    break;
-  }
+    case FINISH:     // Finish up the cycle by movint the witness paper
+      state = finish();
+      break;
+    }
   
 /*
- * End of the loop. return
+ * End of the loop. timeout till the next time
  */
-  return;
+    vTaskDelay(1);
+  }
 }
 
 /*----------------------------------------------------------------

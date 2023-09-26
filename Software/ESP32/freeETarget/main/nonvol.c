@@ -57,8 +57,18 @@ void read_nonvol(void)
 
   if ( DLT(DLT_CRITICAL) )
   {
-    printf("read_nonvol()");
+    printf("read_nonvol()\r\n");
   }
+
+ /*
+  * Initialize NVS
+  */
+    err = nvs_flash_init();
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    {
+        ESP_ERROR_CHECK(nvs_flash_erase());        // NVS partition was truncated and needs to be erased
+        err = nvs_flash_init();
+    }
 
 /*
  * Read the nonvol marker and if uninitialized then set up values
@@ -229,6 +239,11 @@ void factory_nonvol
     nvs_set_u32(my_handle, "NONVOL_V_SET", serial_number);
   }
  
+  if ( DLT(DLT_CRITICAL) )
+  {
+    printf("factory_nonvol()\r\n");
+  }
+
 /*
  * Use the JSON table to initialize the local variables
  */
@@ -268,7 +283,6 @@ void factory_nonvol
     }
    i++;
  }
-  printf("\r\nDone\r\n");
   
 /*    
  *     Test the board only if it is a factor init
@@ -304,15 +318,18 @@ void factory_nonvol
     serial_flush(ALL);
     
     printf("\r\nSerial Number? (ex 223! or x))");
+
     while (1)
     {
       if ( serial_available(CONSOLE) != 0 )
       {
         ch = serial_getch(CONSOLE);
+        serial_putch(ch, CONSOLE);
+        
         if ( ch == '!' )
         {  
           nvs_set_i32(my_handle, NONVOL_SERIAL_NO, serial_number);
-          printf(" Setting Serial Number to: %d", serial_number);
+          printf("\r\nSetting Serial Number to: %d", serial_number);
           break;
         }
         if ( (ch == 'x') || (ch == 'X') )
@@ -339,7 +356,7 @@ void factory_nonvol
 /*
  * Read the NONVOL and print the results
  */
-//  read_nonvol();                          // Read back the new values
+  read_nonvol();                          // Read back the new values
   show_echo();                            // Display these settings
   
 /*

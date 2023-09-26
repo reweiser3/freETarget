@@ -95,7 +95,7 @@ int     json_dac_high;              // High Voltage DAC setting
 int     json_clock[4];              // Storage for clock test
 #endif
 
-#define JSON_DEBUG false            // TRUE to echo DEBUG messages
+#define JSON_ECHO (1==1)            // TRUE to echo DEBUG messages
 
        void show_echo(void);        // Display the current settings
 static void show_test(int v);       // Execute the self test once
@@ -207,7 +207,7 @@ static void diag_delay(int x) { printf("\r\n\"DELAY\":%d", x); delay(x*1000);  r
  * 
  *-----------------------------------------------------*/
 static unsigned int in_JSON = 0;
-static bool_t got_right = false;
+static unsigned int got_right = 0;
 static bool_t not_found;
 static bool_t keep_space;   // Set to 1 if keeping spaces
 
@@ -232,16 +232,22 @@ void freeETarget_json
 {
   char          ch;
 
-  while(1)
+  if ( DLT(DLT_CRITICAL) )
   {
-    printf("*");
-  
+    printf("freeETarget_json()\n\r");
+  }
+
+  while (1)
+  {
 /*
  * See if anything is waiting and if so, add it in
  */
     while ( serial_available(ALL) != 0 )
     {
       ch = serial_getch(ALL);
+#if (JSON_ECHO)
+      printf("%c", ch);
+#endif
 
 /*
  * Parse the stream
@@ -252,7 +258,7 @@ void freeETarget_json
           if ( in_JSON != 0 )
           {
             got_right = in_JSON;
-            handle_json();
+            handle_json();                    // Fall through to reinitialize
           }   
 
         case '{':
@@ -273,7 +279,6 @@ void freeETarget_json
         case '*':
         case '"':                             // Start or end of text
           keep_space = (keep_space ^ 1) & 1;
-          break;
         
         default:
           if ( (ch != ' ') || keep_space )
@@ -330,6 +335,7 @@ static void handle_json(void)
     
     while ( (JSON[j].token != 0) )                              // Cycle through the tokens
     {
+      x = 0;
       if ( JSON[j].token != 0 )
       {
         k = instr(&input_JSON[i], JSON[j].token );              // Compare the input against the list of JSON tags
@@ -408,16 +414,15 @@ static void handle_json(void)
                 nvs_set_i64(my_handle, JSON[j].non_vol, my_float.int64);                 // Store into NON-VOL
               }
               break;
-            }
-            
-            if ( JSON[j].f != 0 )                               // Call the handler if it is available
-            {
-              JSON[j].f(x);
-            }
-
-            
           }
+            
+          if ( JSON[j].f != 0 )                               // Call the handler if it is available
+          {
+            JSON[j].f(x);
+          }            
         }
+      }
+    j++;
     }
   }
 
