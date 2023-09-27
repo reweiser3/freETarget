@@ -22,6 +22,7 @@
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\adc_types.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\esp_adc\include\esp_adc\adc_oneshot.h"
 #include "driver\gpio.h"
+#include "driver\ledc.h"
 #include "timer.h"
 #include "token.h"
 #include "analog_io.h"
@@ -31,6 +32,7 @@
 #include "led_strip_types.h"
 #include "gpio_define.h"
 #include "pcnt.h"
+#include "pwm.h"
 
 static void sw_state(unsigned int action);// Do something with the switches
 static void send_fake_score(void);        // Send a fake score to the PC
@@ -46,14 +48,6 @@ typedef struct led_struct {
   }  led_struct_t;
 
 led_struct_t leds[3];
-
-/* 
- *  HAL Discrete IN
- */
-bool_t get_in(unsigned int port)
-{
-  return gpio_get_level(port);
-}
 
 
 /*-----------------------------------------------------
@@ -160,18 +154,32 @@ void trip_timers(void)
  * The DIP register is read and formed into a word.
  * The word is complimented to return a 1 for every
  * jumper that is installed.
- * 
- * OR in the json_dip_switch to allow remote testing
- * OR in  0xF0 to allow for compile time testing
+ *
  *-----------------------------------------------------*/
-unsigned int read_DIP
-(
-  unsigned int dip_mask
-)
+
+unsigned int read_DIP(void)
 {
   unsigned int return_value = 0;
 
-  return_value |= 0xF0;             // COMPILE TIME
+  if (gpio_get_level(DIP_A) != 0)
+  {
+   return_value |= 1;
+  }
+
+  if (gpio_get_level(DIP_B) != 0)
+  {
+    return_value |= 2;
+  }
+
+  if (gpio_get_level(DIP_C) != 0)
+  {
+    return_value |= 4;
+  }
+
+  if (gpio_get_level(DIP_D) != 0)
+  {
+    return_value |= 8;
+  }
 
   return return_value;
 }  
@@ -204,7 +212,7 @@ void set_LED
   )
 { 
   int i;
-
+return;
   i=0;
 
   while (*new_state != 0)
@@ -482,21 +490,21 @@ void paper_on_off                               // Function to turn the motor on
   if ( (HOLD1(json_multifunction2) == RAPID_RED) 
         || (HOLD1(json_multifunction2) == RAPID_GREEN))
   {
-      gpio_set_level(DIP_0, 1);
+      gpio_set_level(DIP_A, 1);
       dip_mask = RED_MASK;
   }
 
   if (  (HOLD2(json_multifunction2) == RAPID_RED)
       || (HOLD2(json_multifunction2) == RAPID_GREEN ) )
   {
-      gpio_set_level(DIP_3, 1);
+      gpio_set_level(DIP_C, 1);
       dip_mask |= GREEN_MASK;
   }
 
 /*
  * Continue to read the DIP switch
  */
-  dip = read_DIP(dip_mask) & 0x0f;      // Read the jumper header
+  dip = read_DIP();                     // Read the jumper header
 
   if ( dip == 0 )                       // No jumpers in place
   { 
@@ -877,8 +885,8 @@ void digital_test(void)
  * Read in the fixed digital inputs
  */
   printf("\r\nTime: %4.2fs", (float)(esp_timer_get_time()/1000000));
-  printf("\r\nBD Rev: %d", revision());       
-  printf("\r\nDIP: 0x%02X", read_DIP(0)); 
+  printf("\r\nBD Rev: %d", revision());  
+  printf("\r\nDIP: 0x%02X", read_DIP()); 
   gpio_set_level(STOP_N, 0);
   gpio_set_level(STOP_N, 1);                        // Reset the fun flip flop
   printf("\r\nRUN FlipFlop: 0x%02X", is_running());   
@@ -890,7 +898,7 @@ void digital_test(void)
  /*
   * Blink the LEDs and exit
   */
-   POST_LEDs();
+//   POST_LEDs();
    return;
 }
 
@@ -987,7 +995,7 @@ void rapid_red
   }
   if ( HOLD2(json_multifunction2) == RAPID_RED )
   {
-      gpio_set_level(DIP_3, state);
+      gpio_set_level(DIP_C, state);
   }
 
   return;
@@ -1000,11 +1008,11 @@ void rapid_green
 {
   if ( HOLD1(json_multifunction2) == RAPID_GREEN )
   {
-      gpio_set_level(DIP_0, state);
+      gpio_set_level(DIP_B, state);
   }
   if ( HOLD2(json_multifunction2) == RAPID_GREEN )
   {
-      gpio_set_level(DIP_3, state);
+      gpio_set_level(DIP_A, state);
   }
 
   return;

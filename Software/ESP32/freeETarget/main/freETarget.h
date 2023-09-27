@@ -13,7 +13,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"0.0.0 May 12, 2023\""
+#define SOFTWARE_VERSION "\"0.0.1 September 26, 2023, 2023\""
 
 #define REV_100    100
 #define REV_210    210
@@ -39,9 +39,9 @@
 /*
  * Oscillator Features
  */
-#define OSCILLATOR_MHZ   8.0                          // 8000 cycles in 1 ms
+#define OSCILLATOR_MHZ   10.0                         // 10,000 cycles in 1 ms
 #define CLOCK_PERIOD  (1.0/OSCILLATOR_MHZ)            // Seconds per bit
-#define ONE_SECOND      1000L                         // 1000 ms delay 
+#define ONE_SECOND    (1000/portTICK_PERIOD_MS)       // 1000 ms delay 
 #define ONE_SECOND_US   1000000u                      // One second in us
 #define SECONDS       (millis()/1000)                 // Elapsed time in seconds
 #define FULL_SCALE      0xffffffff                    // Full scale timer

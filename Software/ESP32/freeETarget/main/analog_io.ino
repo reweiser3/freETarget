@@ -9,7 +9,6 @@
 #include "freETarget.h"
 #include "Wire.h"
 
-void set_vset_PWM(unsigned int pwm);
 
 /*----------------------------------------------------------------
  * 

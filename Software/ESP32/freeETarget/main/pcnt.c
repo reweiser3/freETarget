@@ -18,6 +18,7 @@
 #include "esp_err.h"
 #include "led_strip.h"
 #include "led_strip_types.h"
+#include "driver\ledc.h"
 #include "gpio_define.h"
 #include "pcnt.h"
 
@@ -59,7 +60,7 @@ void pcnt_init
 )
 {
     int this_unit;
-printf("\r\npcnt init %d\r\n", pcnt->pcnt_unit);
+    
 /*
  * Setup the unit
  */

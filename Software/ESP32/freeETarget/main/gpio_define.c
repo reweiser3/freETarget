@@ -23,14 +23,13 @@
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\gpio_types.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\adc_types.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\esp_adc\include\esp_adc\adc_oneshot.h"
-#include "led_strip.h"
 //#include "helpers.h"
 #include "pwm.h"
 #include "i2c.h"
+#include "gpio_define.h"
 #include "pcnt.h"
 #include "led_strip.h"
 #include "led_strip_types.h"
-#include "gpio_define.h"
 #include "diag_tools.h"
 
 /*
@@ -54,7 +53,7 @@ DIO_struct_t dio09 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_va
 
 DIO_struct_t dio10 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
 DIO_struct_t dio11 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
-DIO_struct_t dio12 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};  // Mode and Initial Value
+DIO_struct_t dio12 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
 DIO_struct_t dio13 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};  // Mode and Initial Value
 DIO_struct_t dio14 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};  // Mode and Initial Value
 DIO_struct_t dio15 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};  // Mode and Initial Value
@@ -187,7 +186,7 @@ gpio_struct_t gpio_table[] = {
     {"CLK_START*",   GPIO_NUM_41, (void*)&dio41},    // Clock Test Start
     {"FACE_HALF",    GPIO_NUM_40, (void*)&dio40},    // FACE Interrupt
     {"STOP*",        GPIO_NUM_39, (void*)&dio39},    // STOP Clock
-    {"A",            GPIO_NUM_29, (void*)&dio38},    // Auxilary Input A
+    {"A",            GPIO_NUM_38, (void*)&dio38},    // Auxilary Input A
 
     {"B",            GPIO_NUM_37, (void*)&dio37},    // Auxilary Input B
     {"C",            GPIO_NUM_36, (void*)&dio36},    // Auxilary Input C
@@ -233,6 +232,7 @@ void gpio_init(void)
     {
         if (gpio_table[i].gpio_uses != NULL )
         {
+            printf("%d", gpio_table[i].gpio_number);
             switch (((DIO_struct_t*)(gpio_table[i].gpio_uses))->type)
             {      
                 default:
@@ -243,6 +243,7 @@ void gpio_init(void)
                     switch (((DIO_struct_t*)(gpio_table[i].gpio_uses))->mode)
                     {
                         case GPIO_MODE_INPUT:
+                            gpio_set_pull_mode(gpio_table[i].gpio_number, GPIO_PULLUP_ONLY);
                             break;
 
                         case GPIO_MODE_OUTPUT:

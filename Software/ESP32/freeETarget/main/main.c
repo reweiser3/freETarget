@@ -88,7 +88,7 @@ void app_main(void)
     /* Configure the peripheral according to the LED type */
     configure_led();
 
-    for (i=0; i != 10; i++)
+    for (i=0; i != 5; i++)
     {
         ESP_LOGI(TAG, "Turning the LED %s!", s_led_state == true ? "ON" : "OFF");
         blink_led();

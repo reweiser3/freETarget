@@ -61,10 +61,8 @@ void self_test
   unsigned int test                 // What test to execute
 )
 {
-/*
- *  Update the timer
- */
-  tick++;
+  unsinged int i;
+
   
 /*
  * Figure out what test to run
@@ -77,9 +75,13 @@ void self_test
     default:                // Undefined, show the tests
     case T_HELP:                
       printf("\r\n 1 - Digital inputs");
-      printf("\r\n 2 - Counter values (internal trigger)");
-      printf("\r\n 3 - Advance paper backer");
-      printf("\r\n 4 - LED brightness test");
+      printf("\r\n 2 - Advance paper backer");
+      printf("\r\n 3 - LED brightness test");
+
+      printf("\r\n 3 - Counter values (internal trigger)");
+
+
+
       printf("\r\n 5 - Face strike test");
       printf("\r\n 6 - WiFi test");
       printf("\r\n 7 - Count on the LEDs");
@@ -91,6 +93,32 @@ void self_test
  */
     case T_DIGITAL: 
       digital_test();
+      break;
+
+/*
+ * Test 2, Advance the paper
+ */
+    case T_PAPER:
+      printf("\r\nAdvancing paper %d ms", json_paper_time);
+      paper_on_off(true);
+      vTaskDelay(ONE_SECOND * json_paper_time / 1000);
+      paper_on_off(false);
+      printf(" done\r\n");
+      break;
+
+/*
+ * Test 3, Set the LED bightness
+ */
+    case T_LED:
+      printf("\r\nCycling the LED");
+      for (i=0; i <= 100; i += 5)
+      {
+        
+      }
+      paper_on_off(true);
+      vTaskDelay(ONE_SECOND * json_paper_time / 1000);
+      paper_on_off(false);
+      printf(" done\r\n");
       break;
   }
  
@@ -208,7 +236,7 @@ void self_test
  */
   stop_timers();                      // Get the circuit ready
   arm_timers();                       // Arm it. 
-  delay(1);                           // Wait a millisecond  
+  vTaskDelay(1);                      // Wait a millisecond  
   sensor_status = is_running();       // Remember all of the running timers
   if ( (sensor_status != 0) && DLT(DLT_CRITICAL) )
   {

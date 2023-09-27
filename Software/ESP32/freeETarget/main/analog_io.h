@@ -16,11 +16,11 @@ unsigned int read_reference(void);      // Read the feedback channel
 void show_analog(int v);                // Display the analog values
 double temperature_C(void);             // Temperature in degrees C
 unsigned int revision(void);            // Return the board revision
+void compute_vset_PWM(double value);    // Reference voltage control loop
+
 void set_LED_PWM(int percent);          // Ramp the PWM duty cycle
 void set_LED_PWM_now(int percent);      // Set the PWM duty cycle
-void set_vset_PWM(unsigned int value); // Value to write to PWM
-void compute_vset_PWM(double value);   // Reference voltage control loop
-
+void set_vset_PWM(unsigned int value);  // Value to write to PWM
 /*
  *  Port Definitions
  */

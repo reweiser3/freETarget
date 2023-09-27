@@ -17,6 +17,7 @@
 #include "led_strip_types.h"
 #include "gpio_define.h"
 
+
 #define PWM_TIMER              LEDC_TIMER_0
 #define PWM_MODE               LEDC_LOW_SPEED_MODE
 #define PWM_CHANNEL            LEDC_CHANNEL_0
@@ -78,6 +79,7 @@ void pwm_init
  */
     ledc_set_duty(PWM_MODE, pwm_channel->channel, pwm_channel->duty);
     ledc_update_duty(PWM_MODE, pwm_channel->channel);
+
 /*
  *  All done, 
  */

@@ -24,9 +24,12 @@ bool_t  do_dlt(unsigned int level);                     // Diagnostics Log and T
 
 #define T_HELP         0       // Help test
 #define T_DIGITAL      1       // Digital test
+#define T_PAPER        2       // Advance paper backer
+#define T_LED          3       // Test the LED PWM
+
 #define T_TRIGGER      2       // Test microphone trigger
 #define T_CLOCK        3       // Trigger clock internally
-#define T_PAPER        6       // Advance paper backer
+
 #define T_SPIRAL       7       // Generate sprial pattern
 #define T_GRID         8       // Generate grid pattern
 #define T_ONCE         9       // Generate single calculation @ 45North
@@ -34,7 +37,7 @@ bool_t  do_dlt(unsigned int level);                     // Diagnostics Log and T
 #define T_SET_TRIP    11       // Set the microphone trip point
 #define T_XFR_LOOP    12       // Transfer loopback
 #define T_SERIAL_PORT 13       // Hello World n
-#define T_LED         14       // Test the PWM
+
 #define T_FACE        15       // Test the face detector
 #define T_WIFI        16       // WiFi Test
 #define T_NONVOL      17       // Dump Nonvol

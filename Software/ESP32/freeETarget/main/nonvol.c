@@ -94,7 +94,7 @@ void read_nonvol(void)
     factory_nonvol(true);                             // Force in good values
   }
 
-  nvs_get_i32(my_handle, "NVM_PS_VERSION", &nonvol_init);
+  nvs_get_i32(my_handle, NONVOL_PS_VERSION, &nonvol_init);
   if ( nonvol_init != PS_VERSION )                    // persistent storage version
   {
     update_nonvol(nonvol_init);
@@ -147,7 +147,7 @@ void read_nonvol(void)
 /*
  * Go through and verify that the special cases are taken care of
  */
-  multifunction_switch();                                   // Look for an override on the target type
+//  multifunction_switch();                                   // Look for an override on the target type
   
 /*
  * All done, begin the program
@@ -287,7 +287,7 @@ void factory_nonvol
 /*    
  *     Test the board only if it is a factor init
  */
-#if(0)
+
   if ( new_serial_number )
   {
     printf("\r\n Testing motor drive ");
@@ -295,13 +295,14 @@ void factory_nonvol
     {
       printf("%d+ ", x);
       paper_on_off(true);
-      delay(ONE_SECOND/4);
+      vTaskDelay(ONE_SECOND/4);
       printf("- ");
       paper_on_off(false);
-      delay(ONE_SECOND/4);
+      vTaskDelay(ONE_SECOND/4);
     }
     printf(" Test Complete\r\n");
   }
+#if (0)
 /*
  * Set the trip point
  */
@@ -418,43 +419,42 @@ void init_nonvol
  * 
  * function: update_nonvol
  * 
- * brief:  Update the nonvol values if there has been a change
+ * brief:  Update the nonvol values to the current persistent 
  * 
  * return: None
  *---------------------------------------------------------------
  *
- * If the init_nonvol location is not set to INIT_DONE then
- * initilze the memory
+ * Check the stored nonvol value against the current persistent
+ * storage version and update if needed.
  * 
  *------------------------------------------------------------*/
 
 void update_nonvol
   (
-    unsigned int current_version          // Version present in persistent storage
+    unsigned int current_version  // Version present in persistent storage
   )
 {
-  unsigned int  i;                        // Iteration counter
-  long          ps_value;                 // Value read from persistent storage  
+  unsigned int  i;                // Iteration counter
+  long          ps_value;         // Value read from persistent storage  
   
   if ( DLT(DLT_CRITICAL) )
   {
-    printf("update_nonvol(%d)", current_version);
+    printf("update_nonvol(%d)\r\n", current_version);
   }
-  
 /*
  * Check to see if this persistent storage has never had a version number
  */
   if ( PS_UNINIT(current_version) )
   {
-    printf("\n\rUpdating legacy persistent storage");
+
     i=0;
     while ( JSON[i].token != 0 )
     { 
       switch ( JSON[i].convert )
       {        
       case IS_INT32:
-        nvs_get_i32(my_handle, JSON[i].non_vol, &ps_value);              // Pull up the value from memory
-        if ( PS_UNINIT(ps_value) )                          // Uninitilazed?
+        nvs_get_i32(my_handle, JSON[i].non_vol, &ps_value);             // Pull up the value from memory
+        if ( PS_UNINIT(ps_value) )                                      // Uninitilazed?
         {
           nvs_set_i32(my_handle, JSON[i].non_vol, JSON[i].init_value);  // Initalize it from the table
         }
@@ -468,8 +468,6 @@ void update_nonvol
    current_version = PS_VERSION;                            // Initialized, force in the current version
    nvs_set_i32(my_handle, NONVOL_PS_VERSION, current_version);
    nvs_commit(my_handle);
-
-   printf("\r\nDone\r\n");
   }
 
 /*

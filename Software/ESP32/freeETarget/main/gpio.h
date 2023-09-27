@@ -18,7 +18,7 @@ void arm_timers(void);                                    // Make the board read
 void clear_running(void);                                 // Clear the run flip flop 
 unsigned int is_running(void);                            // Return a bit mask of running sensors 
 void set_LED(char* new_state);                            // Manage the LEDs
-unsigned int read_DIP(unsigned int dip_mask);             // Read the DIP switch register
+unsigned int read_DIP(void);                              // Read the DIP switch register
 unsigned int read_counter(unsigned int direction);
 void stop_timers(void);                                   // Turn off the counter registers
 void trip_timers(void);
@@ -39,20 +39,10 @@ void paper_on_off(bool_t on);                             // Turn the motor on o
 void rapid_green(unsigned int state);                     // Drive the GREEN light
 void rapid_red(unsigned int state);                       // Drive the RED light
 void multifunction_display(void);                         // Display the MFS settings as text
-bool_t  get_in(unsigned int port);                        // HAL read bit input
 
 /*
  *  Port Definitions
  */
-#define D0          37                     //  Byte Port bit locations
-#define D1          36                     //
-#define D2          35                     //
-#define D3          34                     //
-#define D4          33                     //
-#define D5          32                     //
-#define D6          31                     //
-#define D7          30                     //
-
 #define NORTH_HI    50                    // Address port but locations
 #define NORTH_LO    51
 #define EAST_HI     48
@@ -74,17 +64,24 @@ bool_t  get_in(unsigned int port);                        // HAL read bit input
 #define RUN_A_MASK  (RUN_N_MASK + RUN_E_MASK + RUN_S_MASK + RUN_W_MASK)
 #define RUN_PORT    29
 
+#define PAPER        12                    // Paper advance drive active low
+#define PAPER_ON      0
+#define PAPER_OFF     1
+
 #define QUIET       29
 #define RCLK        40
 #define CLR_N       39
-#define STOP_N      52       
-#define CLOCK_START 53
+#define STOP_N      39      // V      
+#define CLOCK_START 41      // V
 
 #define DIP_0        9
 #define RED_OUT      9                  // Rapid fire RED on DIP0
-#define DIP_1       10
-#define DIP_2       11
-#define DIP_3       12
+
+#define DIP_A       38      // V
+#define DIP_B       37      // V
+#define DIP_C       36      // V
+#define DIP_D       35      // V
+
 #define GREEN_OUT   12                  // Rapid fire GREEN on DIP3
 
 #define RED_MASK     1                  // Use DIP 0
@@ -102,11 +99,11 @@ bool_t  get_in(unsigned int port);                        // HAL read bit input
 /*
  * DIP Switch Use. 
  */
-//                      From DIP                   From Software
-#define CALIBRATE       ((get_in(DIP_3) == 0)    + 0)   // 1 Go to Calibration Mode
-#define DIP_SW_A        ((get_in(DIP_2) == 0)    + 0)   // 2 When CALIBRATE is asserted, use lower trip point
-#define DIP_SW_B        ((get_in(DIP_1) == 0)    + 0)   // 4 When CALIBRATE is asserted, use higher trip point
-#define VERBOSE_TRACE   ((get_in(DIP_0) == 0)    + 0)   // 8 Show the verbose software trace
+//                      From DIP             
+#define CALIBRATE       (DIP_A)         // 1 Go to Calibration Mode
+#define DIP_SW_A        (DIP_B)         // 2 When CALIBRATE is asserted, use lower trip point
+#define DIP_SW_B        (DIP_C)         // 4 When CALIBRATE is asserted, use higher trip point
+#define VERBOSE_TRACE   (DIP_D)         // 8 Show the verbose software trace
 
 #define VSET_PWM     8          // VREF setting
 #define CTS_U        7
@@ -129,11 +126,7 @@ bool_t  get_in(unsigned int port);                        // HAL read bit input
 #define TRIP_SOUTH   0x04
 #define TRIP_WEST    0x08
 
-#define PAPER        18                    // Paper advance drive active low (TX1)
-#define PAPER_ON      0
-#define PAPER_OFF     1
-#define PAPER_ON_300  1
-#define PAPER_OFF_300 0
+
 
 #define FACE_SENSOR  19
 

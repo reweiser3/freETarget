@@ -7,7 +7,6 @@
  *---------------------------------------------------------------*/
 #ifndef _PCNT_H_
 #define _PCNT_H_
-#include "gpio_define.h"
 
 /*
  * Global functions

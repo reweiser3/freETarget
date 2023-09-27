@@ -23,6 +23,8 @@
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\adc_types.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\esp_adc\include\esp_adc\adc_oneshot.h"
 #include "timer.h"
+#include "gpio_define.h"
+#include "pwm.h"
 
 void set_vset_PWM(unsigned int pwm);
 
@@ -60,7 +62,7 @@ void set_LED_PWM_now
   }
 
   old_LED_percent = new_LED_percent;
-  // analogWrite(LED_PWM, old_LED_percent * 256 / 100);  // Write the value out
+  pwm_set(LED_PWM, old_LED_percent);  // Write the value out
   
   return;
 }
