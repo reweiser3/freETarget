@@ -180,7 +180,7 @@ const json_message_t JSON[] = {
 };
 
 int instr(char* s1, char* s2);
-static void diag_delay(int x) { printf("\r\n\"DELAY\":%d", x); delay(x*1000);  return;}
+static void diag_delay(int x) { printf("\r\n\"DELAY\":%d", x); vTaskDelay(x*1000);  return;}
 
 /*-----------------------------------------------------
  * 

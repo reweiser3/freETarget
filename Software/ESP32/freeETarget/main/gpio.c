@@ -30,9 +30,9 @@
 #include "sdkconfig.h"
 #include "led_strip.h"
 #include "led_strip_types.h"
-#include "gpio_define.h"
 #include "pcnt.h"
 #include "pwm.h"
+#include "gpio_define.h"
 
 static void sw_state(unsigned int action);// Do something with the switches
 static void send_fake_score(void);        // Send a fake score to the PC
@@ -717,9 +717,9 @@ static void sw_state
   {
     case POWER_TAP:
       set_LED_PWM_now(json_LED_PWM);      // Yes, a quick press to turn the LED on
-      delay(ONE_SECOND/2),
+      vTaskDelay(ONE_SECOND/2),
       set_LED_PWM_now(0);                 // Blink
-      delay(ONE_SECOND/2);
+      vTaskDelay(ONE_SECOND/2);
       set_LED_PWM_now(json_LED_PWM);      // and leave it on
       power_save = (long)json_power_save * 60L * (long)ONE_SECOND; // and resets the power save time
       json_power_save += 30;      

@@ -24,12 +24,12 @@
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\adc_types.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\esp_adc\include\esp_adc\adc_oneshot.h"
 //#include "helpers.h"
-#include "pwm.h"
 #include "i2c.h"
-#include "gpio_define.h"
-#include "pcnt.h"
 #include "led_strip.h"
 #include "led_strip_types.h"
+#include "pwm.h"
+#include "gpio_define.h"
+#include "pcnt.h"
 #include "diag_tools.h"
 
 /*
@@ -123,10 +123,10 @@ analogIO_struct_t adc2_ch9 = { .type = ANALOG_IO, .gpio = GPIO_NUM_20 };  // CHA
 /*
  *  PWM Control, GPIO filled in by GPIO definition above
  */
-PWM_struct_t pwm0 = { .type = PWM_OUT, .initial_value = 0};
-PWM_struct_t pwm1 = { .type = PWM_OUT, .initial_value = 0};
-PWM_struct_t pwm2 = { .type = PWM_OUT, .initial_value = 0};
-PWM_struct_t pwm3 = { .type = PWM_OUT, .initial_value = 0};
+PWM_struct_t pwm0 = { .pwm_channel = 0, .type = PWM_OUT};
+PWM_struct_t pwm1 = { .pwm_channel = 1, .type = PWM_OUT};
+PWM_struct_t pwm2 = { .pwm_channel = 2, .type = PWM_OUT};
+PWM_struct_t pwm3 = { .pwm_channel = 3, .type = PWM_OUT};
 
 /*
  *  I2C COntrol.  GPIO explicitly filled in here
@@ -166,7 +166,7 @@ gpio_struct_t gpio_table[] = {
     {"RUN_WEST_LO",  GPIO_NUM_15, (void*)&pcnt3},     // RUN_WEST_LO
     {"RUN_NORTH_HI", GPIO_NUM_16, (void*)&pcnt4},     // RUN_NORTH_HI
 
-    {"ATX",          GPIO_NUM_17, NULL},                    // ATX
+    {"ATX",          GPIO_NUM_17, NULL},              // ATX
     {"ARX",          GPIO_NUM_18, NULL},              // ARX
     {"REF_CLK",      GPIO_NUM_8,  (void*)&dio08},     // Reference CLodk
     {"USB_D-",       GPIO_NUM_19, NULL},              // JTAG USB D-
@@ -178,7 +178,7 @@ gpio_struct_t gpio_table[] = {
     {"RUN_WEST_HI",  GPIO_NUM_11, (void*)&pcnt7},     // RUN_WEST_HI
     {"PAPER",        GPIO_NUM_12, (void*)&dio12},     // PAPER  Drive
 
-    {"LED_FB",       GPIO_NUM_1, (void*)&adc1_ch0},  // VREF_FB
+    {"LED_FB",       GPIO_NUM_1, (void*)&adc1_ch0},  // LED Feedback (Measure 12VDC)
     {"LED_PWM",      GPIO_NUM_2, (void*)&pwm0},      // LED_PWM
     {"TXD",          GPIO_NUM_22, NULL},             // UART Transmit   Initialized in serial_io_init
     {"RXD",          GPIO_NUM_23, NULL},             // UART Receive
@@ -232,7 +232,6 @@ void gpio_init(void)
     {
         if (gpio_table[i].gpio_uses != NULL )
         {
-            printf("%d", gpio_table[i].gpio_number);
             switch (((DIO_struct_t*)(gpio_table[i].gpio_uses))->type)
             {      
                 default:
@@ -266,15 +265,19 @@ void gpio_init(void)
                     break;
 
                 case PWM_OUT:
-                    pwm_init((ledc_channel_config_t*)gpio_table[i].gpio_uses, gpio_table[i].gpio_number);
+                    pwm_init(((PWM_struct_t*)(gpio_table[i].gpio_uses))->pwm_channel,\
+                       ((PWM_struct_t*)(gpio_table[i].gpio_uses))->pwm_channel);
                     break;
 
                 case I2C_PORT:
-                    i2c_init(((I2C_struct_t*)(gpio_table[i].gpio_uses))->gpio_number_SDA, ((I2C_struct_t*)(gpio_table[i].gpio_uses))->gpio_number_SCL );
+                    i2c_init(((I2C_struct_t*)(gpio_table[i].gpio_uses))->gpio_number_SDA,\
+                       ((I2C_struct_t*)(gpio_table[i].gpio_uses))->gpio_number_SCL );
                     break;
 
                 case PCNT:
-                    pcnt_init((PCNT_struct_t*)(gpio_table[i].gpio_uses));
+                    pcnt_init(((PCNT_struct_t*)(gpio_table[i].gpio_uses))->pcnt_unit,\
+                        ((PCNT_struct_t*)(gpio_table[i].gpio_uses))->pcnt_control, \
+                        ((PCNT_struct_t*)(gpio_table[i].gpio_uses))->pcnt_signal);
                     break;             
 
                 case LED_STRIP: 

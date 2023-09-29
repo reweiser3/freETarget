@@ -108,7 +108,7 @@ void multifunction_display(void);                         // Display the MFS set
 #define VSET_PWM     8          // VREF setting
 #define CTS_U        7
 #define RTS_U        6
-#define LED_PWM      5          // PWM Port
+
 #define LED_RDY      4
 #define LED_X        3
 #define LED_Y        2

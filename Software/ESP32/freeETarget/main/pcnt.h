@@ -11,8 +11,8 @@
 /*
  * Global functions
  */
-void pcnt_init(PCNT_struct_t*  pcnt);       // pcnt Control
-unsigned long pcnt_read(int which_unit);    // Read timer contents
+void pcnt_init(int  unit, int  control, int  signal);   // pcnt Control
+unsigned long pcnt_read(int unit);                      // Read timer contents
 
 /*
  * Typedefs

@@ -8,12 +8,12 @@
 #ifndef _PWM_H_
 #define _PWM_H_
 
-#include "freETarget.h"
+//#include "freETarget.h"
 
 /*
  * Global functions
  */
-void pwm_init(ledc_channel_config_t* pwm_channel, int gpio_uses);       // Initialize the PWM port
-void pwm_set(ledc_channel_config_t* pwm_channel, unsigned char percent);  // Set a new PWM duty cycle
+void pwm_init(unsigned int pwm_channel, unsigned int pwm_gpio);
+void pwm_set(unsigned int pwm_channel, unsigned int percent); // Set a new PWM duty cycle
 
 #endif

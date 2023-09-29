@@ -19,12 +19,15 @@
 #include "nvs_flash.h"
 #include "nvs.h"
 #include "driver/gpio.h"
+#include "driver/ledc.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\gpio_types.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\adc_types.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\esp_adc\include\esp_adc\adc_oneshot.h"
 #include "timer.h"
-#include "gpio_define.h"
+#include "led_strip.h"
+#include "led_strip_types.h"
 #include "pwm.h"
+#include "gpio_define.h"
 
 void set_vset_PWM(unsigned int pwm);
 
@@ -48,7 +51,7 @@ static unsigned int old_LED_percent = 0;
 
 void set_LED_PWM_now
   (
-  int new_LED_percent                            // Desired LED level (0-100%)
+  unsigned int new_LED_percent                            // Desired LED level (0-100%)
   )
 {
   if ( new_LED_percent == old_LED_percent )
@@ -62,7 +65,7 @@ void set_LED_PWM_now
   }
 
   old_LED_percent = new_LED_percent;
-  pwm_set(LED_PWM, old_LED_percent);  // Write the value out
+  pwm_set(LED_PWM, new_LED_percent);  // Write the value out
   
   return;
 }
@@ -79,18 +82,6 @@ void set_LED_PWM                                  // Theatre lighting
   }
 
 /*
- * Special case, toggle the LED state
- */
-  if (new_LED_percent == LED_PWM_TOGGLE)
-  {
-    new_LED_percent = 0;
-    if ( old_LED_percent == 0 )
-    {
-      new_LED_percent = json_LED_PWM;
-    }
-  }
-  
-/*
  * Loop and ramp the LED  PWM up or down slowly
  */
   while ( new_LED_percent != old_LED_percent )  // Change in the brightness level?
@@ -106,16 +97,12 @@ void set_LED_PWM                                  // Theatre lighting
       old_LED_percent++;                        // Ramp the value up
     }
 
-    delay((unsigned long)ONE_SECOND/50);                       // Worst case, take 2 seconds to get there
+    vTaskDelay((unsigned long)ONE_SECOND/50);                       // Worst case, take 2 seconds to get there
   }
   
 /*
  * All done, begin the program
  */
-  if ( new_LED_percent == 0 )
-  {
-    gpio_set_level(LED_PWM, 0);
-  }
   return;
 }
 
@@ -323,7 +310,7 @@ double temperature_C(void)
     }
 
     set_vset_PWM(pwm);
-    delay(2*ONE_SECOND);
+    vTaskDelay(2*ONE_SECOND);
     cycle_count++;
     if ( cycle_count > 100 )
     {

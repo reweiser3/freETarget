@@ -61,7 +61,7 @@ void self_test
   unsigned int test                 // What test to execute
 )
 {
-  unsinged int i;
+  unsigned int i;
 
   
 /*
@@ -113,11 +113,9 @@ void self_test
       printf("\r\nCycling the LED");
       for (i=0; i <= 100; i += 5)
       {
-        
+        set_LED_PWM(i);       
+        vTaskDelay(ONE_SECOND/5);
       }
-      paper_on_off(true);
-      vTaskDelay(ONE_SECOND * json_paper_time / 1000);
-      paper_on_off(false);
       printf(" done\r\n");
       break;
   }
@@ -176,11 +174,11 @@ void self_test
   }
 
   set_LED("R  ");
-  delay(ONE_SECOND/4);
+  vTaskDelay(ONE_SECOND/4);
   set_LED(" R ");
-  delay(ONE_SECOND/4);
+  vTaskDelay(ONE_SECOND/4);
   set_LED("  R");
-  delay(ONE_SECOND/4);
+  vTaskDelay(ONE_SECOND/4);
   set_LED("G  ");
   
   return;
@@ -255,7 +253,7 @@ void self_test
  */
     stop_timers();                    // Get the circuit ready
     arm_timers();
-    delay(1);                         // Wait for a bit
+    vTaskDelay(1);                         // Wait for a bit
     
     for (j=N; j <= W; j++ )           // Check all of the counters
     {
@@ -271,7 +269,7 @@ void self_test
   */
     stop_timers();                      // Get the circuit ready
     arm_timers();
-    delay(1);  
+    vTaskDelay(1);  
     random_delay = 0; // Pick a random delay time in us
     trip_timers();
     sensor_status = is_running();       // Remember all of the running timers
@@ -473,7 +471,7 @@ void show_sensor_status
     && (face_strike != 0) )
   {
     printf(" PASS");
-    delay(ONE_SECOND);                // Wait for click to go away
+    vTaskDelay(ONE_SECOND);                // Wait for click to go away
   }    
 
 /*

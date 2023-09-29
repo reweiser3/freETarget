@@ -8,13 +8,16 @@
  *
  * This file sets up the timers and routing for the PWM control
  * 
- * See: https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/ledc.html
+ * See: 
+ * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/ledc.html
+ * https://github.com/espressif/esp-idf/tree/272b4091f1/examples/peripherals/ledc/ledc_fade
  * 
  ***************************************************************************/
 #include "driver/ledc.h"
 #include "esp_err.h"
 #include "led_strip.h"
 #include "led_strip_types.h"
+#include "pwm.h"
 #include "gpio_define.h"
 
 
@@ -27,13 +30,17 @@
 
 static int pwm_ready = 0;       // Set to 1 when the hardware is programmed
 
-ledc_timer_config_t led_timer = {
-    .speed_mode       = PWM_MODE,
-    .timer_num        = PWM_TIMER,
-    .duty_resolution  = PWM_DUTY_RES,
-    .freq_hz          = PWM_FREQUENCY,  // Set output frequency at 5 kHz
-    .clk_cfg          = LEDC_AUTO_CLK
-    };
+
+ledc_timer_config_t ledc_timer = {
+    .duty_resolution = LEDC_TIMER_13_BIT, // resolution of PWM duty
+    .freq_hz = 5000,                      // frequency of PWM signal
+    .speed_mode = LEDC_LOW_SPEED_MODE,    // timer mode
+    .timer_num = LEDC_TIMER_0,            // timer index
+    .clk_cfg = LEDC_AUTO_CLK,             // Auto select the source clock
+};
+
+ledc_channel_config_t ledc_channel[4];
+
 
 /*************************************************************************
  * 
@@ -50,7 +57,8 @@ ledc_timer_config_t led_timer = {
  ***************************************************************************/
 void pwm_init
 (
-    ledc_channel_config_t* pwm_channel      // PWM Control
+    unsigned int pwm_channel,           // PWM channel we are using
+    unsigned int pwm_gpio               // What GPIO is it assigned to?
 )
 {
 /*
@@ -58,27 +66,27 @@ void pwm_init
  */
     if ( !pwm_ready )
     {
-        ledc_timer_config(&led_timer);     // Setup the timer
+        ledc_timer_config(&ledc_timer); // Setup the timer
         pwm_ready = 1;
     }
 /*
  * Configure the output port
  */
-    pwm_channel->gpio_num       = pwm_channel->gpio_num;
-    pwm_channel->speed_mode     = PWM_MODE;
-    pwm_channel->channel        = PWM_CHANNEL;
-    pwm_channel->timer_sel      = PWM_TIMER;
-    pwm_channel->intr_type      = LEDC_INTR_DISABLE;
-    pwm_channel->duty           = 0;                    // Set duty to 0%
-    pwm_channel->hpoint         = 0;
-
-    ledc_channel_config(pwm_channel);
+    ledc_channel[pwm_channel].gpio_num            = pwm_gpio;
+    ledc_channel[pwm_channel].channel             = pwm_channel;
+    ledc_channel[pwm_channel].speed_mode          = LEDC_LOW_SPEED_MODE;
+    ledc_channel[pwm_channel].timer_sel           = LEDC_TIMER_0;
+    ledc_channel[pwm_channel].intr_type           = LEDC_INTR_DISABLE;
+    ledc_channel[pwm_channel].duty                = 0;                    // Set duty to 0%
+    ledc_channel[pwm_channel].hpoint              = 0;
+    ledc_channel[pwm_channel].flags.output_invert = 0;      
+    ledc_channel_config(&ledc_channel[pwm_channel]);
 
 /*
  *  Initalize the output
  */
-    ledc_set_duty(PWM_MODE, pwm_channel->channel, pwm_channel->duty);
-    ledc_update_duty(PWM_MODE, pwm_channel->channel);
+    ledc_set_duty(PWM_MODE, ledc_channel[pwm_channel].channel, ledc_channel[pwm_channel].duty);
+    ledc_update_duty(PWM_MODE, ledc_channel[pwm_channel].channel);
 
 /*
  *  All done, 
@@ -101,13 +109,15 @@ void pwm_init
  ***************************************************************************/
 void pwm_set
 (
-    ledc_channel_t channel,   // Channel being operated on
-    int percent               // New duty cycle percentage
+    unsigned int pwm_channel,   // Channel being operated on
+    unsigned int percent        // New duty cycle percentage
 )
 {
-    // Set duty cycle
-    ledc_set_duty(PWM_MODE, channel, percent);
+    unsigned int scaled;
+
+    scaled = (1<<13) * percent / 100;
+    ledc_set_duty(PWM_MODE, ledc_channel[pwm_channel].channel, scaled);
 
     // Update duty to apply the new value
-    ledc_update_duty(PWM_MODE, channel);
+    ledc_update_duty(PWM_MODE, ledc_channel[pwm_channel].channel);
 }

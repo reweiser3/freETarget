@@ -111,17 +111,15 @@ typedef struct I2C_struct  {
 
 typedef struct PWM_struct  {
     gpio_type_t     type;                               // What type of structure am I
+    int             pwm_channel;                        // PWM chanel assigned to this PWM
     int             gpio_number;                        // Number associated with PWM
-    int             initial_value;                      // Starting value (percent)
 } PWM_struct_t;
 
 typedef struct PCNT_struct  {
     gpio_type_t     type;                                // What type of structure am I
-    int             pcnt_control;                        // Number associated with PCNT control
-    int             pcnt_signal;                         // Number associated with PCNT signal
-    int             pcnt_low;                            // Low limit
-    int             pcnt_high;                           // Hight limit
     int             pcnt_unit;                           // What unit to use
+    int             pcnt_control;                        // GPIO associated with PCNT control
+    int             pcnt_signal;                         // GPIO associated with PCNT signal
 } PCNT_struct_t;
 
 typedef struct gpio_struct  {

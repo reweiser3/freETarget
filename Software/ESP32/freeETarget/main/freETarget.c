@@ -393,25 +393,25 @@ unsigned int arm(void)
   {
     printf("\r\n{ \"Fault\": \"NORTH\" }");
     set_LED(LED_NORTH_FAILED);           // Fault code North
-    delay(ONE_SECOND);
+    vTaskDelay(ONE_SECOND);
   }
   if ( sensor_status & TRIP_EAST  )
   {
     printf("\r\n{ \"Fault\": \"EAST\" }");
     set_LED(LED_EAST_FAILED);           // Fault code East
-    delay(ONE_SECOND);
+    vTaskDelay(ONE_SECOND);
   }
   if ( sensor_status & TRIP_SOUTH )
   {
     printf("\n\r{ \"Fault\": \"SOUTH\" }");
     set_LED(LED_SOUTH_FAILED);         // Fault code South
-    delay(ONE_SECOND);
+    vTaskDelay(ONE_SECOND);
   }
   if ( sensor_status & TRIP_WEST )
   {
     printf("\r\n{ \"Fault\": \"WEST\" }");
     set_LED(LED_WEST_FAILED);         // Fault code West
-    delay(ONE_SECOND);
+    vTaskDelay(ONE_SECOND);
   }
 
 /*
@@ -551,7 +551,7 @@ unsigned int reduce(void)
     {
       if ( (json_rapid_enable == 0) && (json_tabata_enable = 0))// If in a regular session, hold off for the follow through time
       {
-        delay(ONE_SECOND * json_follow_through);
+        vTaskDelay(ONE_SECOND * json_follow_through);
       }
       send_score(&record[last_shot]);
       rapid_red(0);
@@ -941,13 +941,13 @@ void rapid_enable
         random_wait = esp_random() % (json_rapid_wait % 100);     // Use bottom two digits for the time
         sprintf(str, "\r\n{\"RAPID_WAIT\":%d}", random_wait);
         serial_to_all(str, ALL);
-        delay(random_wait * ONE_SECOND);
+        vTaskDelay(random_wait * ONE_SECOND);
       }
       else
       {
         sprintf(str, "\r\n{\"RAPID_WAIT\":%d}", json_rapid_wait); // Use this time 
         serial_to_all(str, ALL);
-        delay(json_rapid_wait * ONE_SECOND);
+        vTaskDelay(json_rapid_wait * ONE_SECOND);
       }
     }
     state_timer = (long)json_rapid_time * 1000L;                  // Duration of the event in ms
@@ -1011,10 +1011,10 @@ void bye(unsigned int x)
  * Say Good Night Gracie!
  */
   serial_to_all("{\"GOOD_BYE\":0}", ALL);
-  delay(ONE_SECOND);
+  vTaskDelay(ONE_SECOND);
   tabata_enable(false);             // Turn off any automatic cycles 
   rapid_enable(false);
-  set_LED_PWM(LED_PWM_OFF);         // Going to sleep 
+  set_LED_PWM(0);                   // Going to sleep 
   
 /*
  * Loop waiting for something to happen

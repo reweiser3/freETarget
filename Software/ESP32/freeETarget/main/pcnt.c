@@ -56,49 +56,48 @@ static pcnt_channel_handle_t       pcnt_chan_b[8];
  **************************************************************************/
 void pcnt_init
 (
-    PCNT_struct_t*  pcnt       // pcnt Control
+    int  unit,                           // What unit to use
+    int  control,                        // GPIO associated with PCNT control
+    int  signal                          // GPIO associated with PCNT signal
 )
 {
-    int this_unit;
-    
 /*
  * Setup the unit
  */
-    this_unit = pcnt->pcnt_unit; 
-    unit_config[this_unit].low_limit = -32767;
-    unit_config[this_unit].high_limit = 32767;
-    pcnt_unit[this_unit] = NULL;
-    pcnt_new_unit(&unit_config[this_unit], &pcnt_unit[this_unit]);
+    unit_config[unit].low_limit  = -0x7fff;
+    unit_config[unit].high_limit = 0x7fff;
+    pcnt_unit[unit] = NULL;
+    pcnt_new_unit(&unit_config[unit], &pcnt_unit[unit]);
 
 /*
  *  Setup the glitch filter
  */
-    filter_config[this_unit].max_glitch_ns = 10;
-    pcnt_unit_set_glitch_filter(pcnt_unit[this_unit], &filter_config[this_unit]);
+    filter_config[unit].max_glitch_ns = 10;
+    pcnt_unit_set_glitch_filter(pcnt_unit[unit], &filter_config[unit]);
 
 /*
  *  Setup the channel.  Only Channel A is used.  B is left idle
  */
-    pcnt_chan_a[this_unit] = NULL;
-    chan_a_config[this_unit].edge_gpio_num = pcnt->pcnt_signal;     // Counter
-    chan_a_config[this_unit].level_gpio_num = pcnt->pcnt_control;   // Enable 
-    pcnt_new_channel(pcnt_unit[this_unit], &chan_a_config[this_unit], &pcnt_chan_a[this_unit]);
+    pcnt_chan_a[unit] = NULL;
+    chan_a_config[unit].edge_gpio_num = signal;     // Counter
+    chan_a_config[unit].level_gpio_num = control;   // Enable 
+    pcnt_new_channel(pcnt_unit[unit], &chan_a_config[unit], &pcnt_chan_a[unit]);
 
-    pcnt_chan_b[this_unit] = NULL;
-    chan_b_config[this_unit].edge_gpio_num = pcnt->pcnt_signal;
-    chan_b_config[this_unit].level_gpio_num = pcnt->pcnt_control;
-    pcnt_new_channel(pcnt_unit[this_unit], &chan_b_config[this_unit], &pcnt_chan_b[this_unit]);
+    pcnt_chan_b[unit] = NULL;
+    chan_b_config[unit].edge_gpio_num = signal;
+    chan_b_config[unit].level_gpio_num = control;
+    pcnt_new_channel(pcnt_unit[unit], &chan_b_config[unit], &pcnt_chan_b[unit]);
 
 /*
  *  Setup the control.  Count only when the control is HIGH.
  */
 //                                Channel                       Rising Edge                        Falling Edge
-    pcnt_channel_set_edge_action( pcnt_chan_a[this_unit], PCNT_CHANNEL_EDGE_ACTION_INCREASE, PCNT_CHANNEL_EDGE_ACTION_HOLD);    // Counter
+    pcnt_channel_set_edge_action( pcnt_chan_a[unit], PCNT_CHANNEL_EDGE_ACTION_INCREASE, PCNT_CHANNEL_EDGE_ACTION_HOLD);    // Counter
 //                                Channel                        When High                          When Low
-    pcnt_channel_set_level_action(pcnt_chan_a[this_unit], PCNT_CHANNEL_LEVEL_ACTION_KEEP, PCNT_CHANNEL_LEVEL_ACTION_HOLD);      // Control
+    pcnt_channel_set_level_action(pcnt_chan_a[unit], PCNT_CHANNEL_LEVEL_ACTION_KEEP, PCNT_CHANNEL_LEVEL_ACTION_HOLD);      // Control
 //  Not Used
-    pcnt_channel_set_edge_action( pcnt_chan_b[this_unit], PCNT_CHANNEL_EDGE_ACTION_HOLD,  PCNT_CHANNEL_EDGE_ACTION_HOLD);       // Not Used
-    pcnt_channel_set_level_action(pcnt_chan_b[this_unit], PCNT_CHANNEL_LEVEL_ACTION_HOLD, PCNT_CHANNEL_LEVEL_ACTION_HOLD);      // Not Used
+    pcnt_channel_set_edge_action( pcnt_chan_b[unit], PCNT_CHANNEL_EDGE_ACTION_HOLD,  PCNT_CHANNEL_EDGE_ACTION_HOLD);       // Not Used
+    pcnt_channel_set_level_action(pcnt_chan_b[unit], PCNT_CHANNEL_LEVEL_ACTION_HOLD, PCNT_CHANNEL_LEVEL_ACTION_HOLD);      // Not Used
 
 /*
  *  All done, return
