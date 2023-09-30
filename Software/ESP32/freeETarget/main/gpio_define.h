@@ -81,8 +81,7 @@ typedef enum gpio_type {
     PWM_OUT,                                           // GPIO is used as a PWM port
     I2C_PORT,                                          // GPIO is used as a i2c port
     PCNT,                                              // GPIO is used as a Pulse Counter
-    LED_STRIP                                          // GPIO is used to drives a LED strip 
-
+    LED_STRIP                                          // GPIO is used to drives a LED strip (status LEDs) 
 } gpio_type_t;
 
 typedef struct DIO_struct  {
@@ -122,14 +121,17 @@ typedef struct PCNT_struct  {
     int             pcnt_signal;                         // GPIO associated with PCNT signal
 } PCNT_struct_t;
 
+typedef struct LED_strip_struct {
+    gpio_type_t     type;                                // What type of structure am I
+    int             gpio_number;                         // What unit to use
+    int             led_qty;                             // How many LEDs are in the strip
+} LED_strip_struct_t;
+
 typedef struct gpio_struct  {
-    char* gpio_name;                                     // GPIO name
-    int   gpio_number;                                   // Number associated with GPIO
-    void* gpio_uses;                                     // Pointer to IO specific structure
+    char*           gpio_name;                           // GPIO name
+    int             gpio_number;                         // Number associated with GPIO
+    void*           gpio_uses;                           // Pointer to IO specific structure
 } gpio_struct_t;
 
 extern gpio_struct_t gpio_table[];                      // List of available devices
-extern led_strip_config_t        led_strip_config;      // 3 LEDs on the board
-extern led_strip_rmt_config_t    rmt_config;            // 10MHz
-extern led_strip_handle_t        led_strip;
 #endif

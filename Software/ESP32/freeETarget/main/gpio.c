@@ -33,22 +33,35 @@
 #include "pcnt.h"
 #include "pwm.h"
 #include "gpio_define.h"
+#include <string.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_log.h"
+#include "driver/rmt_tx.h"
+#include "../managed_components/espressif__led_strip/src/led_strip_rmt_encoder.h"
 
+/*
+ * Function prototypes
+ */
 static void sw_state(unsigned int action);// Do something with the switches
 static void send_fake_score(void);        // Send a fake score to the PC
 
-static unsigned int dip_mask;             // Used if the MFS2 uses the DIP_0 or DIP_3
-static long power_save;
-
-typedef struct led_struct {
+/* 
+ *  Typedefs
+ */
+typedef struct status_struct {
   int red;                                // Bits to send to the LED
   int green;
   int blue;
   int blink;                              // TRUE if blinking enabled
-  }  led_struct_t;
+  }  status_struct_t;
 
-led_struct_t leds[3];
-
+/* 
+ * Variables
+ */
+status_struct_t status[3];
+static unsigned int dip_mask;             // Used if the MFS2 uses the DIP_0 or DIP_3
+static long power_save;
 
 /*-----------------------------------------------------
  * 
@@ -184,11 +197,54 @@ unsigned int read_DIP(void)
   return return_value;
 }  
 
+
 /*-----------------------------------------------------
  * 
- * function: set_LED
+ * function: init_status_LED
  * 
- * brief:    Set the state of all the LEDs
+ * brief:    Initialize the LED driver
+ * 
+ * return:   None
+ * 
+ *-----------------------------------------------------
+ *
+ * The status LED driver makes use of the remote control
+ * transmitter supported in the ESP32
+ * 
+ *-----------------------------------------------------*/
+#define RMT_LED_STRIP_RESOLUTION_HZ 10000000 // 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
+
+rmt_channel_handle_t led_chan = NULL;
+rmt_tx_channel_config_t tx_chan_config = {
+    .clk_src           = RMT_CLK_SRC_DEFAULT, // select source clock
+    .mem_block_symbols = 64, // increase the block size can make the LED less flickering
+    .resolution_hz     = RMT_LED_STRIP_RESOLUTION_HZ,
+    .trans_queue_depth = 1, // set the number of transactions that can be pending in the background
+};
+
+rmt_encoder_handle_t led_encoder = NULL;
+led_strip_encoder_config_t encoder_config = {
+        .resolution = RMT_LED_STRIP_RESOLUTION_HZ
+};
+
+void status_LED_init
+(
+  unsigned int led_gpio   // What GPIO is used for output
+)
+{
+  printf("\r\nGPIO: %d\r\n", led_gpio);
+  tx_chan_config.gpio_num = led_gpio;
+  ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config, &led_chan));
+  ESP_ERROR_CHECK(rmt_new_led_strip_encoder(&encoder_config, &led_encoder));
+  ESP_ERROR_CHECK(rmt_enable(led_chan));
+  return;
+}
+
+/*-----------------------------------------------------
+ * 
+ * function: set_status_LED
+ * 
+ * brief:    Set the state of all the status LEDs
  * 
  * return:   None
  * 
@@ -200,55 +256,59 @@ unsigned int read_DIP(void)
  * '-' - Leave the LED alone
  *  
  *-----------------------------------------------------*/
-#define RED   0xFF0000
-#define GREEN 0x00FF00
-#define BLUE  0x0000FF
-#define WHITE 0xFFFFFF
-#define OFF   0x000000 
 
-void set_LED
+rmt_transmit_config_t tx_config = {
+        .loop_count = 0, // no transfer loop
+    };
+
+  
+unsigned char led_strip_pixels[3 * 3];
+
+void set_status_LED
   (
     char* new_state       // New LED colours
   )
 { 
   int i;
-return;
-  i=0;
 
+/*
+ * Decode the calling string into a list of pixels
+ */
+  i=0;
   while (*new_state != 0)
   {
     if ( *new_state != '-' )
     {
-      leds[i].blink = 0;
-      leds[i].red = 0;
-      leds[i].green = 0;
-      leds[i].blue = 0;          // Turn off the LED
+      status[i].blink = 0;
+      status[i].red = 0;
+      status[i].green = 0;
+      status[i].blue = 0;          // Turn off the LED
       switch (*new_state)
       {
         case 'r':               // RED LED
-          leds[i].blink = 1;    // Turn on Blinking
+          status[i].blink = 1;    // Turn on Blinking
         case 'R':
-          leds[i].red   = 0xff;
+          status[i].red   = 0xff;
           break;
 
         case 'g':               // GREEN LED
-          leds[i].blink = 1;    // Turn on Blinking
+          status[i].blink = 1;    // Turn on Blinking
         case 'G':
-          leds[i].green = 0xff;
+          status[i].green = 0xff;
           break;
 
         case 'b':
-          leds[i].blink = 1;
+          status[i].blink = 1;
         case 'B':
-          leds[i].blue  = 0xff;
+          status[i].blue  = 0xff;
           break;
 
         case 'w':
-          leds[i].blink = 1;
+          status[i].blink = 1;
         case 'W':
-          leds[i].red   = 0xff;
-          leds[i].green = 0xff;
-          leds[i].blue   = 0xff;
+          status[i].red   = 0xff;
+          status[i].green = 0xff;
+          status[i].blue   = 0xff;
           break;
 
         case ' ':             // The LEDs are already off
@@ -262,17 +322,22 @@ return;
 /*
  *  Send out the new settings
  */
-  for (i=0; i != sizeof(leds) / sizeof(led_struct_t); i++)
+  for (i=0; i < 3; i++)
   {
-    led_strip_set_pixel(led_strip, i, leds[i].red, leds[i].green, leds[i].blue);
+    led_strip_pixels[i * 3 + 0] = status[i].green;
+    led_strip_pixels[i * 3 + 1] = status[i].blue;
+    led_strip_pixels[i * 3 + 2] = status[i].red;
   }
-  led_strip_refresh(led_strip);
+    
+  ESP_ERROR_CHECK(rmt_transmit(led_chan, led_encoder, led_strip_pixels, sizeof(led_strip_pixels), &tx_config));
 
 /*
- *  All done, return
+ * All done, return
  */
-  return;  
+  return;
+
 }
+
 
 /*-----------------------------------------------------
  * 
@@ -618,19 +683,19 @@ void multifunction_switch(void)
   {
     if ( DIP_SW_A )
     {
-      set_LED("--G");
+      set_status_LED("--G");
     }
     else
     {
-      set_LED("-- ");
+      set_status_LED("-- ");
     }
     if ( DIP_SW_B )
     {
-      set_LED("-G-");
+      set_status_LED("-G-");
     }
     else
     {
-      set_LED("- -");
+      set_status_LED("- -");
     }
   }
   timer_delete(&wdt);
@@ -676,7 +741,7 @@ void multifunction_switch(void)
  */
   multifunction_wait_open();      // Wait here for the switches to be open
 
-  set_LED(LED_READY);
+  set_status_LED(LED_READY);
   return;
 }
 

@@ -98,7 +98,7 @@ void freeETarget_init(void)
   serial_io_init();
   POST_version();                         // Show the version string on all ports
   gpio_init();  
- // set_LED(LED_HELLO_WORLD);               // Hello World
+ // set_status_LED(LED_HELLO_WORLD);               // Hello World
   read_nonvol();
   
 /*
@@ -147,7 +147,7 @@ void freeETarget_init(void)
  */ 
   set_LED_PWM(json_LED_PWM);
   POST_LEDs();                            // Cycle the LEDs
-  set_LED(LED_READY);                     // to a client, then the RDY light is steady on
+  set_status_LED(LED_READY);                     // to a client, then the RDY light is steady on
   serial_flush(ALL);                      // Get rid of everything
 #endif
   
@@ -330,7 +330,7 @@ void freeETarget_task (void)
   if ( json_tabata_enable || json_rapid_enable ) // If the Tabata or rapid fire is enabled, 
   {
     set_LED_PWM_now(0);             // Turn off the LEDs
-    set_LED(LED_TABATA_ON);         // Just turn on X
+    set_status_LED(LED_TABATA_ON);         // Just turn on X
     json_rapid_enable = 0;          // Disable the rapid fire
   }                                 // Until the session starts
   else
@@ -392,25 +392,25 @@ unsigned int arm(void)
   if ( sensor_status & TRIP_EAST  )
   {
     printf("\r\n{ \"Fault\": \"NORTH\" }");
-    set_LED(LED_NORTH_FAILED);           // Fault code North
+    set_status_LED(LED_NORTH_FAILED);           // Fault code North
     vTaskDelay(ONE_SECOND);
   }
   if ( sensor_status & TRIP_EAST  )
   {
     printf("\r\n{ \"Fault\": \"EAST\" }");
-    set_LED(LED_EAST_FAILED);           // Fault code East
+    set_status_LED(LED_EAST_FAILED);           // Fault code East
     vTaskDelay(ONE_SECOND);
   }
   if ( sensor_status & TRIP_SOUTH )
   {
     printf("\n\r{ \"Fault\": \"SOUTH\" }");
-    set_LED(LED_SOUTH_FAILED);         // Fault code South
+    set_status_LED(LED_SOUTH_FAILED);         // Fault code South
     vTaskDelay(ONE_SECOND);
   }
   if ( sensor_status & TRIP_WEST )
   {
     printf("\r\n{ \"Fault\": \"WEST\" }");
-    set_LED(LED_WEST_FAILED);         // Fault code West
+    set_status_LED(LED_WEST_FAILED);         // Fault code West
     vTaskDelay(ONE_SECOND);
   }
 
@@ -448,7 +448,7 @@ unsigned int wait(void)
   if ( (json_token == TOKEN_WIFI)         // If the esp01 is not present, or connected
           || ((json_token != TOKEN_WIFI) && (my_ring != TOKEN_UNDEF)) )
   {
-    set_LED(LED_READY);                 // to a client, then the RDY light is steady on
+    set_status_LED(LED_READY);                 // to a client, then the RDY light is steady on
   }
   else
   {
@@ -458,11 +458,11 @@ unsigned int wait(void)
       blink_on_off ^= 1;
       if ( blink_on_off )       // Otherwise blink the RDY light
       {
-        set_LED(LED_READY);
+        set_status_LED(LED_READY);
       }
       else
       {
-        set_LED(LED_READY_OFF);
+        set_status_LED(LED_READY_OFF);
       }
     }
   }
@@ -572,7 +572,7 @@ unsigned int reduce(void)
       {
         printf("Shot miss...\r\n");
       }
-      set_LED(LED_MISS);
+      set_status_LED(LED_MISS);
       send_miss(&record[last_shot]);
       rapid_green(0);
       rapid_red(1);                                             // Show a miss

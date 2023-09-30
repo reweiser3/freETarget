@@ -17,7 +17,7 @@ void init_gpio(void);                                     // Initialize the GPIO
 void arm_timers(void);                                    // Make the board ready
 void clear_running(void);                                 // Clear the run flip flop 
 unsigned int is_running(void);                            // Return a bit mask of running sensors 
-void set_LED(char* new_state);                            // Manage the LEDs
+void set_status_LED(char* new_state);                            // Manage the LEDs
 unsigned int read_DIP(void);                              // Read the DIP switch register
 unsigned int read_counter(unsigned int direction);
 void stop_timers(void);                                   // Turn off the counter registers
@@ -39,6 +39,7 @@ void paper_on_off(bool_t on);                             // Turn the motor on o
 void rapid_green(unsigned int state);                     // Drive the GREEN light
 void rapid_red(unsigned int state);                       // Drive the RED light
 void multifunction_display(void);                         // Display the MFS settings as text
+void status_LED_init(unsigned int gpio_number);           // Initialize the RMT driver 
 
 /*
  *  Port Definitions

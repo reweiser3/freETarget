@@ -145,9 +145,8 @@ PCNT_struct_t pcnt7 = { .type=PCNT, .pcnt_unit = 7, .pcnt_signal = GPIO_NUM_8, .
 /*
  *  LED Strip
  */
-led_strip_config_t        led_strip_config = {  .max_leds = 3 };           // 3 LEDs on the board
-led_strip_rmt_config_t    rmt_config       = {.resolution_hz = 10 * 1000 * 1000}; // 10MHz
-led_strip_handle_t        led_strip;
+LED_strip_struct_t  led_strip_config = {.type=LED_STRIP};           // 3 LEDs on the board
+
 
 /*
  *  GPIO Usage
@@ -281,8 +280,8 @@ void gpio_init(void)
                     break;             
 
                 case LED_STRIP: 
-                    led_strip_config.strip_gpio_num = gpio_table[i].gpio_number;
-                    led_strip_new_rmt_device(&led_strip_config, &rmt_config, &led_strip);
+                    status_LED_init(gpio_table[i].gpio_number);
+                    break;
                 
             }
         }

@@ -556,7 +556,7 @@ void send_score
       }
       timer_delete(&wdt);                       // Don't need it any more
     }
-    set_LED(LED_WIFI_SEND);
+    set_status_LED(LED_WIFI_SEND);
   }
   
  /* 
@@ -645,7 +645,7 @@ void send_score
   if ( json_token != TOKEN_WIFI )
   {
     token_give();                            // Give up the token ring
-    set_LED(LED_READY);
+    set_status_LED(LED_READY);
   }
   return;
 }
@@ -691,7 +691,7 @@ void send_miss
       { 
         token_poll();
       }
-      set_LED(LED_WIFI_SEND);
+      set_status_LED(LED_WIFI_SEND);
     }
   }
   
@@ -742,7 +742,7 @@ void send_miss
  * All done, go home
  */
   token_give();
-  set_LED(LED_READY);
+  set_status_LED(LED_READY);
   return;
 }
 

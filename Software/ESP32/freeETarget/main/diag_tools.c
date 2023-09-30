@@ -64,7 +64,6 @@ void self_test
 {
   int i;
 
-  
 /*
  * Figure out what test to run
  */
@@ -124,8 +123,30 @@ void self_test
       }
       printf(" done\r\n");
       break;
+
+/*
+ * Test 4, Set status LEDs
+ */
+    case T_STATUS:
+      printf("\r\nSending out status");
+      while(1)
+      {
+      set_status_LED("R--");
+      vTaskDelay(ONE_SECOND);
+      
+      set_status_LED("RG-");
+      vTaskDelay(ONE_SECOND);
+
+      set_status_LED("RGB");
+      vTaskDelay(ONE_SECOND);
+      
+      set_status_LED("WWW");
+      vTaskDelay(ONE_SECOND);
+      }
+      printf(" done\r\n");
+      break;
   }
- 
+
  /* 
   *  All done, return;
   */
@@ -179,13 +200,13 @@ void self_test
     printf("POST LEDs");
   }
 
-  set_LED("R  ");
+  set_status_LED("R  ");
   vTaskDelay(ONE_SECOND/4);
-  set_LED(" R ");
+  set_status_LED(" R ");
   vTaskDelay(ONE_SECOND/4);
-  set_LED("  R");
+  set_status_LED("  R");
   vTaskDelay(ONE_SECOND/4);
-  set_LED("G  ");
+  set_status_LED("G  ");
   
   return;
  }
@@ -326,7 +347,7 @@ void self_test
 /*
  * Got here, the test completed successfully
  */
-  set_LED("GGG");
+  set_status_LED("GGG");
   return test_passed;
 }
   
@@ -350,7 +371,7 @@ void self_test
    }
    
    set_trip_point(0);                // Show the trip point once (20 cycles used for blinking values)
-   set_LED(LED_RESET);              // Show test test Ending
+   set_status_LED(LED_RESET);              // Show test test Ending
    return;
  }
  

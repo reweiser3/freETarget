@@ -26,6 +26,7 @@ bool_t  do_dlt(unsigned int level);                     // Diagnostics Log and T
 #define T_DIGITAL      1       // Digital test
 #define T_PAPER        2       // Advance paper backer
 #define T_LED          3       // Test the LED PWM
+#define T_STATUS       4       // Send colours across the status LEDs
 
 #define T_TRIGGER      2       // Test microphone trigger
 #define T_CLOCK        3       // Trigger clock internally
