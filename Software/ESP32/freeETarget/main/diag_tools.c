@@ -31,6 +31,7 @@
 #include "timer.h"
 #include "esp_timer.h"
 #include "dac.h"
+#include "pwm.h"
 
 const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 
@@ -61,7 +62,7 @@ void self_test
   unsigned int test                 // What test to execute
 )
 {
-  unsigned int i;
+  int i;
 
   
 /*
@@ -113,8 +114,13 @@ void self_test
       printf("\r\nCycling the LED");
       for (i=0; i <= 100; i += 5)
       {
-        set_LED_PWM(i);       
-        vTaskDelay(ONE_SECOND/5);
+        pwm_set(LED_PWM, i);       
+        vTaskDelay(ONE_SECOND/10);
+      }
+      for (i=100; i >= 0; i -= 5)
+      {
+        pwm_set(LED_PWM,i);       
+        vTaskDelay(ONE_SECOND/10);
       }
       printf(" done\r\n");
       break;

@@ -13,16 +13,10 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"0.0.1 September 26, 2023, 2023\""
+#define SOFTWARE_VERSION "\"0.0.3 September 29, 2023\""
 
-#define REV_100    100
-#define REV_210    210
-#define REV_220    220
-#define REV_290    290
-#define REV_300    300   // Third Generation
-#define REV_310    310   // Onboard Hi Pass Filter
-#define REV_320    320   // No USB adapter
-#define REV_400    400   // ESP32
+
+#define REV_500    500   // ESP32
 
 #define INIT_DONE       0xabcd                    // Initialization complete signature
 #ifndef true

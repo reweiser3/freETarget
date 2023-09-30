@@ -57,7 +57,7 @@ void read_nonvol(void)
 
   if ( DLT(DLT_CRITICAL) )
   {
-    printf("read_nonvol()\r\n");
+    printf("read_nonvol()");
   }
 
  /*

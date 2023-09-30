@@ -126,8 +126,6 @@ void multifunction_display(void);                         // Display the MFS set
 #define TRIP_SOUTH   0x04
 #define TRIP_WEST    0x08
 
-
-
 #define FACE_SENSOR  19
 
 #define SPARE_1      22

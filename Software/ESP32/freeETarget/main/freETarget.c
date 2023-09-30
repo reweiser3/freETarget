@@ -153,7 +153,7 @@ void freeETarget_init(void)
   
   if ( DLT(DLT_CRITICAL) )
   {
-    printf("Initialization complete\r\n");
+    printf("Initialization complete");
   }
 
 /*
@@ -1092,10 +1092,8 @@ static void send_keep_alive(void)
   char str[32];
   static int keep_alive_count = 0;
 
-//  if ( esp01_connected() )
-  {
-    sprintf(str, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);
-    serial_to_all(str, TCPIP);
-  }
+  sprintf(str, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);
+  serial_to_all(str, TCPIP);
+  
   return;
 }

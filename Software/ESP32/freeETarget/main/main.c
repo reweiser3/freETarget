@@ -105,8 +105,7 @@ void app_main(void)
 /*
  * Everything is ready, start the threads
  */
-    printf("\r\nBack in main()\r\n");
 //   xTaskCreate(tcp_server_task,  "tcp_server", 4096, (void*)AF_INET, 5, NULL);
-   xTaskCreate(freeETarget_json, "json_task",  4096, NULL, 5, NULL);
-   xTaskCreate(freeETarget_timer, "timer_task",  4096, NULL, 5, NULL);
+   xTaskCreate(freeETarget_json,  "json_task",  4096, NULL, 5, NULL);
+   xTaskCreate(freeETarget_timer, "timer_task", 4096, NULL, 5, NULL);
 }

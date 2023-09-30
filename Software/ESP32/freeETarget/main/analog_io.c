@@ -141,8 +141,8 @@ unsigned int read_reference(void)
  *  undefined (< 100) then the last 'good' revision is returned
  *  
  *--------------------------------------------------------------*/
-//                                       0      1  2  3     4     5  6      7    8  9   A     B      C   D   E   F
-const static unsigned int version[] = {REV_210, 1, 2, 3, REV_320, 5, 6, REV_220, 8, 9, 10, REV_310, 12, 13, 14, 15};
+//                                       0      1  2  3  4  5  6  7  8  9   A   B   C   D   E   F
+const static unsigned int version[] = {REV_500, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
   
 unsigned int revision(void)
 {
@@ -153,19 +153,6 @@ unsigned int revision(void)
  */
   revision =   version[0]; // analogRead(ANALOG_VERSION) * 16 / 1024];
 
-/*
- * Fake the revision if it is undefined
- */
-  if ( revision <= REV_100 )
-  {
-    revision = REV_300;
-  }
-
-  if ( (revision == REV_310) && (json_serial_number > 160) )
-  {
-    revision = REV_320;
-  }
-  
 /*
  * Nothing more to do, return the board revision
  */

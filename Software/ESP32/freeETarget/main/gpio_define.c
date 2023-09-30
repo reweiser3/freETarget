@@ -266,7 +266,7 @@ void gpio_init(void)
 
                 case PWM_OUT:
                     pwm_init(((PWM_struct_t*)(gpio_table[i].gpio_uses))->pwm_channel,\
-                       ((PWM_struct_t*)(gpio_table[i].gpio_uses))->pwm_channel);
+                       gpio_table[i].gpio_number);
                     break;
 
                 case I2C_PORT:

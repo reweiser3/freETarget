@@ -31,14 +31,6 @@
 static int pwm_ready = 0;       // Set to 1 when the hardware is programmed
 
 
-ledc_timer_config_t ledc_timer = {
-    .duty_resolution = LEDC_TIMER_13_BIT, // resolution of PWM duty
-    .freq_hz = 5000,                      // frequency of PWM signal
-    .speed_mode = LEDC_LOW_SPEED_MODE,    // timer mode
-    .timer_num = LEDC_TIMER_0,            // timer index
-    .clk_cfg = LEDC_AUTO_CLK,             // Auto select the source clock
-};
-
 ledc_channel_config_t ledc_channel[4];
 
 
@@ -55,6 +47,15 @@ ledc_channel_config_t ledc_channel[4];
  * The PWM registers are updated for the new duty cycle
  * 
  ***************************************************************************/
+
+ledc_timer_config_t ledc_timer = {
+    .duty_resolution = LEDC_TIMER_13_BIT, // resolution of PWM duty
+    .freq_hz = 5000,                      // frequency of PWM signal
+    .speed_mode = LEDC_LOW_SPEED_MODE,    // timer mode
+    .timer_num = LEDC_TIMER_0,            // timer index
+    .clk_cfg = LEDC_AUTO_CLK,             // Auto select the source clock
+};
+
 void pwm_init
 (
     unsigned int pwm_channel,           // PWM channel we are using
