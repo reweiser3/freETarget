@@ -74,13 +74,12 @@ esp_err_t i2c_init
 
 esp_err_t i2c_read
 (
-    uint8_t  device_addr,           // I2C Dewvice Address
-    uint16_t  reg_addr,              // I2C Register address
+    uint8_t  device_addr,           // I2C Device Address
     uint8_t* data,                  // Buffer to be sent
     size_t   length                 // Number of bytes to be sent
 )
 {
-    return i2c_master_write_read_device(I2C_MASTER_NUM, device_addr, &reg_addr, 2, data, length, I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
+    return i2c_master_read_from_device(I2C_MASTER_NUM, device_addr, data, length, I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
 }
 
 
@@ -101,18 +100,10 @@ esp_err_t i2c_write
 (
     uint8_t device_addr,            // Device Address
     uint8_t* data,                  // Data to write
-     size_t length                  // Number of bytes to write
+    size_t length                  // Number of bytes to write
 )
 {
-    int i;
-    uint8_t write_buf[128];
-    
-    for ( i =0; i != length; i++)
-    {
-        write_buf[i] = data[i];
-    }
-
-    return i2c_master_write_to_device(I2C_MASTER_NUM, device_addr, write_buf, sizeof(write_buf), I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
+    return i2c_master_write_to_device(I2C_MASTER_NUM, device_addr, data, length, I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
 }
 
 

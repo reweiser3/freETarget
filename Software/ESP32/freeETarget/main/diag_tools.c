@@ -63,7 +63,8 @@ void self_test
   unsigned int test                 // What test to execute
 )
 {
-  int i;
+  int   i;
+  float x;
 
 /*
  * Figure out what test to run
@@ -80,8 +81,8 @@ void self_test
       printf("\r\n 3 - LED brightness test");
       printf("\r\n 4 - Status LED driver");
       printf("\r\n 5 - Temperaturen sendor test");
+      printf("\r\n 6 - DAC test");
 
-      printf("\r\n 6 - WiFi test");
       printf("\r\n 7 - Count on the LEDs");
       printf("\r\n");
       break;
@@ -148,8 +149,25 @@ void self_test
  * Test 5, Temperature
  */
     case T_TEMPERATURE:
-    printf("\r\nTemperature: %f", temperature_C());
-    printf("\r\nHumidity: %f\r\n", humidity_RH());
+      printf("\r\nTemperature: %f", temperature_C());
+      printf("\r\nHumidity: %f\r\n", humidity_RH());
+      break;
+
+/*
+ * Test 6, V_REF
+ */
+    case T_VREF:
+      printf("\r\nRamping DACs 0 & 1 ");
+      for (i=0; i != 10240; i++)
+      {
+        x = i % 100;
+        set_VRef(0, x);
+        x = 100 * sin(((float)i)/100.0);
+        set_VRef(1, x);
+        vTaskDelay(ONE_SECOND/100);
+      }
+      printf("done");
+      break;
   }
 
  /* 

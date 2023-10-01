@@ -28,6 +28,7 @@ bool_t  do_dlt(unsigned int level);                     // Diagnostics Log and T
 #define T_LED          3       // Test the LED PWM
 #define T_STATUS       4       // Send colours across the status LEDs
 #define T_TEMPERATURE  5       // Read temperature
+#define T_VREF         6       // Cycle the VREF outputs 
 
 #define T_TRIGGER      2       // Test microphone trigger
 #define T_CLOCK        3       // Trigger clock internally

@@ -189,8 +189,10 @@ double temperature_C(void)
 /*
  * Read in the temperature and humidity together
  */
-  i2c_read( TEMP_IC, TEMP_REG, &temp_buffer, sizeof(temp_buffer) );
-
+  temp_buffer[0] = 0x24;        // Trigger read on demand
+  temp_buffer[1] = 0x00;
+  i2c_write( TEMP_IC, &temp_buffer, 2 );
+  i2c_read( TEMP_IC,  &temp_buffer, 5);
 
 /*
  *  Return the temperature in C
@@ -208,7 +210,7 @@ double temperature_C(void)
 
 /*----------------------------------------------------------------
  * 
- * function: humidigy_RH()
+ * function: humidity_RH()
  * 
  * brief: Return the previoudly read humidity
  * 
@@ -250,75 +252,44 @@ double humidity_RH(void)
   return;
 }
 
+
 /*----------------------------------------------------------------
  * 
- * funciton: compute_vset_PWM()
+ * function: set_vref()
  * 
- * brief: Use a control loop to figure out the PWM setting
+ * brief: Set the refererence voltage for the comparitor
  * 
  *----------------------------------------------------------------
  *
- * The value is previously set when the VREF value is set by the
- * JSON driver.
- *
+ * See Microchip documentation for MCP4728
+ * https://ww1.microchip.com/downloads/en/DeviceDoc/22187E.pdf
+ * Figure 5-8
+ * 
  *--------------------------------------------------------------*/
- void compute_vset_PWM
-  (
-  double vset                      // Desired control voltage
-  )
+
+void set_VRef
+(
+  unsigned int channel,         // Channel 0-3 to control
+  float        percent          // Percent of full scale
+)
 {
-  int vref_raw;                     // Raw VREF value read from ADC
-  int vref_desired;                 //
-  int vref_error;                   // Difference between desired and raw
-  unsigned int pwm;                 // Value written to the PWM
-  int cycle_count;
-  char s[128];
-  char svref[15], svset[15];
-/*
- * Compute the initial values
- */
-  vref_desired = (int)(json_vset * 1023.0 / 5.0);// Scaled desired VREF
-  pwm = json_vset_PWM;              // Starting value
-  set_vset_PWM(json_vset_PWM);
-  
-/*
- * Loop until the error converges
- */
-  cycle_count = 0;
-  while ( 1 )
-  {
-    vref_raw = 0; // analogRead(V_REFERENCE);
-    vref_error = vref_desired - vref_raw;
-    pwm -= vref_error/4;
-    if ( pwm > 255 )
-    {
-      pwm = 255;
-    }
-    sprintf(s, "\r\nDesired: %s VREF: %s as read %d wanted %d error %d PWM %d", svset, svref, vref_raw, vref_desired, vref_error, pwm);
-    serial_to_all(s, ALL);
-    
-    if ( abs(vref_error) <= 2 )
-    {
-      break;
-    }
+  unsigned char temp_buffer[10];
+  int raw;
 
-    set_vset_PWM(pwm);
-    vTaskDelay(2*ONE_SECOND);
-    cycle_count++;
-    if ( cycle_count > 100 )
-    {
-      sprintf(s, "\r\nvset_PWM exceeded.  Set value using CAL function and try again");
-      serial_to_all(s, ALL);
-      return;
-    }
-  }
+/*
+ * Write to the selected DAC
+ */
+  temp_buffer[0] = 0xC0;                          // Single write
+  temp_buffer[1] = 0x40 + (channel << 1) + 0x00;  // Multi write + channel + LDAC = 0 (immediate)
+  raw = (int)(2047.0 * percent / 100.0);          // Convert percent to 0-2047
+  temp_buffer[2] = 0x80 + 0x00 + 0x00 + (raw >> 8);
+  temp_buffer[3] =                      (raw & 0xff);
+  i2c_write( DAC_IC, &temp_buffer, 4 );
 
- /*
-  * Got the right control value, sa it and exit
-  */
-    serial_to_all("\r\nDone\r\n", ALL);
-    json_vset_PWM = pwm;
-    nvs_set_i32(my_handle, NONVOL_VSET, json_vset_PWM);
-    return;
-} 
- 
+/*
+ *  All done, return
+ */
+
+  return;
+
+}

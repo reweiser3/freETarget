@@ -16,7 +16,7 @@ unsigned int read_reference(void);          // Read the feedback channel
 double temperature_C(void);                 // Temperature in degrees C
 double humidity_RH(void);                   // Relative humidity in %
 unsigned int revision(void);                // Return the board revision
-void compute_vset_PWM(double value);        // Reference voltage control loop
+void set_VRef(unsigned int channel, float percent); // Set the output of the VREF DAC(s)
 
 void set_LED_PWM(int percent);              // Ramp the PWM duty cycle
 void set_LED_PWM_now(unsigned int percent); // Set the PWM duty cycle
@@ -36,9 +36,7 @@ void set_vset_PWM(unsigned int value);      // Value to write to PWM
 
 #define TO_VOLTS(x) ( ((double)(x) * 5.0) / 1024.0 )
 
-#define TEMP_IC      (0x44 << 1)  // TI HDC3022
-#define TEMP_REG     (0x2C0D)
-#define HUMIDITY_REG (0x2C10)
-
+#define TEMP_IC      (0x44 << 1)// TI HDC3022
+#define DAC_IC       (0xC0)     // Microchip HCP4728    
 
 #endif
