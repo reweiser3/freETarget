@@ -32,6 +32,7 @@
 #include "esp_timer.h"
 #include "dac.h"
 #include "pwm.h"
+#include "analog_io.h"
 
 const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 
@@ -77,12 +78,9 @@ void self_test
       printf("\r\n 1 - Digital inputs");
       printf("\r\n 2 - Advance paper backer");
       printf("\r\n 3 - LED brightness test");
+      printf("\r\n 4 - Status LED driver");
+      printf("\r\n 5 - Temperaturen sendor test");
 
-      printf("\r\n 3 - Counter values (internal trigger)");
-
-
-
-      printf("\r\n 5 - Face strike test");
       printf("\r\n 6 - WiFi test");
       printf("\r\n 7 - Count on the LEDs");
       printf("\r\n");
@@ -145,6 +143,13 @@ void self_test
       }
       printf(" done\r\n");
       break;
+
+/*
+ * Test 5, Temperature
+ */
+    case T_TEMPERATURE:
+    printf("\r\nTemperature: %f", temperature_C());
+    printf("\r\nHumidity: %f\r\n", humidity_RH());
   }
 
  /* 

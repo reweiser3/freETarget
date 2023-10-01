@@ -232,7 +232,6 @@ void status_LED_init
   unsigned int led_gpio   // What GPIO is used for output
 )
 {
-  printf("\r\nGPIO: %d\r\n", led_gpio);
   tx_chan_config.gpio_num = led_gpio;
   ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config, &led_chan));
   ESP_ERROR_CHECK(rmt_new_led_strip_encoder(&encoder_config, &led_encoder));
@@ -308,7 +307,7 @@ void set_status_LED
         case 'W':
           status[i].red   = 0xff;
           status[i].green = 0xff;
-          status[i].blue   = 0xff;
+          status[i].blue  = 0xff;
           break;
 
         case ' ':             // The LEDs are already off

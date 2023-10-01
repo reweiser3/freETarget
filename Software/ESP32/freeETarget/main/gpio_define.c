@@ -131,7 +131,7 @@ PWM_struct_t pwm3 = { .pwm_channel = 3, .type = PWM_OUT};
 /*
  *  I2C COntrol.  GPIO explicitly filled in here
  */
-I2C_struct_t i2c = { I2C_PORT, GPIO_NUM_38, GPIO_NUM_39 };
+I2C_struct_t i2c = { I2C_PORT, GPIO_NUM_14, GPIO_NUM_13 };
 
 PCNT_struct_t pcnt0 = { .type=PCNT, .pcnt_unit = 0, .pcnt_signal = GPIO_NUM_8, .pcnt_control = GPIO_NUM_5  };
 PCNT_struct_t pcnt1 = { .type=PCNT, .pcnt_unit = 1, .pcnt_signal = GPIO_NUM_8, .pcnt_control = GPIO_NUM_6  };
@@ -195,8 +195,8 @@ gpio_struct_t gpio_table[] = {
     {"SPARE0",       GPIO_NUM_48, (void*)&dio48},    // SPARE 0
     {"SPARE1",       GPIO_NUM_47, (void*)&dio47},    // Spare 1
     {"SPARE2",       GPIO_NUM_21, (void*)&dio21},    // Spare 2 
-    {"SDA",          GPIO_NUM_38, (void*)&i2c},      // SDA
-    {"SCL",          GPIO_NUM_39, NULL},             // SCL
+    {"SDA",          GPIO_NUM_14, (void*)&i2c},      // SDA
+    {"SCL",          GPIO_NUM_13, NULL},             // SCL
     {0, 0, 0 } 
 };
 

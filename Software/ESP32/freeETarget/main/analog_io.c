@@ -28,6 +28,8 @@
 #include "led_strip_types.h"
 #include "pwm.h"
 #include "gpio_define.h"
+#include "i2c.h"
+#include <stdio.h>
 
 void set_vset_PWM(unsigned int pwm);
 
@@ -159,7 +161,6 @@ unsigned int revision(void)
   return revision;
 }
 
-
 /*----------------------------------------------------------------
  * 
  * function: temperature_C()
@@ -168,59 +169,64 @@ unsigned int revision(void)
  * 
  *----------------------------------------------------------------
  *
- * See TI Documentation for LM75
- * http://www.ti.com/general/docs/suppproductinfo.tsp?distId=10&gotoUrl=http%3A%2F%2Fwww.ti.com%2Flit%2Fgpn%2Flm75b
+ * See TI Documentation for HDC3022
+ * https://www.ti.com/product/HDC3022
  *
- * The output of the LM75 is a signed nine bit number 
- * -55C < temp < 125C
+ * A simple interrogation is used. 
  * 
  *--------------------------------------------------------------*/
- #define RTD_SCALE      (0.5)   // 1/2C / LSB
+#define RTD_SCALE      (0.5)   // 1/2C / LSB
+#define RH_SCALE    (0.5)
+static float  t_c;              // Temperature from sensor
+static float  rh;               // Humidity from sensor
 
 double temperature_C(void)
 {
-  double return_value;
-  int raw;                // Allow for negative temperatures
-
-  raw = 0xffff;
- #if (0)
-
+  int temperature;              // Temperature inside of the packet
+  int humidity;                 // Humidity inside of the packet
+  unsigned char temp_buffer[10];
+  int raw;
 /*
- *  Point to the temperature register
+ * Read in the temperature and humidity together
  */
-  Wire.beginTransmission(TEMP_IC);
-  Wire.write(0);
-  Wire.endTransmission();
+  i2c_read( TEMP_IC, TEMP_REG, &temp_buffer, sizeof(temp_buffer) );
 
-/*
- * Read in the temperature register
- */
-  Wire.requestFrom(TEMP_IC, 2);
-  raw = Wire.read();
-  raw <<= 8;
-  raw += Wire.read();
-  raw >>= 7;
-  
-  if ( raw & 0x0100 )
-    {
-    raw |= 0xFF00;      // Sign extend
-    }
-
-#endif 
 
 /*
  *  Return the temperature in C
  */
-  return_value =  (double)(raw) * RTD_SCALE ;
-  
-#if (SAMPLE_CALCULATIONS )
-  return_value = 23.0;
-#endif
-    
-  return return_value;
+  raw = (temp_buffer[2] << 8) + temp_buffer[3];
+  printf(" t_c raw  %d", raw);
+  t_c =  (double)(raw) * RTD_SCALE;
+  raw = (temp_buffer[4] << 8) + temp_buffer[5];
+  printf(" rh raw  %d", raw);
+  rh  =  (double)(raw) * RTD_SCALE;
+
+  return t_c;
 
 }
 
+/*----------------------------------------------------------------
+ * 
+ * function: humidigy_RH()
+ * 
+ * brief: Return the previoudly read humidity
+ * 
+ * return: Humidity in RH (0-100%)
+ *----------------------------------------------------------------
+ *
+ * See TI Documentation for HDC3022
+ * https://www.ti.com/product/HDC3022
+ *
+ * A simple interrogation is used. 
+ * 
+ *--------------------------------------------------------------*/
+ #define RH_SCALE      (0.5)   // 1/2C / LSB
+
+double humidity_RH(void)
+{
+  return rh;
+}
 
 /*----------------------------------------------------------------
  * 
