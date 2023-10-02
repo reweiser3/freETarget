@@ -11,13 +11,13 @@
 /*
  * Global functions
  */
-void init_analog_io(void);                  // Setup the analog hardware
-unsigned int read_reference(void);          // Read the feedback channel
+void adc_init(unsigned int channel, unsigned int gpio); // Setup the analog hardware
+unsigned int adc_read(unsigned int channel);// Return the raw value
+unsigned int read_12V(void);                // Read the 12V motor drive input
+unsigned int revision(void);                // Return the board revision
 double temperature_C(void);                 // Temperature in degrees C
 double humidity_RH(void);                   // Relative humidity in %
-unsigned int revision(void);                // Return the board revision
 void set_VRef(unsigned int channel, float percent); // Set the output of the VREF DAC(s)
-
 void set_LED_PWM(int percent);              // Ramp the PWM duty cycle
 void set_LED_PWM_now(unsigned int percent); // Set the PWM duty cycle
 void set_vset_PWM(unsigned int value);      // Value to write to PWM
@@ -26,9 +26,9 @@ void set_vset_PWM(unsigned int value);      // Value to write to PWM
  *  Port Definitions
  */
 #define V_REFERENCE  0          // Reference Input
-#define V_12_LED     8          // 12 Volt LED input
+#define V_12_LED     ADC(1,0)   // 12 Volt LED input
 #define K_12     ((10000.0d + 2200.0d)/ 2200.0d) // Resistor divider
-#define ANALOG_VERSION 5        // Analog Version Input
+#define BOARD_REV ADC(1,3) // Analog Version Input
 #define LED_PWM      0          // PWM mapped to PWM channel 0
 #define vset_PWM     8          // Reference Voltage Control
 #define MAX_ANALOG  0x3ff       // Largest analog input

@@ -98,7 +98,7 @@ void freeETarget_init(void)
   serial_io_init();
   POST_version();                         // Show the version string on all ports
   gpio_init();  
- // set_status_LED(LED_HELLO_WORLD);               // Hello World
+  set_status_LED(LED_HELLO_WORLD);        // Hello World
   read_nonvol();
   
 /*
@@ -128,15 +128,6 @@ void freeETarget_init(void)
     printf("POST_2 Failed\r\n");          // Failed the test
   }
   
-/* 
- *  Setup the timer
- */
-
-  if ( DLT(DLT_CRITICAL) )
-  {
-    printf("Starting timers");
-  }
-
 /*
  * Initialize the WiFi or token ring if available
  */

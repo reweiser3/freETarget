@@ -90,12 +90,13 @@ typedef struct DIO_struct  {
     int             initial_value;                     // Value set on initialization
 } DIO_struct_t;
 
-typedef struct analogIO_struct  {
+typedef struct ADC_struct  {
     gpio_type_t     type;                               // What type of structure am I
-    int             gpio;                               // What GPIO is it assigned to
-    int             adc_handle;                         // Handle given by OS
-    int             adc_config[2];                      // Channel setup
-} analogIO_struct_t;
+    int             adc_channel;                        // What channel are we using?
+} ADC_struct_t;
+
+#define ADC(channel, adc) (((channel) * 10) | (adc))    // Pack the channel and ADC into an integer
+#define ADC_CH(id) (id/10)                              // Unpack the chanel from the integer
 
 typedef struct serialIO_struct  {
     gpio_type_t     type;                                // What type of structure am I

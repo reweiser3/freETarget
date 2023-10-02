@@ -30,8 +30,108 @@
 #include "gpio_define.h"
 #include "i2c.h"
 #include <stdio.h>
+#include "driver/adc.h"
 
 void set_vset_PWM(unsigned int pwm);
+                    
+
+/*----------------------------------------------------------------
+ * 
+ * function: adc_init()
+ * 
+ * brief:  Initialize the ADC channel
+ * 
+ * return: None
+ * 
+ *----------------------------------------------------------------
+ *
+ * The ADC channel is initialized and the handle set up
+ * 
+ * https://docs.espressif.com/projects/esp-idf/en/v4.4/esp32/api-reference/peripherals/adc.html
+ * 
+ *--------------------------------------------------------------*/  
+
+#define ADC_ATTENUATION  ADC_ATTEN_DB_11  //ADC Attenuation
+
+void adc_init
+(
+    unsigned int adc_channel,   // What ADC channel are we accessing
+    unsigned int adc_gpio       // What GPIO is used
+)
+{
+  unsigned int adc;             // Which ADC (1/2)
+  unsigned int channel;         // Which channel attached to the ADC (0-10)
+
+  adc = ADC_CH(adc_channel);    // What ADC are we on
+  channel = adc_channel % 10;   // What channel are we using
+
+/*
+ * Setup the channel
+ */
+    ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_DEFAULT));
+    switch (adc)
+    {
+      case 1: 
+        ESP_ERROR_CHECK(adc1_config_channel_atten(channel, ADC_ATTENUATION));
+        break;
+      
+      case 2:
+        ESP_ERROR_CHECK(adc2_config_channel_atten(channel, ADC_ATTENUATION));
+        break;
+    }
+
+/*
+ *  Ready to go
+ */
+    return;
+ }
+
+ /*----------------------------------------------------------------
+ * 
+ * function: adc_read()
+ * 
+ * brief:  Read a value from teh ADC channel
+ * 
+ * return: None
+ * 
+ *----------------------------------------------------------------
+ *
+ * The ADC channel is initialized and the handle set up
+ * 
+ * https://docs.espressif.com/projects/esp-idf/en/v4.4/esp32/api-reference/peripherals/adc.html
+ * 
+ *--------------------------------------------------------------*/ 
+unsigned int adc_read
+(
+  unsigned int adc_channel          // What input are we reading?
+)
+{
+  unsigned int adc;             // Which ADC (1/2)
+  unsigned int channel;         // Which channel attached to the ADC (0-10)
+           int raw;             // Raw value from the ADC
+
+  adc = ADC_CH(adc_channel);    // What ADC are we on
+  channel = adc_channel % 10;   // What channel are we using
+
+/*
+ *  Read the appropriate channel
+ */
+  switch (adc)
+  {
+    case 1: 
+      raw = adc1_get_raw(channel);
+      break;
+
+    case 2: 
+      adc2_get_raw(channel, ADC_WIDTH_BIT_DEFAULT, &raw);
+      break;
+  }
+
+/*
+ *  Done
+ */
+  return raw;
+}
 
 /*----------------------------------------------------------------
  * 

@@ -31,6 +31,7 @@
 #include "gpio_define.h"
 #include "pcnt.h"
 #include "diag_tools.h"
+#include "analog_io.h"
 
 /*
  *  Generic Definitions
@@ -98,27 +99,27 @@ DIO_struct_t dio49 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_va
 /*
  *  Analog IO usage
  */
-analogIO_struct_t adc1_ch0 = { .type = ANALOG_IO, .gpio = GPIO_NUM_39};   // CHANNEL 1, ADC 0
-analogIO_struct_t adc1_ch1 = { .type = ANALOG_IO, .gpio = GPIO_NUM_38};   // CHANNEL 1, ADC 1
-analogIO_struct_t adc1_ch2 = { .type = ANALOG_IO, .gpio = GPIO_NUM_3 };   // CHANNEL 1, ADC 2
-analogIO_struct_t adc1_ch3 = { .type = ANALOG_IO, .gpio = GPIO_NUM_4 };   // CHANNEL 1, ADC 3
-analogIO_struct_t adc1_ch4 = { .type = ANALOG_IO, .gpio = GPIO_NUM_5 };   // CHANNEL 1, ADC 4
-analogIO_struct_t adc1_ch5 = { .type = ANALOG_IO, .gpio = GPIO_NUM_6 };   // CHANNEL 1, ADC 5
-analogIO_struct_t adc1_ch6 = { .type = ANALOG_IO, .gpio = GPIO_NUM_7 };   // CHANNEL 1, ADC 6
-analogIO_struct_t adc1_ch7 = { .type = ANALOG_IO, .gpio = GPIO_NUM_8 };   // CHANNEL 1, ADC 7
-analogIO_struct_t adc1_ch8 = { .type = ANALOG_IO, .gpio = GPIO_NUM_9 };   // CHANNEL 1, ADC 9
-analogIO_struct_t adc1_ch9 = { .type = ANALOG_IO, .gpio = GPIO_NUM_10};   // CHANNEL 1, ADC 10
+ADC_struct_t adc1_ch0 = { .type = ANALOG_IO, .adc_channel = ADC(1,0) };   // CHANNEL 1, ADC 0
+ADC_struct_t adc1_ch1 = { .type = ANALOG_IO, .adc_channel = ADC(1,1) };   // CHANNEL 1, ADC 1
+ADC_struct_t adc1_ch2 = { .type = ANALOG_IO, .adc_channel = ADC(1,2) };   // CHANNEL 1, ADC 2
+ADC_struct_t adc1_ch3 = { .type = ANALOG_IO, .adc_channel = ADC(1,3) };   // CHANNEL 1, ADC 3
+ADC_struct_t adc1_ch4 = { .type = ANALOG_IO, .adc_channel = ADC(1,4) };   // CHANNEL 1, ADC 4
+ADC_struct_t adc1_ch5 = { .type = ANALOG_IO, .adc_channel = ADC(1,5) };   // CHANNEL 1, ADC 5
+ADC_struct_t adc1_ch6 = { .type = ANALOG_IO, .adc_channel = ADC(1,6) };   // CHANNEL 1, ADC 6
+ADC_struct_t adc1_ch7 = { .type = ANALOG_IO, .adc_channel = ADC(1,7) };   // CHANNEL 1, ADC 7
+ADC_struct_t adc1_ch8 = { .type = ANALOG_IO, .adc_channel = ADC(1,8) };   // CHANNEL 1, ADC 9
+ADC_struct_t adc1_ch9 = { .type = ANALOG_IO, .adc_channel = ADC(1,9) };   // CHANNEL 1, ADC 10
 
-analogIO_struct_t adc2_ch0 = { .type = ANALOG_IO, .gpio = GPIO_NUM_11 };  // CHANNEL 2, ADC 0
-analogIO_struct_t adc2_ch1 = { .type = ANALOG_IO, .gpio = GPIO_NUM_12 };  // CHANNEL 2, ADC 1
-analogIO_struct_t adc2_ch2 = { .type = ANALOG_IO, .gpio = GPIO_NUM_13 };  // CHANNEL 2, ADC 2
-analogIO_struct_t adc2_ch3 = { .type = ANALOG_IO, .gpio = GPIO_NUM_14 };  // CHANNEL 2, ADC 3
-analogIO_struct_t adc2_ch4 = { .type = ANALOG_IO, .gpio = GPIO_NUM_15 };  // CHANNEL 2, ADC 4
-analogIO_struct_t adc2_ch5 = { .type = ANALOG_IO, .gpio = GPIO_NUM_16 };  // CHANNEL 2, ADC 5
-analogIO_struct_t adc2_ch6 = { .type = ANALOG_IO, .gpio = GPIO_NUM_17 };  // CHANNEL 2, ADC 6
-analogIO_struct_t adc2_ch7 = { .type = ANALOG_IO, .gpio = GPIO_NUM_18 };  // CHANNEL 2, ADC 7
-analogIO_struct_t adc2_ch8 = { .type = ANALOG_IO, .gpio = GPIO_NUM_19 };  // CHANNEL 2, ADC 8
-analogIO_struct_t adc2_ch9 = { .type = ANALOG_IO, .gpio = GPIO_NUM_20 };  // CHANNEL 2, ADC 9
+ADC_struct_t adc2_ch0 = { .type = ANALOG_IO, .adc_channel = ADC(2,0) };  // CHANNEL 2, ADC 0
+ADC_struct_t adc2_ch1 = { .type = ANALOG_IO, .adc_channel = ADC(2,1) };  // CHANNEL 2, ADC 1
+ADC_struct_t adc2_ch2 = { .type = ANALOG_IO, .adc_channel = ADC(2,2) };  // CHANNEL 2, ADC 2
+ADC_struct_t adc2_ch3 = { .type = ANALOG_IO, .adc_channel = ADC(2,3) };  // CHANNEL 2, ADC 3
+ADC_struct_t adc2_ch4 = { .type = ANALOG_IO, .adc_channel = ADC(2,4) };  // CHANNEL 2, ADC 4
+ADC_struct_t adc2_ch5 = { .type = ANALOG_IO, .adc_channel = ADC(2,5) };  // CHANNEL 2, ADC 5
+ADC_struct_t adc2_ch6 = { .type = ANALOG_IO, .adc_channel = ADC(2,6) };  // CHANNEL 2, ADC 6
+ADC_struct_t adc2_ch7 = { .type = ANALOG_IO, .adc_channel = ADC(2,7) };  // CHANNEL 2, ADC 7
+ADC_struct_t adc2_ch8 = { .type = ANALOG_IO, .adc_channel = ADC(2,8) };  // CHANNEL 2, ADC 8
+ADC_struct_t adc2_ch9 = { .type = ANALOG_IO, .adc_channel = ADC(2,9) };  // CHANNEL 2, ADC 9
 
 /*
  *  PWM Control, GPIO filled in by GPIO definition above
@@ -257,15 +258,13 @@ void gpio_init(void)
                     break;
 
                 case ANALOG_IO:
-#if (0)
-                    adc_oneshot_new_unit(gpio_table[i].config[CONFIG], &analogIO_table[i].config[HANDLE]);
-                    adc_oneshot_config_channel(gpio_table[i].config[CONFIG], &analogIO_table[i].config[HANDLE]);
-#endif
+                    adc_init(((ADC_struct_t*)(gpio_table[i].gpio_uses))->adc_channel, \
+                        gpio_table[i].gpio_number );
                     break;
 
                 case PWM_OUT:
                     pwm_init(((PWM_struct_t*)(gpio_table[i].gpio_uses))->pwm_channel,\
-                       gpio_table[i].gpio_number);
+                        gpio_table[i].gpio_number);
                     break;
 
                 case I2C_PORT:

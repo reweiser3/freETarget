@@ -33,6 +33,7 @@
 #include "dac.h"
 #include "pwm.h"
 #include "analog_io.h"
+#include "gpio_define.h"
 
 const char* which_one[4] = {"North:", "East:", "South:", "West:"};
 
@@ -167,6 +168,15 @@ void self_test
         vTaskDelay(ONE_SECOND/100);
       }
       printf("done");
+      break;
+
+/*
+ * Test 7, Analog In
+ */
+    case T_AIN:
+      printf("\r\nAnalog Input ");
+      printf("\r\n12V %d", adc_read(V_12_LED));
+      printf("\r\nBoard Rev %d", adc_read(BOARD_REV));
       break;
   }
 
