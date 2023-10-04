@@ -99,7 +99,6 @@ unsigned int read_counter
  * register that is running.
  * 
  *-----------------------------------------------------*/
-
 unsigned int is_running (void)
 {
   unsigned int i;
