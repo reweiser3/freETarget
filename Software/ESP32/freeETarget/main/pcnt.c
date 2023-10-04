@@ -10,7 +10,7 @@
  * 
  * See:
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/pcnt.html
- * https://www.espressif.com/sites/default/files/documentation/esp32_technical_reference_manual_en.pdf#pcnt
+ * https://www.espressif.com/sites/default/files/documentation/esp32-s3_technical_reference_manual_en.pdf#pcnt
  * 
  ***************************************************************************/
 #include <stdio.h>
@@ -21,19 +21,20 @@
 #include "driver\ledc.h"
 #include "gpio_define.h"
 #include "pcnt.h"
+#include "diag_tools.h"
 
 /*
  *  Working variables
  */
-static pcnt_unit_config_t          unit_config[8];         // Single unit configuration
-static pcnt_unit_handle_t          pcnt_unit[8];
-static pcnt_glitch_filter_config_t filter_config[8];       // Glitch Filter
+static pcnt_unit_config_t          unit_config[SOC_PCNT_UNITS_PER_GROUP];    // Single unit configuration
+static pcnt_unit_handle_t          pcnt_unit[SOC_PCNT_UNITS_PER_GROUP];
+static pcnt_glitch_filter_config_t filter_config[SOC_PCNT_UNITS_PER_GROUP];  // Glitch Filter
 
-static pcnt_chan_config_t          chan_a_config[8];       // Counter Configuration A
-static pcnt_channel_handle_t       pcnt_chan_a[8];
+static pcnt_chan_config_t          chan_a_config[SOC_PCNT_UNITS_PER_GROUP];  // Counter Configuration A
+static pcnt_channel_handle_t       pcnt_chan_a[SOC_PCNT_UNITS_PER_GROUP];
 
-static pcnt_chan_config_t          chan_b_config[8];       // Counter Configuration B
-static pcnt_channel_handle_t       pcnt_chan_b[8];
+static pcnt_chan_config_t          chan_b_config[SOC_PCNT_UNITS_PER_GROUP];  // Counter Configuration B
+static pcnt_channel_handle_t       pcnt_chan_b[SOC_PCNT_UNITS_PER_GROUP];
 
 /*************************************************************************
  * 
@@ -100,8 +101,9 @@ void pcnt_init
     pcnt_channel_set_level_action(pcnt_chan_b[unit], PCNT_CHANNEL_LEVEL_ACTION_HOLD, PCNT_CHANNEL_LEVEL_ACTION_HOLD);      // Not Used
 
 /*
- *  All done, return
+ *  All done, Clear the counter and return
  */
+    pcnt_unit_clear_count(pcnt_unit[unit]); 
     return;
 }
 
@@ -118,10 +120,37 @@ void pcnt_init
  * The PCNT registers are 16 bits long with an overflow counter
  * 
  **************************************************************************/
-unsigned long pcnt_read
+unsigned int pcnt_read
 (
-    int which_unit                   // What timer to read
+    int unit                   // What timer to read
 )
 {
-    return 0; // pcnt_unit[which_unit].register;
+    int value;
+
+    pcnt_unit_get_count(pcnt_unit[unit], &value);
+
+    return value;
+}
+
+/*************************************************************************
+ * 
+ * function: pcnt_clear)
+ * 
+ * description:  Clear the pcnt register
+ * `
+ * return:   Nothing
+ * 
+ **************************************************************************
+ *
+ * Clear the indicated counter
+ * 
+ **************************************************************************/
+void pcnt_clear
+(
+    int unit                   // What timer to clear
+)
+{
+    pcnt_unit_clear_count(pcnt_unit[unit]);
+
+    return;
 }

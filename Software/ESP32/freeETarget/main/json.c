@@ -294,7 +294,7 @@ void freeETarget_json
       }   // End switch
 
     }     // End if char available
-    vTaskDelay( json_delay );
+    vTaskDelay( MIN_DELAY );
   }
   
 /*

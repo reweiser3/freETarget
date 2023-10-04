@@ -35,9 +35,8 @@
  */
 #define OSCILLATOR_MHZ   10.0                         // 10,000 cycles in 1 ms
 #define CLOCK_PERIOD  (1.0/OSCILLATOR_MHZ)            // Seconds per bit
-#define ONE_SECOND    (1000/portTICK_PERIOD_MS)       // 1000 ms delay 
-#define ONE_SECOND_US   1000000u                      // One second in us
-#define SECONDS       (millis()/1000)                 // Elapsed time in seconds
+#define ONE_SECOND    (100)                           // 10 ms delay per LSB
+#define MIN_DELAY     (1)                             // Minimum timeout 10ms
 #define FULL_SCALE      0xffffffff                    // Full scale timer
 
 

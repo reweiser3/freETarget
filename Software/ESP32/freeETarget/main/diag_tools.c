@@ -34,8 +34,10 @@
 #include "pwm.h"
 #include "analog_io.h"
 #include "gpio_define.h"
+#include "driver\gpio.h"
+#include "pcnt.h"
 
-const char* which_one[4] = {"North:", "East:", "South:", "West:"};
+const char* which_one[4] = {"North", "East", "South", "West"};
 
 #define TICK(x) (((x) / 0.33) * OSCILLATOR_MHZ)   // Distance in clock ticks
 #define RX(Z,X,Y) (16000 - (sqrt(sq(TICK(x)-s[(Z)].x) + sq(TICK(y)-s[(Z)].y))))
@@ -177,6 +179,36 @@ void self_test
       printf("\r\nAnalog Input ");
       printf("\r\n12V %d", adc_read(V_12_LED));
       printf("\r\nBoard Rev %d", adc_read(BOARD_REV));
+      break;
+
+/*
+ * Test 8, Timer Control
+ */
+    case T_TIMER:
+      printf("\r\nTimer Control ");
+      for (i=0; i != 10000; i++)
+      {
+        gpio_set_level(39, i&1);      // Reset the timer
+        gpio_set_level(CLOCK_START, i&1);
+        paper_on_off(i&1);
+        gpio_set_level(21, i&1);      // Reset the timer
+        vTaskDelay(ONE_SECOND/100);
+      }
+      printf("done");
+      break;
+
+/*
+ * Test 9, PCNT test
+ */
+    case T_PCNT:
+      printf("\r\nRead PCNT\r\n");
+      arm_timers();
+      trip_timers();
+      for (i=0; i != 4; i++)
+      {
+        printf("%s: %d    ", which_one[i], pcnt_read(i));
+      }
+      printf("\r\ndone");
       break;
   }
 

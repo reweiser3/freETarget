@@ -12,7 +12,8 @@
  * Global functions
  */
 void pcnt_init(int  unit, int  control, int  signal);   // pcnt Control
-unsigned long pcnt_read(int unit);                      // Read timer contents
+unsigned int pcnt_read(int unit);                       // Read timer contents
+void pcnt_clear(int unit);                              // Clear the timer contents
 
 /*
  * Typedefs

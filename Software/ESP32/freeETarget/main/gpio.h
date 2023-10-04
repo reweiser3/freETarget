@@ -44,7 +44,7 @@ void status_LED_init(unsigned int gpio_number);           // Initialize the RMT 
 /*
  *  Port Definitions
  */
-#define NORTH_HI    50                    // Address port but locations
+#define NORTH_HI    15                    // Address port but locations
 #define NORTH_LO    51
 #define EAST_HI     48
 #define EAST_LO     49
@@ -53,25 +53,10 @@ void status_LED_init(unsigned int gpio_number);           // Initialize the RMT 
 #define WEST_HI     41
 #define WEST_LO     42
 
-#define RUN_LSB      3
-#define RUN_NORTH   25                    // PA3
-#define RUN_N_MASK  (1<<3)
-#define RUN_EAST    26                    // PA4
-#define RUN_E_MASK  (1<<4)
-#define RUN_SOUTH   27                    // PA5
-#define RUN_S_MASK  (1<<5)
-#define RUN_WEST    28                    // PA6
-#define RUN_W_MASK  (1<<6)
-#define RUN_A_MASK  (RUN_N_MASK + RUN_E_MASK + RUN_S_MASK + RUN_W_MASK)
-#define RUN_PORT    29
-
 #define PAPER        12                    // Paper advance drive active low
 #define PAPER_ON      0
 #define PAPER_OFF     1
 
-#define QUIET       29
-#define RCLK        40
-#define CLR_N       39
 #define STOP_N      39      // V      
 #define CLOCK_START 41      // V
 

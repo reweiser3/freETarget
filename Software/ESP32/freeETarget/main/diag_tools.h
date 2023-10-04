@@ -30,28 +30,8 @@ bool_t  do_dlt(unsigned int level);                     // Diagnostics Log and T
 #define T_TEMPERATURE  5       // Read temperature
 #define T_VREF         6       // Cycle the VREF outputs 
 #define T_AIN          7       // Analog Inpt 
-
-#define T_TRIGGER      2       // Test microphone trigger
-#define T_CLOCK        3       // Trigger clock internally
-
-#define T_SPIRAL       7       // Generate sprial pattern
-#define T_GRID         8       // Generate grid pattern
-#define T_ONCE         9       // Generate single calculation @ 45North
-#define T_PASS_THRU   10       // Serial port pass through
-#define T_SET_TRIP    11       // Set the microphone trip point
-#define T_XFR_LOOP    12       // Transfer loopback
-#define T_SERIAL_PORT 13       // Hello World n
-
-#define T_FACE        15       // Test the face detector
-#define T_WIFI        16       // WiFi Test
-#define T_NONVOL      17       // Dump Nonvol
-#define T_SHOT        18       // Send shot record
-#define T_WIFI_STATUS 19       // Obtain the WiFi Status
-#define T_WIFI_BROADCAST 20
-#define T_SWITCH      25       // Test the switches
-#define T_S_OF_SOUND  26       // Test Speed of Sound algorithm
-#define T_TOKEN       27       // Token Ring Test
-#define T_LED_CYCLE   28       // Blink the 3 LEDs
+#define T_TIMER        8       // Toggle the timer controls
+#define T_PCNT         9       // Read the PCNT registers 
 
 /*
  * LED status messages

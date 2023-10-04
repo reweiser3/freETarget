@@ -102,7 +102,19 @@ unsigned int read_counter
 
 unsigned int is_running (void)
 {
-  return 0;
+  unsigned int i;
+  unsigned int x;
+
+  x = 0;
+  for (i=N; i <= W; i++)      // Look at all of the counters
+  {
+    if ( pcnt_read(i) != 0 )  // Timer running?
+    {
+      x |= (1 << i);          // Remember it
+    }
+  }
+  
+  return x;                   // Return the running mask
 }
 
 /*-----------------------------------------------------
@@ -126,22 +138,23 @@ unsigned int is_running (void)
  *-----------------------------------------------------*/
 void arm_timers(void)
 {
-
+  gpio_set_level(STOP_N, 0);      // Reset the timer
+  pcnt_clear(N);
+  pcnt_clear(E);                  // Reset the counters
+  pcnt_clear(S);
+  pcnt_clear(W);
+  gpio_set_level(STOP_N, 1);      // Then enable it
   
   return;
 }
 
-void clear_running(void)          // Reset the RUN flip Flop
-{
-
-  return;
-}
-
 /*
- *  Stop the oscillator
+ *  Stop the oscillator and 
  */
 void stop_timers(void)
 {
+  gpio_set_level(STOP_N, 0);      // Reset the timer
+
   return;
 }
 
@@ -150,7 +163,9 @@ void stop_timers(void)
  */
 void trip_timers(void)
 {
-
+  gpio_set_level(STOP_N, 1);            // Let the flipflops go
+  gpio_set_level(CLOCK_START, 1);       // and trigger the output 
+  gpio_set_level(CLOCK_START, 0);
   return;
 }
 

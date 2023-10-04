@@ -73,7 +73,8 @@ void freeETarget_timer
 /*
  * Decide what to do if based on what inputs are present
  */
-    pin = RUN_PORT & RUN_A_MASK;                 // Read in the RUN bits
+#if(0)
+    pin = 0xff;                 // Read in the RUN bits
 
 /*
  * Read the timer hardware based on the ISR state
@@ -115,7 +116,7 @@ void freeETarget_timer
         }
         break;
     }
-
+#endif
 /*
  * Refresh the timers
  */
