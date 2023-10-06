@@ -38,11 +38,11 @@ static pcnt_channel_handle_t       pcnt_chan_b[SOC_PCNT_UNITS_PER_GROUP];
 
 /*************************************************************************
  * 
- * function: pcnt_init()
+ * @function: pcnt_init()
  * 
  * description:  Set the pulse counter control
  * 
- * return:  Nope
+ * @return:  Nope
  * 
  **************************************************************************
  *
@@ -109,11 +109,11 @@ void pcnt_init
 
 /*************************************************************************
  * 
- * function: pcnt_read()
+ * @function: pcnt_read()
  * 
  * description:  Read the pcnt register
  * 
- * return:   32 bit timer count
+ * @return:   32 bit timer count
  * 
  **************************************************************************
  *
@@ -134,11 +134,11 @@ unsigned int pcnt_read
 
 /*************************************************************************
  * 
- * function: pcnt_clear)
+ * @function: pcnt_clear)
  * 
  * description:  Clear the pcnt register
  * `
- * return:   Nothing
+ * @return:   Nothing
  * 
  **************************************************************************
  *

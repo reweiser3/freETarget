@@ -36,11 +36,11 @@ ledc_channel_config_t ledc_channel[4];
 
 /*************************************************************************
  * 
- * function: pwm_init()
+ * @function: pwm_init()
  * 
  * description:  Set the PWM duty cycle
  * 
- * return:  Nope
+ * @return:  Nope
  * 
  **************************************************************************
  *
@@ -97,11 +97,11 @@ void pwm_init
 
 /*************************************************************************
  * 
- * function: pwm_set()
+ * @function: pwm_set()
  * 
  * description:  Set the PWM duty cycle
  * 
- * return:  Nope
+ * @return:  Nope
  * 
  **************************************************************************
  *

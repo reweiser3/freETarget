@@ -44,29 +44,27 @@ void status_LED_init(unsigned int gpio_number);           // Initialize the RMT 
 /*
  *  Port Definitions
  */
-#define NORTH_HI    15                    // Address port but locations
-#define NORTH_LO    51
-#define EAST_HI     48
-#define EAST_LO     49
-#define SOUTH_HI    43                    // Address port but locations
-#define SOUTH_LO    47
-#define WEST_HI     41
-#define WEST_LO     42
+#define RUN_NORTH_LO   5                  // Address port but locations
+#define RUN_EAST_LO    6
+#define RUN_SOUTH_LO   7
+#define RUN_WEST_LO   49
+#define RUN_MASK      0x0f
 
-#define PAPER        12                    // Paper advance drive active low
-#define PAPER_ON      0
-#define PAPER_OFF     1
+#define PAPER         12                 // Paper advance drive active low
+#define PAPER_ON       0
+#define PAPER_OFF      1
 
-#define STOP_N      39      // V      
-#define CLOCK_START 41      // V
+#define STOP_N          39      // V      
+#define CLOCK_START     41      // V
 
-#define DIP_0        9
-#define RED_OUT      9                  // Rapid fire RED on DIP0
+#define DIP_0           9
+#define RED_OUT         9                  // Rapid fire RED on DIP0
 
-#define DIP_A       38      // V
-#define DIP_B       37      // V
-#define DIP_C       36      // V
-#define DIP_D       35      // V
+#define DIP_A           38      // V
+#define DIP_B           37      // V
+#define DIP_C           36      // V
+#define DIP_D           35      // V
+#define RUN_A_MASK  0xf     // All run bits set 
 
 #define GREEN_OUT   12                  // Rapid fire GREEN on DIP3
 
@@ -91,30 +89,13 @@ void status_LED_init(unsigned int gpio_number);           // Initialize the RMT 
 #define DIP_SW_B        (DIP_C)         // 4 When CALIBRATE is asserted, use higher trip point
 #define VERBOSE_TRACE   (DIP_D)         // 8 Show the verbose software trace
 
-#define VSET_PWM     8          // VREF setting
-#define CTS_U        7
-#define RTS_U        6
 
-#define LED_RDY      4
-#define LED_X        3
-#define LED_Y        2
-#define LON          1          // Turn the LED on
-#define LOF          0          // Turn the LED off
-#define LXX         -1          // Leave the LED alone
-#define L(A, B, C)  (A), (B), (C)
-
-#define NORTH        0
-#define EAST         1
-#define SOUTH        2
-#define WEST         3
-#define TRIP_NORTH   0x01
-#define TRIP_EAST    0x02
-#define TRIP_SOUTH   0x04
-#define TRIP_WEST    0x08
 
 #define FACE_SENSOR  19
 
-#define SPARE_1      22
+/*
+ *  MFS Uset
+ */
 #define POWER_TAP     0                   // DIP A/B used to wake up
 #define PAPER_FEED    1                   // DIP A/B used as a paper feed
 #define LED_ADJUST    2                   // DIP A/B used to set LED brightness
@@ -127,7 +108,7 @@ void status_LED_init(unsigned int gpio_number);           // Initialize the RMT 
 #define TARGET_TYPE   9                   // Sent target type with score
 
 #define NO_ACTION     0                   // DIP usual function
-#define RAPID_RED     1                   // Rapid Foir Red Output
+#define RAPID_RED     1                   // Rapid Fire Red Output
 #define RAPID_GREEN   2                   // Rapid Fire Green Output
 
 #define J10_1      VCC

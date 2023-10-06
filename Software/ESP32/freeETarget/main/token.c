@@ -71,11 +71,11 @@ int whos_ring = TOKEN_UNDEF;        // Who owns the ring right now?
 
 /*-----------------------------------------------------
  * 
- * function: token_init
+ * @function: token_init
  * 
- * brief:    Prepare the token ring
+ * @brief:    Prepare the token ring
  * 
- * return:   Token ring address
+ * @return:   Token ring address
  * 
  *-----------------------------------------------------
  *
@@ -83,7 +83,7 @@ int whos_ring = TOKEN_UNDEF;        // Who owns the ring right now?
  * an enumeration.  
  * 
  * If nothing happens after TOKEN time seconds,then
- * return and wait for someone else to trigger the
+ * @return and wait for someone else to trigger the
  * enumeration
  *-----------------------------------------------------*/
 
@@ -124,11 +124,11 @@ void token_init(void)
 
 /*-----------------------------------------------------
  * 
- * function: token_poll
+ * @function: token_poll
  * 
- * brief:    Look for something on the token ring
+ * @brief:    Look for something on the token ring
  * 
- * return:   TRUE if the action has been completed
+ * @return:   TRUE if the action has been completed
  * 
  *-----------------------------------------------------
  *
@@ -305,11 +305,11 @@ void token_poll(void)
   
 /*-----------------------------------------------------
  * 
- * function: token_take
+ * @function: token_take
  * 
- * brief:    Request to take the token ring
+ * @brief:    Request to take the token ring
  * 
- * return:   who owns the ring
+ * @return:   who owns the ring
  * 
  *-----------------------------------------------------
  *
@@ -354,11 +354,11 @@ int token_take(void)
 
 /*-----------------------------------------------------
  * 
- * function: token_give
+ * @function: token_give
  * 
- * brief:    Return the token ring
+ * @brief:    Return the token ring
  * 
- * return:   who owns the ring
+ * @return:   who owns the ring
  * 
  *-----------------------------------------------------
  *
@@ -404,11 +404,11 @@ int token_give(void)
 
 /*-----------------------------------------------------
  * 
- * function: token_available
+ * @function: token_available
  * 
- * brief:    Test to see if the token ring is available
+ * @brief:    Test to see if the token ring is available
  * 
- * return:   TRUE if the ring is available
+ * @return:   TRUE if the ring is available
  * 
  *-----------------------------------------------------
  *

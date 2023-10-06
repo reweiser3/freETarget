@@ -184,11 +184,11 @@ static void diag_delay(int x) { printf("\r\n\"DELAY\":%d", x); vTaskDelay(x*1000
 
 /*-----------------------------------------------------
  * 
- * function: freeETarget_json
+ * @function: freeETarget_json
  * 
- * brief: Accumulate input from the serial port
+ * @brief: Accumulate input from the serial port
  * 
- * return: None
+ * @return: None
  * 
  *-----------------------------------------------------
  *
@@ -304,11 +304,11 @@ void freeETarget_json
 
 /*-----------------------------------------------------
  * 
- * function: handle_json
+ * @function: handle_json
  * 
- * brief:  Breakdown the JSON and handle it
+ * @brief:  Breakdown the JSON and handle it
  * 
- * return: None
+ * @return: None
  * 
  *-----------------------------------------------------
  *
@@ -484,11 +484,11 @@ int instr(char* s1, char* s2)
 
 /*-----------------------------------------------------
  * 
- * function: show_echo
+ * @function: show_echo
  * 
- * brief: Display the current settings
+ * @brief: Display the current settings
  * 
- * return: None
+ * @return: None
  * 
  *-----------------------------------------------------
  *
@@ -628,11 +628,11 @@ void show_echo(void)
 
 /*-----------------------------------------------------
  * 
- * function: show_names
+ * @function: show_names
  * 
- * brief: Display the list of names
+ * @brief: Display the list of names
  * 
- * return: None
+ * @return: None
  * 
  *-----------------------------------------------------
  *
@@ -666,11 +666,11 @@ static void show_names(int v)
 
 /*-----------------------------------------------------
  * 
- * function: show_test
+ * @function: show_test
  * 
- * brief: Execute one iteration of the self test
+ * @brief: Execute one iteration of the self test
  * 
- * return: None67!
+ * @return: None67!
  * 
  *----------------------------------------------------*/
 
@@ -684,11 +684,11 @@ static void show_test(int test_number)
 
  /*-----------------------------------------------------
  * 
- * function: set_trace
+ * @function: set_trace
  * 
- * brief:    Turn the software trace on and off
+ * @brief:    Turn the software trace on and off
  * 
- * return: None
+ * @return: None
  * 
  *-----------------------------------------------------
  *

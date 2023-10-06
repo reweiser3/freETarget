@@ -32,11 +32,11 @@ nvs_handle_t my_handle;                    // Handle to NVS space
 
 /*----------------------------------------------------------------
  * 
- * functoon: read_nonvol
+ * @functoon: read_nonvol
  * 
- * brief: Read nonvol and set up variables
+ * @brief: Read nonvol and set up variables
  * 
- * return: Nonvol values copied to RAM
+ * @return: Nonvol values copied to RAM
  * 
  *---------------------------------------------------------------
  *
@@ -160,11 +160,11 @@ void read_nonvol(void)
 #if(0)
 /*----------------------------------------------------------------
  * 
- * funciton: check_nonvol
+ * @funciton: check_nonvol
  * 
- * brief:    Read nonvol and set up variables
+ * @brief:    Read nonvol and set up variables
  * 
- * return:   Nonvol values copied to RAM
+ * @return:   Nonvol values copied to RAM
  * 
  *---------------------------------------------------------------
  *
@@ -207,11 +207,11 @@ void check_nonvol(void)
 
 /*----------------------------------------------------------------
  * 
- * function: factory_nonvol
+ * @function: factory_nonvol
  * 
- * brief: Initialize the NONVOL back to factory settings
+ * @brief: Initialize the NONVOL back to factory settings
  * 
- * return: None
+ * @return: None
  *---------------------------------------------------------------
  *
  * If the init_nonvol location is not set to INIT_DONE then
@@ -370,11 +370,11 @@ void factory_nonvol
  
 /*----------------------------------------------------------------
  * 
- * function: init_nonvol
+ * @function: init_nonvol
  * 
- * brief: Initialize the NONVOL back to factory settings
+ * @brief: Initialize the NONVOL back to factory settings
  * 
- * return: None
+ * @return: None
  *---------------------------------------------------------------
  *
  * {"INIT":1234} Reset but leave serial number alone
@@ -417,11 +417,11 @@ void init_nonvol
 
 /*----------------------------------------------------------------
  * 
- * function: update_nonvol
+ * @function: update_nonvol
  * 
- * brief:  Update the nonvol values to the current persistent 
+ * @brief:  Update the nonvol values to the current persistent 
  * 
- * return: None
+ * @return: None
  *---------------------------------------------------------------
  *
  * Check the stored nonvol value against the current persistent
@@ -478,11 +478,11 @@ void update_nonvol
 
 /*----------------------------------------------------------------
  *
- * function: gen_postion
+ * @function: gen_postion
  * 
- * brief: Generate new position varibles based on new sensor diameter
+ * @brief: Generate new position varibles based on new sensor diameter
  * 
- * return: Position values stored in NONVOL
+ * @return: Position values stored in NONVOL
  * 
  *---------------------------------------------------------------
  *

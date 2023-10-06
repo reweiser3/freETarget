@@ -49,11 +49,11 @@ static float get_float(void);       // Get a float from the user
 
 /*******************************************************************************
  *
- * function: void self_test
+ * @function: void self_test
  *
- * brief: Execute self tests based on the jumper settings
+ * @brief: Execute self tests based on the jumper settings
  * 
- * return: None
+ * @return: None
  *
  *******************************************************************************
  *   
@@ -210,6 +210,15 @@ void self_test
       }
       printf("\r\ndone");
       break;
+
+/*
+ * Test 10, Timer Interrupt Test
+ */
+    case T_ISR:
+      printf("\r\nStarting Timers\r\n");
+      freeETarget_timer_init();
+      printf("\r\ndone");
+      break;
   }
 
  /* 
@@ -220,11 +229,11 @@ void self_test
 
 /*******************************************************************************
  * 
- * function: POST_version()
+ * @function: POST_version()
  * 
- * brief: Show the Version String
+ * @brief: Show the Version String
  * 
- * return: None
+ * @return: None
  * 
  *******************************************************************************
  *
@@ -245,11 +254,11 @@ void self_test
  
 /*----------------------------------------------------------------
  * 
- * function: POST_LEDs()
+ * @function: POST_LEDs()
  * 
- * brief: Show the LEDs are working
+ * @brief: Show the LEDs are working
  * 
- * return: None
+ * @return: None
  * 
  *----------------------------------------------------------------
  *
@@ -278,11 +287,11 @@ void self_test
 
 /*----------------------------------------------------------------
  * 
- * function: void POST_counters()
+ * @function: void POST_counters()
  * 
- * brief: Verify the counter circuit operation
+ * @brief: Verify the counter circuit operation
  * 
- * return: None
+ * @return: None
  * 
  *----------------------------------------------------------------
  *
@@ -418,11 +427,11 @@ void self_test
   
 /*----------------------------------------------------------------
  * 
- * function: void POST_trip_point()
+ * @function: void POST_trip_point()
  * 
- * brief: Display the trip point
+ * @brief: Display the trip point
  * 
- * return: None
+ * @return: None
  *----------------------------------------------------------------
  *
  *  Run the set_trip_point function once
@@ -442,11 +451,11 @@ void self_test
  
 /*----------------------------------------------------------------
  * 
- * function: set_trip_point
+ * @function: set_trip_point
  * 
- * brief:  Prompt the user for a voltage
+ * @brief:  Prompt the user for a voltage
  * 
- * return: None
+ * @return: None
  *----------------------------------------------------------------
  *
  * The user is promted or a channel number and voltage.
@@ -487,18 +496,18 @@ void set_trip_point(int x)
   dac_write(channel, value);
 
 /*
-  * Return
+  * @return
   */
   return;
 }
 
 /*----------------------------------------------------------------
  *
- * function: show_sensor_status()
+ * @function: show_sensor_status()
  *
- * brief:    Show which sensor flip flops were latched
+ * @brief:    Show which sensor flip flops were latched
  *
- * return:   Nothing
+ * @return:   Nothing
  * 
  *----------------------------------------------------------------
  * 
@@ -574,11 +583,11 @@ void show_sensor_status
 }
 /*----------------------------------------------------------------
  *
- * function: do_dlt
+ * @function: do_dlt
  *
- * brief:    Check for a DLT log and print the time
+ * @brief:    Check for a DLT log and print the time
  *
- * return:   TRUE if the DLT should be printed
+ * @return:   TRUE if the DLT should be printed
  * 
  *----------------------------------------------------------------
  * 

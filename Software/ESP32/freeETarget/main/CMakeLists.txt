@@ -1,4 +1,4 @@
-idf_component_register(SRCS "main.c" "dac.c" "pcnt.c"
+idf_component_register(SRCS  "main.c" "dac.c" "pcnt.c"
                     "freETarget.c"
                     "diag_tools.c"
                     "token.c"

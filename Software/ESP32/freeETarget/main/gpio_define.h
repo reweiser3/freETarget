@@ -61,13 +61,7 @@
 #define GPIO_NUM_40 40
 
 /*
- *  Schematic Capture
- */
-#define RUN_STOP GPIO_NUM_05 
-
-
-/*
- * Function Prototypes
+ * @function Prototypes
  */
 void gpio_init(void);
 

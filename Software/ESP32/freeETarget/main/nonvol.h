@@ -16,7 +16,7 @@
 extern nvs_handle_t my_handle;                    // Handle to NVS space
 
 /*
- * Function prototypes
+ * @function prototypes
  */
 void factory_nonvol(bool_t new_serial_number);    // Factory reset nonvol
 void init_nonvol(int v);                          // Reset to defaults

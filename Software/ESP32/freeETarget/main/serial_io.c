@@ -65,11 +65,11 @@ static int  out_out_ptr = 0;
 
 /******************************************************************************
  * 
- * function: serial_io_init
+ * @function: serial_io_init
  * 
- * brief: Initalize the various Serial ports
+ * @brief: Initalize the various Serial ports
  * 
- * return: None
+ * @return: None
  * 
  *******************************************************************************
  *
@@ -110,11 +110,11 @@ void serial_io_init(void)
 
 /*******************************************************************************
  * 
- * function: serial_available
+ * @function: serial_available
  * 
- * brief:    Determine if bytes are waiting in any port
+ * @brief:    Determine if bytes are waiting in any port
  * 
- * return:   Number of characters in all of the ports
+ * @return:   Number of characters in all of the ports
  * 
  *******************************************************************************
  *
@@ -164,11 +164,11 @@ unsigned int serial_available
 
 /*******************************************************************************
  * 
- * function: serial_flush
+ * @function: serial_flush
  * 
- * brief:    purge everything in the queue
+ * @brief:    purge everything in the queue
  * 
- * return:   Number of characters in all of the ports
+ * @return:   Number of characters in all of the ports
  * 
  *******************************************************************************
  *
@@ -202,11 +202,11 @@ void serial_flush
 
 /*******************************************************************************
  * 
- * function: serial_getch
+ * @function: serial_getch
  * 
- * brief:    Read one or more of the serial ports
+ * @brief:    Read one or more of the serial ports
  * 
- * return:   Next character in the  selected serial port
+ * @return:   Next character in the  selected serial port
  * 
  *******************************************************************************
  *
@@ -263,11 +263,11 @@ char serial_getch
 }
 /*******************************************************************************
  * 
- * function: serial_to_all
+ * @function: serial_to_all
  * 
- * brief:    Send a string to the available serial ports
+ * @brief:    Send a string to the available serial ports
  * 
- * return:   None
+ * @return:   None
  * 
  *******************************************************************************
  *
@@ -359,11 +359,11 @@ void serial_to_all
 
 /*******************************************************************************
  * 
- * function: serial_to_tcpip
+ * @function: serial_to_tcpip
  * 
- * brief:    Get waiting bytes for the tcpip
+ * @brief:    Get waiting bytes for the tcpip
  * 
- * return:   Buffer updated
+ * @return:   Buffer updated
  * 
  *******************************************************************************
  *

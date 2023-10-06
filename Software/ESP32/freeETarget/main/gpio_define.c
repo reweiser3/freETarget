@@ -213,7 +213,7 @@ static char* gpio_use[] = {
  * 
  * description:  Initialize the GPIO states
  * 
- * return:  Nope
+ * @return:  Nope
  * 
  **************************************************************************
  *

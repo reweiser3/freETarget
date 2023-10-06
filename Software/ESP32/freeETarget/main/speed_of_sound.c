@@ -23,9 +23,9 @@
 
 /*----------------------------------------------------------------
  *
- * function: speed_of_sound
+ * @function: speed_of_sound
  *
- * brief: Return the speed of sound (mm / us)
+ * @brief: Return the speed of sound (mm / us)
  *
  *----------------------------------------------------------------
  *
@@ -132,7 +132,7 @@ double speed_of_sound
   }
 
 /*
- * Return the speed of sound
+ * @return the speed of sound
  */
   return speed_mmPuS;
 
@@ -141,9 +141,9 @@ double speed_of_sound
 
 /*----------------------------------------------------------------
  *
- * function: sound_test()
+ * @function: sound_test()
  *
- * brief: Dispolay the speed of souind at various temperatures and Humidites
+ * @brief: Dispolay the speed of souind at various temperatures and Humidites
  *
  *----------------------------------------------------------------*/
 void sound_test(void)

@@ -41,7 +41,7 @@
 #include "../managed_components/espressif__led_strip/src/led_strip_rmt_encoder.h"
 
 /*
- * Function prototypes
+ * @function prototypes
  */
 static void sw_state(unsigned int action);// Do something with the switches
 static void send_fake_score(void);        // Send a fake score to the PC
@@ -65,11 +65,11 @@ static long power_save;
 
 /*-----------------------------------------------------
  * 
- * function: read_counter
+ * @function: read_counter
  * 
- * brief: Read specified counter register
+ * @brief: Read specified counter register
  * 
- * return: 16 bit counter register
+ * @return: 16 bit counter register
  * 
  *-----------------------------------------------------
  *
@@ -87,11 +87,11 @@ unsigned int read_counter
 
 /*-----------------------------------------------------
  * 
- * function: is_running
+ * @function: is_running
  * 
- * brief: Determine if the clocks are running
+ * @brief: Determine if the clocks are running
  * 
- * return: TRUE if any of the counters are running
+ * @return: TRUE if any of the counters are running
  * 
  *-----------------------------------------------------
  *
@@ -118,11 +118,11 @@ unsigned int is_running (void)
 
 /*-----------------------------------------------------
  * 
- * function: arm_timers
+ * @function: arm_timers
  * 
- * brief: Strobe the control lines to start a new cycle
+ * @brief: Strobe the control lines to start a new cycle
  * 
- * return: NONE
+ * @return: NONE
  * 
  *-----------------------------------------------------
  *
@@ -170,11 +170,11 @@ void trip_timers(void)
 
 /*-----------------------------------------------------
  * 
- * function: read_DIP
+ * @function: read_DIP
  * 
- * brief: READ the jumper block setting
+ * @brief: READ the jumper block setting
  * 
- * return: TRUE for every position with a jumper installed
+ * @return: TRUE for every position with a jumper installed
  * 
  *-----------------------------------------------------
  *
@@ -214,11 +214,11 @@ unsigned int read_DIP(void)
 
 /*-----------------------------------------------------
  * 
- * function: init_status_LED
+ * @function: init_status_LED
  * 
- * brief:    Initialize the LED driver
+ * @brief:    Initialize the LED driver
  * 
- * return:   None
+ * @return:   None
  * 
  *-----------------------------------------------------
  *
@@ -255,11 +255,11 @@ void status_LED_init
 
 /*-----------------------------------------------------
  * 
- * function: set_status_LED
+ * @function: set_status_LED
  * 
- * brief:    Set the state of all the status LEDs
+ * @brief:    Set the state of all the status LEDs
  * 
- * return:   None
+ * @return:   None
  * 
  *-----------------------------------------------------
  *
@@ -354,11 +354,11 @@ void set_status_LED
 
 /*-----------------------------------------------------
  * 
- * function: read_timers
+ * @function: read_timers
  * 
- * brief:   Read the timer registers
+ * @brief:   Read the timer registers
  * 
- * return:  All four timer registers read and stored
+ * @return:  All four timer registers read and stored
  * 
  *-----------------------------------------------------
  *
@@ -382,11 +382,11 @@ void read_timers
 
 /*-----------------------------------------------------
  * 
- * function: drive_paper
+ * @function: drive_paper
  * 
- * brief:    Turn on the witness paper motor for json_paper_time
+ * @brief:    Turn on the witness paper motor for json_paper_time
  * 
- * return:  None
+ * @return:  None
  * 
  *-----------------------------------------------------
  *
@@ -477,11 +477,11 @@ void drive_paper(void)
 
 /*-----------------------------------------------------
  * 
- * function: paper_on_off
+ * @function: paper_on_off
  * 
- * brief:    Turn the withness paper motor on or off
+ * @brief:    Turn the withness paper motor on or off
  * 
- * return:  None
+ * @return:  None
  * 
  *-----------------------------------------------------
  *
@@ -516,11 +516,11 @@ void paper_on_off                               // Function to turn the motor on
 
 /*-----------------------------------------------------
  * 
- * function: face_ISR
+ * @function: face_ISR
  * 
- * brief:    Face Strike Interrupt Service Routint
+ * @brief:    Face Strike Interrupt Service Routint
  * 
- * return:   None
+ * @return:   None
  * 
  *-----------------------------------------------------
  *
@@ -547,11 +547,11 @@ void paper_on_off                               // Function to turn the motor on
 
 /*-----------------------------------------------------
  * 
- * function: multifunction_init
+ * @function: multifunction_init
  * 
- * brief:    Use the multifunction switches during starup
+ * @brief:    Use the multifunction switches during starup
  * 
- * return:   None
+ * @return:   None
  * 
  *-----------------------------------------------------
  * 
@@ -621,11 +621,11 @@ void paper_on_off                               // Function to turn the motor on
  
 /*-----------------------------------------------------
  * 
- * function: multifunction_switch
+ * @function: multifunction_switch
  * 
- * brief:    Carry out the functions of the multifunction switch
+ * @brief:    Carry out the functions of the multifunction switch
  * 
- * return:   Switch state
+ * @return:   Switch state
  * 
  *-----------------------------------------------------
  *
@@ -761,16 +761,16 @@ void multifunction_switch(void)
 
 /*-----------------------------------------------------
  * 
- * function: multifunction_switch helper functions
+ * @function: multifunction_switch helper functions
  * 
- * brief:    Small functioins to work with the MFC
+ * @brief:    Small functioins to work with the MFC
  * 
- * return:   Switch state
+ * @return:   Switch state
  * 
  *-----------------------------------------------------
  *
  * The MFC software above has been organized to use helper
- * functions to simplify the construction and provide
+ * @functions to simplify the construction and provide
  * consistency in the operation.
  * 
  *-----------------------------------------------------*/
@@ -903,11 +903,11 @@ void multifunction_wait_open(void)
 
 /*-----------------------------------------------------
  * 
- * function: multifunction_display
+ * @function: multifunction_display
  * 
- * brief:    Display the MFS settings as text
+ * @brief:    Display the MFS settings as text
  * 
- * return:   None
+ * @return:   None
  * 
  *-----------------------------------------------------
  *
@@ -943,11 +943,11 @@ void multifunction_display(void)
 
 /*-----------------------------------------------------
  * 
- * function: digital_test()
+ * @function: digital_test()
  * 
- * brief:    Exercise the GPIO digital ports
+ * @brief:    Exercise the GPIO digital ports
  * 
- * return:   None
+ * @return:   None
  * 
  *-----------------------------------------------------
  *
@@ -983,11 +983,11 @@ void digital_test(void)
 
 /*----------------------------------------------------------------
  * 
- * function: aquire()
+ * @function: aquire()
  * 
- * brief: Aquire the data from the counter registers
+ * @brief: Aquire the data from the counter registers
  * 
- * return: Nothing
+ * @return: Nothing
  * 
  *----------------------------------------------------------------
  *
@@ -1021,11 +1021,11 @@ void aquire(void)
 
 /*----------------------------------------------------------------
  * 
- * function: send_fake_score
+ * @function: send_fake_score
  * 
- * brief: Send a fake score to the PC for testing
+ * @brief: Send a fake score to the PC for testing
  * 
- * return: Nothing
+ * @return: Nothing
  * 
  *----------------------------------------------------------------
  *
@@ -1048,12 +1048,12 @@ static void send_fake_score(void)
 
 /*----------------------------------------------------------------
  * 
- * function: rapid_red()
+ * @function: rapid_red()
  *           rapid_green()
  * 
- * brief: Set the RED and GREEN lights
+ * @brief: Set the RED and GREEN lights
  * 
- * return: Nothing
+ * @return: Nothing
  * 
  *----------------------------------------------------------------
  *

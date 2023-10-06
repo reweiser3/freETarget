@@ -38,11 +38,11 @@ static void remap_target(double* x, double* y);  // Map a club target if used
 
 /*----------------------------------------------------------------
  *
- * function: init_sensors()
+ * @function: init_sensors()
  *
- * brief: Setup the constants in the strucure
+ * @brief: Setup the constants in the strucure
  * 
- * return: Sensor array updated with current geometry
+ * @return: Sensor array updated with current geometry
  *
  *----------------------------------------------------------------
  *
@@ -100,11 +100,11 @@ void init_sensors(void)
 
 /*----------------------------------------------------------------
  *
- * funtion: compute_hit
+ * @funtion: compute_hit
  *
- * brief: Determine the location of the hit
+ * @brief: Determine the location of the hit
  * 
- * return: Sensor location used to recognize shot
+ * @return: Sensor location used to recognize shot
  *
  *----------------------------------------------------------------
  *
@@ -337,11 +337,11 @@ unsigned int compute_hit
 
 /*----------------------------------------------------------------
  *
- * function: find_xy_3D
+ * @function: find_xy_3D
  *
- * brief: Calaculate where the shot seems to lie
+ * @brief: Calaculate where the shot seems to lie
  * 
- * return: TRUE if the shot was computed correctly
+ * @return: TRUE if the shot was computed correctly
  *
  *----------------------------------------------------------------
  *
@@ -506,11 +506,11 @@ bool_t find_xy_3D
   
 /*----------------------------------------------------------------
  *
- * function: send_score
+ * @function: send_score
  *
- * brief: Send the score out over the serial port
+ * @brief: Send the score out over the serial port
  * 
- * return: None
+ * @return: None
  *
  *----------------------------------------------------------------
  * 
@@ -652,11 +652,11 @@ void send_score
  
 /*----------------------------------------------------------------
  *
- * function: send_miss
+ * @function: send_miss
  *
- * brief: Send out a miss message
+ * @brief: Send out a miss message
  * 
- * return: None
+ * @return: None
  *
  *----------------------------------------------------------------
  * 
@@ -749,11 +749,11 @@ void send_miss
 
 /*----------------------------------------------------------------
  *
- * function: remap_target
+ * @function: remap_target
  *
- * brief: Remaps shot into a different target
+ * @brief: Remaps shot into a different target
  * 
- * return: Pellet location remapped to centre bull
+ * @return: Pellet location remapped to centre bull
  *
  *----------------------------------------------------------------
  *
@@ -880,11 +880,11 @@ static void remap_target
 
 /*----------------------------------------------------------------
  *
- * function: show_timer
+ * @function: show_timer
  *
- * brief: Display a timer message to identify errors
+ * @brief: Display a timer message to identify errors
  *
- * return: None
+ * @return: None
  *----------------------------------------------------------------
  * 
  * The error is sent as:

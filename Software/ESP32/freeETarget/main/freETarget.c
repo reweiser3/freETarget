@@ -23,6 +23,7 @@
 #include "esp_random.h"
 #include "serial_io.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\freertos\FreeRTOS-Kernel\include\freertos\mpu_wrappers.h"
+#include "dac.h"
 
 /*
  *  Function Prototypes
@@ -82,11 +83,11 @@ const char    to_hex[] = "0123456789ABCDEF";      // Quick Hex to ASCII
 
 /*----------------------------------------------------------------
  * 
- * function: freeETarget_init()
+ * @function: freeETarget_init()
  * 
- * brief: Initialize the board and prepare to run
+ * @brief: Initialize the board and prepare to run
  * 
- * return: None
+ * @return: None
  * 
  *--------------------------------------------------------------*/
 
@@ -104,9 +105,8 @@ void freeETarget_init(void)
 /*
  *  Set up the port pins
  */
- // init_dac();
+  dac_init();
   init_sensors();
-//  init_analog_io();
   timer_new(&keep_alive,    (unsigned long)json_keep_alive * ONE_SECOND); // Keep alive timer
   timer_new(&state_timer,   0);                                           // Free running state timer
   timer_new(&in_shot_timer, FULL_SCALE);                                  // Time inside of the shot window
@@ -156,11 +156,11 @@ void freeETarget_init(void)
 
 /*----------------------------------------------------------------
  * 
- * function: freeEtarget_task
+ * @function: freeEtarget_task
  * 
- * brief: Main control loop
+ * @brief: Main control loop
  * 
- * return: None
+ * @return: None
  * 
  *----------------------------------------------------------------
  */
@@ -291,11 +291,11 @@ void freeETarget_task (void)
 
 /*----------------------------------------------------------------
  * 
- * function: set_mode()
+ * @function: set_mode()
  * 
- * brief: Set up the modes for the next string of shots
+ * @brief: Set up the modes for the next string of shots
  * 
- * return: Exit to the ARM state
+ * @return: Exit to the ARM state
  * 
  *----------------------------------------------------------------
  *
@@ -337,11 +337,11 @@ void freeETarget_task (void)
     
 /*----------------------------------------------------------------
  * 
- * function: arm()
+ * @function: arm()
  * 
- * brief:  Arm the circuit and check for errors
+ * @brief:  Arm the circuit and check for errors
  * 
- * return: Exit to the WAIT state if the circuit is ready
+ * @return: Exit to the WAIT state if the circuit is ready
  *         Stay in the ARM state if a hardware fault was detected
  * 
  *----------------------------------------------------------------
@@ -380,25 +380,25 @@ unsigned int arm(void)
 /*
  * The sensors are tripping, display the error
  */
-  if ( sensor_status & TRIP_EAST  )
+  if ( sensor_status & RUN_NORTH_LO  )
   {
     printf("\r\n{ \"Fault\": \"NORTH\" }");
     set_status_LED(LED_NORTH_FAILED);           // Fault code North
     vTaskDelay(ONE_SECOND);
   }
-  if ( sensor_status & TRIP_EAST  )
+  if ( sensor_status & RUN_EAST_LO  )
   {
     printf("\r\n{ \"Fault\": \"EAST\" }");
     set_status_LED(LED_EAST_FAILED);           // Fault code East
     vTaskDelay(ONE_SECOND);
   }
-  if ( sensor_status & TRIP_SOUTH )
+  if ( sensor_status & RUN_SOUTH_LO)
   {
     printf("\n\r{ \"Fault\": \"SOUTH\" }");
     set_status_LED(LED_SOUTH_FAILED);         // Fault code South
     vTaskDelay(ONE_SECOND);
   }
-  if ( sensor_status & TRIP_WEST )
+  if ( sensor_status & RUN_WEST_LO)
   {
     printf("\r\n{ \"Fault\": \"WEST\" }");
     set_status_LED(LED_WEST_FAILED);         // Fault code West
@@ -413,11 +413,11 @@ unsigned int arm(void)
    
 /*----------------------------------------------------------------
  * 
- * function: wait()
+ * @function: wait()
  * 
- * brief: Wait here for a shot to be fired
+ * @brief: Wait here for a shot to be fired
  * 
- * return: Exit to the WAIT state if the circuit is ready
+ * @return: Exit to the WAIT state if the circuit is ready
  *         Stay in the ARM state if a hardware fault was detected
  * 
  *----------------------------------------------------------------
@@ -497,11 +497,11 @@ unsigned int wait(void)
 
 /*----------------------------------------------------------------
  * 
- * function: reduce()
+ * @function: reduce()
  * 
- * brief: Loop through one or more shots and present the score
+ * @brief: Loop through one or more shots and present the score
  * 
- * return: Stay in the reduce state if a follow through timer is active 
+ * @return: Stay in the reduce state if a follow through timer is active 
  *         Jump to ARM state if more shots are ecpected
  * 
  *----------------------------------------------------------------
@@ -607,11 +607,11 @@ unsigned int reduce(void)
     
 /*----------------------------------------------------------------
  * 
- * function: finish()
+ * @function: finish()
  * 
- * brief: Finish up the shot cycle 
+ * @brief: Finish up the shot cycle 
  * 
- * return: Retrn to the SET_MODE state
+ * @return: Retrn to the SET_MODE state
  *
  *----------------------------------------------------------------
  *
@@ -627,11 +627,11 @@ unsigned int finish(void)
 
 /*----------------------------------------------------------------
  * 
- * function: tabata_enable
+ * @function: tabata_enable
  * 
- * brief:    Start or stop a tabata session
+ * @brief:    Start or stop a tabata session
  * 
- * return:   Nothing
+ * @return:   Nothing
  * 
  *----------------------------------------------------------------
  *
@@ -686,11 +686,11 @@ unsigned int finish(void)
 
 /*----------------------------------------------------------------
  * 
- * function: tabata
+ * @function: tabata
  * 
- * brief:   Implement a Tabata timer for training
+ * @brief:   Implement a Tabata timer for training
  * 
- * return:  Time that the current TABATA state == TABATA_ON
+ * @return:  Time that the current TABATA state == TABATA_ON
  * 
  *----------------------------------------------------------------
  *
@@ -816,11 +816,11 @@ static long tabata
 
 /*----------------------------------------------------------------
  * 
- * function: discard_shot
+ * @function: discard_shot
  * 
- * brief:    Determine if the shot is outside of the valid time
+ * @brief:    Determine if the shot is outside of the valid time
  * 
- * return:   TRUE if the shot is not allowed
+ * @return:   TRUE if the shot is not allowed
  * 
  *----------------------------------------------------------------
  *  
@@ -847,11 +847,11 @@ static bool_t discard_shot(void)
 
 /*----------------------------------------------------------------
  * 
- * function: rapid_auto
+ * @function: rapid_auto
  * 
- * brief:    Start or stop a rapid fire session
+ * @brief:    Start or stop a rapid fire session
  * 
- * return:   Nothing
+ * @return:   Nothing
  * 
  *----------------------------------------------------------------
  *
@@ -889,11 +889,11 @@ static bool_t discard_shot(void)
 
 /*----------------------------------------------------------------
  * 
- * function: rapid_enable
+ * @function: rapid_enable
  * 
- * brief:    Start or stop a rapid fire session
+ * @brief:    Start or stop a rapid fire session
  * 
- * return:   Nothing
+ * @return:   Nothing
  * 
  *----------------------------------------------------------------
  *
@@ -976,11 +976,11 @@ void rapid_enable
 
  /*----------------------------------------------------------------
  * 
- * function: bye
+ * @function: bye
  * 
- * brief:    Go into power saver
+ * @brief:    Go into power saver
  * 
- * return:   Nothing
+ * @return:   Nothing
  * 
  *----------------------------------------------------------------
  *
@@ -1036,11 +1036,11 @@ void bye(unsigned int x)
 
 /*----------------------------------------------------------------
  * 
- * function: hello
+ * @function: hello
  * 
- * brief:    Come out of power saver
+ * @brief:    Come out of power saver
  * 
- * return:   Nothing
+ * @return:   Nothing
  * 
  *----------------------------------------------------------------
  *
@@ -1065,11 +1065,11 @@ void hello(void)
 
 /*----------------------------------------------------------------
  * 
- * function: send_keep_alive
+ * @function: send_keep_alive
  * 
- * brief:    Send a keep alive over the TCPIP
+ * @brief:    Send a keep alive over the TCPIP
  * 
- * return:   Nothing
+ * @return:   Nothing
  * 
  *----------------------------------------------------------------
  *

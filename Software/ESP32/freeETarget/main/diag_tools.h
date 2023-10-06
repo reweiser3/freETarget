@@ -10,7 +10,7 @@
 #include "gpio.h"
 
 /*
- * Function Prototypes
+ * @function Prototypes
  */
 void    self_test(unsigned int test);
 void    show_sensor_status(unsigned int sensor_status); // Display the sensor status as text
@@ -32,6 +32,7 @@ bool_t  do_dlt(unsigned int level);                     // Diagnostics Log and T
 #define T_AIN          7       // Analog Inpt 
 #define T_TIMER        8       // Toggle the timer controls
 #define T_PCNT         9       // Read the PCNT registers 
+#define T_ISR         10       // Test the Timer ISR
 
 /*
  * LED status messages

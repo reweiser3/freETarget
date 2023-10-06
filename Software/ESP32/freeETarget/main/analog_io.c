@@ -37,11 +37,11 @@ void set_vset_PWM(unsigned int pwm);
 
 /*----------------------------------------------------------------
  * 
- * function: adc_init()
+ * @function: adc_init()
  * 
- * brief:  Initialize the ADC channel
+ * @brief:  Initialize the ADC channel
  * 
- * return: None
+ * @return: None
  * 
  *----------------------------------------------------------------
  *
@@ -88,11 +88,11 @@ void adc_init
 
  /*----------------------------------------------------------------
  * 
- * function: adc_read()
+ * @function: adc_read()
  * 
- * brief:  Read a value from teh ADC channel
+ * @brief:  Read a value from teh ADC channel
  * 
- * return: None
+ * @return: None
  * 
  *----------------------------------------------------------------
  *
@@ -135,12 +135,12 @@ unsigned int adc_read
 
 /*----------------------------------------------------------------
  * 
- * function: set_LED_PWM()
- * function: set_LED_PWM_now()
+ * @function: set_LED_PWM()
+ * @function: set_LED_PWM_now()
  * 
- * brief: Program the PWM value
+ * @brief: Program the PWM value
  * 
- * return: None
+ * @return: None
  * 
  *----------------------------------------------------------------
  *
@@ -211,11 +211,11 @@ void set_LED_PWM                                  // Theatre lighting
 
 /*----------------------------------------------------------------
  * 
- * function: read_feedback(void)
+ * @function: read_feedback(void)
  * 
- * brief: return the reference voltage
+ * @brief: return the reference voltage
  * 
- * return: ADC value of the reference voltage
+ * @return: ADC value of the reference voltage
  * 
  *--------------------------------------------------------------*/
 unsigned int read_reference(void)
@@ -225,11 +225,11 @@ unsigned int read_reference(void)
 
 /*----------------------------------------------------------------
  * 
- * function: revision(void)
+ * @function: revision(void)
  * 
- * brief: Return the board revision
+ * @brief: Return the board revision
  * 
- * return: Board revision level
+ * @return: Board revision level
  * 
  *--------------------------------------------------------------
  *
@@ -263,9 +263,9 @@ unsigned int revision(void)
 
 /*----------------------------------------------------------------
  * 
- * function: temperature_C()
+ * @function: temperature_C()
  * 
- * brief: Read the temperature sensor and return temperature in degrees C
+ * @brief: Read the temperature sensor and return temperature in degrees C
  * 
  *----------------------------------------------------------------
  *
@@ -310,11 +310,11 @@ double temperature_C(void)
 
 /*----------------------------------------------------------------
  * 
- * function: humidity_RH()
+ * @function: humidity_RH()
  * 
- * brief: Return the previoudly read humidity
+ * @brief: Return the previoudly read humidity
  * 
- * return: Humidity in RH (0-100%)
+ * @return: Humidity in RH (0-100%)
  *----------------------------------------------------------------
  *
  * See TI Documentation for HDC3022
@@ -332,9 +332,9 @@ double humidity_RH(void)
 
 /*----------------------------------------------------------------
  * 
- * funciton: set_vset_PWM()
+ * @funciton: set_vset_PWM()
  * 
- * brief: Set the PWM value to the hardware
+ * @brief: Set the PWM value to the hardware
  * 
  *----------------------------------------------------------------
  *
@@ -355,9 +355,9 @@ double humidity_RH(void)
 
 /*----------------------------------------------------------------
  * 
- * function: set_vref()
+ * @function: set_vref()
  * 
- * brief: Set the refererence voltage for the comparitor
+ * @brief: Set the refererence voltage for the comparitor
  * 
  *----------------------------------------------------------------
  *

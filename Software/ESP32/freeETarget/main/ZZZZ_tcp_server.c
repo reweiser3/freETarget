@@ -36,11 +36,11 @@ static const char *TAG = "tcp_server";
 
 /*****************************************************************************
  *
- * function: tcp_server_io)
+ * @function: tcp_server_io)
  *
- * brief: Transmit data in and out of the target
+ * @brief: Transmit data in and out of the target
  * 
- * return: None
+ * @return: None
  *
  ******************************************************************************
  *
@@ -97,11 +97,11 @@ static void tcp_server_io
 
 /*****************************************************************************
  *
- * function: tcp_server_task()
+ * @function: tcp_server_task()
  *
- * brief: Synchorous task to manage the TCPIP Stack
+ * @brief: Synchorous task to manage the TCPIP Stack
  * 
- * return: Never
+ * @return: Never
  *
  ******************************************************************************
  *
@@ -202,11 +202,11 @@ CLEAN_UP:
 
 /*----------------------------------------------------------------
  * 
- * function: app_main()
+ * @function: app_main()
  * 
- * brief:    Main entry point for freeETarget softwae
+ * @brief:    Main entry point for freeETarget softwae
  * 
- * return: None
+ * @return: None
  * 
  *----------------------------------------------------------------
  *
