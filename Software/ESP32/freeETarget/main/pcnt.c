@@ -120,6 +120,8 @@ void pcnt_init
  * The PCNT registers are 16 bits long with an overflow counter
  * 
  **************************************************************************/
+#define PCNT_BASE 0x60017000+0x00030    // Pointer to start of PCNT registers
+
 unsigned int pcnt_read
 (
     int unit                   // What timer to read
@@ -134,7 +136,7 @@ unsigned int pcnt_read
 
 /*************************************************************************
  * 
- * @function: pcnt_clear)
+ * @function: pcnt_clear()
  * 
  * description:  Clear the pcnt register
  * `

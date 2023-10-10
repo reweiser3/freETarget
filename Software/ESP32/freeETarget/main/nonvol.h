@@ -30,9 +30,11 @@ void restore_nonvol(void);                        // Copyt the nonvol back
  */
 
 #define NONVOL_INIT           "NONVOL_INIT"    // Show when the INIT is done
-#define NONVOL_SENSOR_DIA     "SENSOR_DIA"     // Sensor diameter
-#define NONVOL_PAPER_TIME     "PAPER_TIME"     // Paper advance time
 #define NONVOL_CALIBRE_X10    "CALIBRE_X10"    // Pellet Calibre
+#define NONVOL_DOPPLER        "DOPPLER"        // Compensation for signal fading
+#define NONVOL_SENSOR_DIA     "SENSOR_DIA"     // Sensor diameter
+
+
 #define NONVOL_SENSOR_ANGLE   "SENSOR_ANGLE"   // Angular displacement of sensors
 #define NONVOL_NORTH_X        "NORTH_X"        // Offset applied to North sensor
 #define NONVOL_NORTH_Y        "NORTH_Y"
@@ -51,25 +53,22 @@ void restore_nonvol(void);                        // Copyt the nonvol back
 #define NONVOL_STEP_COUNT     "STEP_COUNT"     // Number of paper pulse steps
 #define NONVOL_MFS            "MFS"            // Multifunction switch operation 
 #define NONVOL_MFS2           "MFS2"           // Multifunction switch operation
+#define NONVOL_PAPER_TIME     "PAPER_TIME"     // Paper advance time
 #define NONVOL_STEP_TIME      "STEP_TIME"      // Stepper motor pulse duration
-#define NONVOL_Z_OFFSET       "Z_OFFSET"       // Distance from sensor plane to paper plane
 #define NONVOL_PAPER_ECO      "PAPER_ECO"      // Advance witness paper if the shot is less than paper_eco
 #define NONVOL_TARGET_TYPE    "TARGET_TYPE"    // Modify the target processing (0 == Regular single bull)
-#define NONVOL_VSET_PWM       "VSET_PWM"       // Starting PWM setting
-#define NONVOL_VSET           "VSET"           // Desired Voltage value (floating point)
 #define NONVOL_PS_VERSION     "PS_VERSION"     // Persistent storage version
 #define NONVOL_FOLLOW_THROUGH "FOLLOW_THROUGH" // Follow through timer
 #define NONVOL_KEEP_ALIVE     "KEEP_ALIVE"     // Send out a keep alive at a r
 #define NONVOL_FACE_STRIKE    "FACE_STRIKE"    // Number of cycles to accept a face strike
+#define NONVOL_MIN_RING_TIME  "MIN_RING_TIME"  // Minimum time for ringing to stop 
+#define NONVOL_TOKEN          "TOKEN"          // Token ring state
+#define NONVOL_VREF_LO        "VREF_LO"        // Sensor Reference Voltage low in V
+#define NONVOL_VREF_HI        "VREF_HI"        // Sensor Reference Voltage high in V
 #define NONVOL_WIFI_CHANNEL   "WIFI_CHANNEL"   // Channel to use for WiFI
 #define NONVOL_WIFI_DHCP      "WIFI_DHCP"      // 
 #define NONVOL_WIFI_SSID      "WIFI_SSID"      // Storage for SSID
 #define NONVOL_WIFI_PWD       "WIFI_PWD"       // Storage for SSID Password
 #define NONVOL_WIFI_IP        "WIFI_IP"        // Storage forIP Address
-#define NONVOL_MIN_RING_TIME  "MIN_RING_TIME"  // Minimum time for ringing to stop 
-#define NONVOL_DOPPLER        "DOPPLER"        // Compensation for signal fading
-#define NONVOL_TOKEN          "TOKEN"          // Token ring state
-#define NONVOL_DAC_LOW        "DAC_LOW"        // Sensor Reference Voltage low in mV
-#define NONVOL_DAC_HIGH       "DAC_HIGH"       // Sensor Reference Voltage high in mV
-
+#define NONVOL_Z_OFFSET       "Z_OFFSET"       // Distance from sensor plane to paper plane
 #endif

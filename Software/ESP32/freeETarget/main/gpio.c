@@ -50,9 +50,9 @@ static void send_fake_score(void);        // Send a fake score to the PC
  *  Typedefs
  */
 typedef struct status_struct {
-  int red;                                // Bits to send to the LED
+  int blue;                               // Bits to send to the LED
   int green;
-  int blue;
+  int red;   
   int blink;                              // TRUE if blinking enabled
   }  status_struct_t;
 
@@ -190,22 +190,22 @@ unsigned int read_DIP(void)
 
   if (gpio_get_level(DIP_A) != 0)
   {
-   return_value |= 1;
+   return_value |= 8;
   }
 
   if (gpio_get_level(DIP_B) != 0)
   {
-    return_value |= 2;
+    return_value |= 4;
   }
 
   if (gpio_get_level(DIP_C) != 0)
   {
-    return_value |= 4;
+    return_value |= 2;
   }
 
   if (gpio_get_level(DIP_D) != 0)
   {
-    return_value |= 8;
+    return_value |= 1;
   }
 
   return return_value;
@@ -269,6 +269,7 @@ void status_LED_init
  * '-' - Leave the LED alone
  *  
  *-----------------------------------------------------*/
+#define   LED_ON 0x1F
 
 rmt_transmit_config_t tx_config = {
         .loop_count = 0, // no transfer loop
@@ -301,27 +302,27 @@ void set_status_LED
         case 'r':               // RED LED
           status[i].blink = 1;    // Turn on Blinking
         case 'R':
-          status[i].red   = 0xff;
+          status[i].red   = LED_ON;
           break;
 
         case 'g':               // GREEN LED
           status[i].blink = 1;    // Turn on Blinking
         case 'G':
-          status[i].green = 0xff;
+          status[i].green = LED_ON;
           break;
 
         case 'b':
           status[i].blink = 1;
         case 'B':
-          status[i].blue  = 0xff;
+          status[i].blue  = LED_ON;
           break;
 
         case 'w':
           status[i].blink = 1;
         case 'W':
-          status[i].red   = 0xff;
-          status[i].green = 0xff;
-          status[i].blue  = 0xff;
+          status[i].red   = LED_ON/2;
+          status[i].green = LED_ON/2;
+          status[i].blue  = LED_ON/2;
           break;
 
         case ' ':             // The LEDs are already off
@@ -338,8 +339,8 @@ void set_status_LED
   for (i=0; i < 3; i++)
   {
     led_strip_pixels[i * 3 + 0] = status[i].green;
-    led_strip_pixels[i * 3 + 1] = status[i].blue;
-    led_strip_pixels[i * 3 + 2] = status[i].red;
+    led_strip_pixels[i * 3 + 2] = status[i].blue;
+    led_strip_pixels[i * 3 + 1] = status[i].red;
   }
     
   ESP_ERROR_CHECK(rmt_transmit(led_chan, led_encoder, led_strip_pixels, sizeof(led_strip_pixels), &tx_config));

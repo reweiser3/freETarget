@@ -36,7 +36,7 @@ void set_vset_PWM(unsigned int value);      // Value to write to PWM
 
 #define TO_VOLTS(x) ( ((double)(x) * 5.0) / 1024.0 )
 
-#define TEMP_IC      (0x44 << 1)// TI HDC3022
-#define DAC_IC       (0xC0)     // Microchip HCP4728    
+#define TEMP_IC      (0x44)     // TI HDC3022
+#define DAC_IC       (0x60)     // Microchip HCP4728    
 
 #endif

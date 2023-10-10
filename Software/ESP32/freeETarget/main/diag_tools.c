@@ -152,8 +152,11 @@ void self_test
  * Test 5, Temperature
  */
     case T_TEMPERATURE:
+    while(1)
+    {
       printf("\r\nTemperature: %f", temperature_C());
       printf("\r\nHumidity: %f\r\n", humidity_RH());
+    }
       break;
 
 /*
@@ -178,7 +181,7 @@ void self_test
     case T_AIN:
       printf("\r\nAnalog Input ");
       printf("\r\n12V %d", adc_read(V_12_LED));
-      printf("\r\nBoard Rev %d", adc_read(BOARD_REV));
+      printf("\r\nBoard Rev %d", revision());
       break;
 
 /*
@@ -186,13 +189,34 @@ void self_test
  */
     case T_TIMER:
       printf("\r\nTimer Control ");
-      for (i=0; i != 10000; i++)
+//      for (i=0; i != 10000; i++)
+//      {
+//        gpio_set_level(39, i&1);      // Reset the timer
+//        gpio_set_level(CLOCK_START, i&1);
+//        paper_on_off(i&1);
+      volatile unsigned int* gpio_out;
+      gpio_out = 0x60004004;
+      volatile unsigned int* gpio_in;
+      gpio_in = 0x6000403C;
+      register unsigned int old,new, temp, a, b, c, d, z;
+      new = (1<<21);
+      old = (*gpio_in) & 15;       // Read the por
+
+while(1)
+{
+      *gpio_out ^= new;
+      temp = (*gpio_in) & 15;       // Read the por
+      temp ^= old;          // Look for differeces
+      if ( temp != 0 )
       {
-        gpio_set_level(39, i&1);      // Reset the timer
-        gpio_set_level(CLOCK_START, i&1);
-        paper_on_off(i&1);
-        gpio_set_level(21, i&1);      // Reset the timer
-        vTaskDelay(ONE_SECOND/100);
+        if ( temp & 1 ) a = *gpio_out;
+        if ( temp & 2 ) b = *gpio_out;
+        if ( temp & 4 ) c = *gpio_out;
+        if ( temp & 8 ) d = *gpio_out;
+        old ^= temp;
+      }
+
+//        vTaskDelay(ONE_SECOND/100);
       }
       printf("done");
       break;
@@ -201,6 +225,8 @@ void self_test
  * Test 9, PCNT test
  */
     case T_PCNT:
+
+
       printf("\r\nRead PCNT\r\n");
       arm_timers();
       trip_timers();
@@ -275,11 +301,11 @@ void self_test
   }
 
   set_status_LED("R  ");
-  vTaskDelay(ONE_SECOND/4);
+  vTaskDelay(ONE_SECOND/1);
   set_status_LED(" R ");
-  vTaskDelay(ONE_SECOND/4);
+  vTaskDelay(ONE_SECOND/1);
   set_status_LED("  R");
-  vTaskDelay(ONE_SECOND/4);
+  vTaskDelay(ONE_SECOND/1);
   set_status_LED("G  ");
   
   return;
@@ -607,7 +633,7 @@ bool_t do_dlt
     return false;      // Send out if the trace is higher than the level 
   }
 
-  printf("\n\r%10.6fs ",esp_timer_get_time()/1000000.0 );
+  printf("\n\r%10.6fs: ",esp_timer_get_time()/1000000.0 );
 
   return true;
 }

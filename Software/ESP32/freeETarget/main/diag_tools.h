@@ -52,11 +52,11 @@ bool_t  do_dlt(unsigned int level);                     // Diagnostics Log and T
 #define LED_HELLO_WORLD   "RWB"             // Hello World
 
 // Fault Codes
-#define LED_FAULT          "R--"            // Generic fault
+#define LED_FAULT          "--R"            // Generic fault
 #define LED_NORTH_FAILED   "RRR"            // North sensor failed
-#define LED_EAST_FAILED    "RRG"            // East sensor failed
-#define LED_SOUTH_FAILED   "RRB"            // South sensor failed
-#define LED_WEST_FAILED    "RRW"            // 3 West sensor failed
+#define LED_EAST_FAILED    "GRR"            // East sensor failed
+#define LED_SOUTH_FAILED   "BRR"            // South sensor failed
+#define LED_WEST_FAILED    "WRR"            // 3 West sensor failed
 
 #define LED_FAIL_A         "RGR"            // 
 #define LED_FAIL_B         "RGG"            // 

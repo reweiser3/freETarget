@@ -7,7 +7,7 @@
  *
  *****************************************************************************
  *
- * See: https://ww1.microchip.com/downloads/en/DeviceDoc/22187E.pdf
+ * See: https://ww1.microchip.com/downloads/en/DeviceDoc/22{"187E.pdf
  *
  *****************************************************************************/
 
@@ -59,10 +59,17 @@
  * Set the output based on the JSON settings
  *  
  *--------------------------------------------------------------*/
-void dac_init(void)
+void dac_init
+(
+  int not_used
+)
 {
-    dac_write(DAC_LOW, json_dac_low);
-    dac_write(DAC_HIGH, json_dac_high);
+    unsigned int dac_value;
+
+    dac_value = (int)(2047.0 * json_vref_lo / 2.048);
+    dac_write(DAC_LOW, dac_value);
+    dac_value = (int)(2047.0 * json_vref_hi / 2.048);
+    dac_write(DAC_LOW, dac_value);
     return;
 }
 

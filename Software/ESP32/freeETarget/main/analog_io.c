@@ -248,11 +248,13 @@ const static unsigned int version[] = {REV_500, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1
   
 unsigned int revision(void)
 {
-  unsigned int revision;
+  int revision;
 
 /* 
  *  Read the resistors and determine the board revision
  */
+  revision = adc_read(BOARD_REV) >> (12-4);
+  printf("adc voltage %d", revision);
   revision =   version[0]; // analogRead(ANALOG_VERSION) * 16 / 1024];
 
 /*
@@ -292,17 +294,21 @@ double temperature_C(void)
   temp_buffer[0] = 0x24;        // Trigger read on demand
   temp_buffer[1] = 0x00;
   i2c_write( TEMP_IC, &temp_buffer, 2 );
-  i2c_read( TEMP_IC,  &temp_buffer, 5);
+  temp_buffer[0] = 0xAB;
+  temp_buffer[1] = 0xCD;
+  temp_buffer[2] = 0xDE;
+  temp_buffer[3] = 0xF0;
+  i2c_read( TEMP_IC,  &temp_buffer, 6);
 
 /*
  *  Return the temperature in C
  */
-  raw = (temp_buffer[2] << 8) + temp_buffer[3];
-  printf(" t_c raw  %d", raw);
-  t_c =  (double)(raw) * RTD_SCALE;
-  raw = (temp_buffer[4] << 8) + temp_buffer[5];
-  printf(" rh raw  %d", raw);
-  rh  =  (double)(raw) * RTD_SCALE;
+  raw = (temp_buffer[0] << 8) + temp_buffer[1];
+  printf(" t_c raw  %d\r\n", raw);
+  t_c = -42.0 + (175.0 * (float)raw / 65535.0);
+  raw = (temp_buffer[3] << 8) + temp_buffer[4];
+  printf(" rh raw  %d\r\n", raw);
+  rh  =  100.0 * (float)raw / 65535.0;
 
   return t_c;
 

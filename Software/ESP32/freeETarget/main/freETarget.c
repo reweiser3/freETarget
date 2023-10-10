@@ -105,7 +105,7 @@ void freeETarget_init(void)
 /*
  *  Set up the port pins
  */
-  dac_init();
+  dac_init(0);
   init_sensors();
   timer_new(&keep_alive,    (unsigned long)json_keep_alive * ONE_SECOND); // Keep alive timer
   timer_new(&state_timer,   0);                                           // Free running state timer
@@ -136,11 +136,12 @@ void freeETarget_init(void)
 /*
  * Ready to go
  */ 
+#endif
   set_LED_PWM(json_LED_PWM);
   POST_LEDs();                            // Cycle the LEDs
-  set_status_LED(LED_READY);                     // to a client, then the RDY light is steady on
+  set_status_LED(LED_READY);              // to a client, then the RDY light is steady on
   serial_flush(ALL);                      // Get rid of everything
-#endif
+
   
   if ( DLT(DLT_CRITICAL) )
   {

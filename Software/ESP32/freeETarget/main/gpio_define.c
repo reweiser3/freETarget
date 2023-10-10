@@ -195,7 +195,7 @@ gpio_struct_t gpio_table[] = {
     {"STATUS",       GPIO_NUM_45, (void*)&led_strip_config},// Status LEDs
     {"SPARE0",       GPIO_NUM_48, (void*)&dio48},    // SPARE 0
     {"SPARE1",       GPIO_NUM_47, (void*)&dio47},    // Spare 1
-    {"SPARE2",       GPIO_NUM_21, (void*)&dio21},    // Spare 2 
+    {"V_REF_SET",    GPIO_NUM_21, (void*)&dio21},    // Set VREF 
     {"SDA",          GPIO_NUM_14, (void*)&i2c},      // SDA
     {"SCL",          GPIO_NUM_13, NULL},             // SCL
     {0, 0, 0 } 
@@ -239,7 +239,7 @@ void gpio_init(void)
         {   
             if ( DLT(DLT_CRITICAL) )
             {
-                printf("%s: %d  %s\r\n",gpio_table[i].gpio_name, gpio_table[i].gpio_number, gpio_use[((DIO_struct_t*)(gpio_table[i].gpio_uses))->type]);
+                printf("%s: %d  %s",gpio_table[i].gpio_name, gpio_table[i].gpio_number, gpio_use[((DIO_struct_t*)(gpio_table[i].gpio_uses))->type]);
             }
             switch (((DIO_struct_t*)(gpio_table[i].gpio_uses))->type)
             {      
