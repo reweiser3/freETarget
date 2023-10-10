@@ -67,7 +67,7 @@ void self_test
 )
 {
   int   i;
-  float x;
+  float x, volts;
 
 /*
  * Figure out what test to run
@@ -164,13 +164,16 @@ void self_test
  */
     case T_VREF:
       printf("\r\nRamping DACs 0 & 1 ");
-      for (i=0; i != 10240; i++)
+      volts = 0.0;
+      while(1)
       {
-        x = i % 100;
-        set_VRef(0, x);
-        x = 100 * sin(((float)i)/100.0);
-        set_VRef(1, x);
-        vTaskDelay(ONE_SECOND/100);
+        set_VRef(0, volts);
+        set_VRef(1, 2.048-volts);
+        volts += 0.001;
+        if ( volts > 2.048 )
+        {
+          volts = 0;
+        }
       }
       printf("done");
       break;

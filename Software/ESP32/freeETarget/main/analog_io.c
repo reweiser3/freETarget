@@ -372,30 +372,31 @@ double humidity_RH(void)
  * Figure 5-8
  * 
  *--------------------------------------------------------------*/
-
 void set_VRef
 (
   unsigned int channel,         // Channel 0-3 to control
-  float        percent          // Percent of full scale
+  float        volts            // Voltage to set output
 )
 {
-  unsigned char temp_buffer[10];
+  unsigned char buffer[10];
   int raw;
+
+  raw = (int)(volts * 1000.0) & 0x0FFF;                 // Volts to  mV (1lsb = 1mV)
 
 /*
  * Write to the selected DAC
  */
-  temp_buffer[0] = 0xC0;                          // Single write
-  temp_buffer[1] = 0x40 + (channel << 1) + 0x00;  // Multi write + channel + LDAC = 0 (immediate)
-  raw = (int)(2047.0 * percent / 100.0);          // Convert percent to 0-2047
-  temp_buffer[2] = 0x80 + 0x00 + 0x00 + (raw >> 8);
-  temp_buffer[3] =                      (raw & 0xff);
-  i2c_write( DAC_IC, &temp_buffer, 4 );
+  buffer[0] = (0xb << 3) + (channel << 1) + 0x00;  // Multi write + channel + LDAC = 0 (immediate)
+  buffer[1] = 0x80                                 // VREF = 2.048 internal
+                     | 0x00                        // PD = Normal mode
+                     | 0x00                        // Gain = 1
+                     | ((raw >> 8) & 0x0f);        // Top 12 bits of the voltage
+  buffer[2] = (raw & 0xff);
+  i2c_write( DAC_IC, &buffer, 3 );
 
 /*
  *  All done, return
  */
-
   return;
 
 }

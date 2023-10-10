@@ -17,7 +17,7 @@ unsigned int read_12V(void);                // Read the 12V motor drive input
 unsigned int revision(void);                // Return the board revision
 double temperature_C(void);                 // Temperature in degrees C
 double humidity_RH(void);                   // Relative humidity in %
-void set_VRef(unsigned int channel, float percent); // Set the output of the VREF DAC(s)
+void set_VRef(unsigned int channel, float volts); // Set the output of the VREF DAC(s)
 void set_LED_PWM(int percent);              // Ramp the PWM duty cycle
 void set_LED_PWM_now(unsigned int percent); // Set the PWM duty cycle
 void set_vset_PWM(unsigned int value);      // Value to write to PWM
