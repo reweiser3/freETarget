@@ -31,6 +31,7 @@
 #include "i2c.h"
 #include <stdio.h>
 #include "driver/adc.h"
+#include "dac.h"
 
 void set_vset_PWM(unsigned int pwm);
                     
@@ -211,20 +212,6 @@ void set_LED_PWM                                  // Theatre lighting
 
 /*----------------------------------------------------------------
  * 
- * @function: read_feedback(void)
- * 
- * @brief: return the reference voltage
- * 
- * @return: ADC value of the reference voltage
- * 
- *--------------------------------------------------------------*/
-unsigned int read_reference(void)
-{
-  return 0; // analogRead(V_REFERENCE);
-}
-
-/*----------------------------------------------------------------
- * 
  * @function: revision(void)
  * 
  * @brief: Return the board revision
@@ -253,9 +240,7 @@ unsigned int revision(void)
 /* 
  *  Read the resistors and determine the board revision
  */
-  revision = adc_read(BOARD_REV) >> (12-4);
-  printf("adc voltage %d", revision);
-  revision =   version[0]; // analogRead(ANALOG_VERSION) * 16 / 1024];
+  revision = version[adc_read(BOARD_REV) >> (12-4)];
 
 /*
  * Nothing more to do, return the board revision
@@ -304,10 +289,8 @@ double temperature_C(void)
  *  Return the temperature in C
  */
   raw = (temp_buffer[0] << 8) + temp_buffer[1];
-  printf(" t_c raw  %d\r\n", raw);
   t_c = -42.0 + (175.0 * (float)raw / 65535.0);
   raw = (temp_buffer[3] << 8) + temp_buffer[4];
-  printf(" rh raw  %d\r\n", raw);
   rh  =  100.0 * (float)raw / 65535.0;
 
   return t_c;
@@ -361,7 +344,7 @@ double humidity_RH(void)
 
 /*----------------------------------------------------------------
  * 
- * @function: set_vref()
+ * @function: set_VREF()
  * 
  * @brief: Set the refererence voltage for the comparitor
  * 
@@ -372,27 +355,13 @@ double humidity_RH(void)
  * Figure 5-8
  * 
  *--------------------------------------------------------------*/
-void set_VRef
+void set_VREF
 (
   unsigned int channel,         // Channel 0-3 to control
   float        volts            // Voltage to set output
 )
 {
-  unsigned char buffer[10];
-  int raw;
-
-  raw = (int)(volts * 1000.0) & 0x0FFF;                 // Volts to  mV (1lsb = 1mV)
-
-/*
- * Write to the selected DAC
- */
-  buffer[0] = (0xb << 3) + (channel << 1) + 0x00;  // Multi write + channel + LDAC = 0 (immediate)
-  buffer[1] = 0x80                                 // VREF = 2.048 internal
-                     | 0x00                        // PD = Normal mode
-                     | 0x00                        // Gain = 1
-                     | ((raw >> 8) & 0x0f);        // Top 12 bits of the voltage
-  buffer[2] = (raw & 0xff);
-  i2c_write( DAC_IC, &buffer, 3 );
+  dac_write(channel, volts);
 
 /*
  *  All done, return

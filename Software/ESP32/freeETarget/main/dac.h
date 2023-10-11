@@ -14,10 +14,10 @@
 /*
  *  Definitions
  */
-#define DAC_FS    2048    // DAC Full Scale Voltage
-#define V_REF     2.048   // DAC Reference Voltage
 #define DAC_ADDR  0x60    // DAC I2C address
 #define DAC_WRITE 0x58    // Single write
+#define DAC_LOW   0       // Channel 0
+#define DAC_HIGH  1       // Channel 1
 
 /*
  *  Functions

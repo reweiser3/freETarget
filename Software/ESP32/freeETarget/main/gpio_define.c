@@ -82,12 +82,12 @@ DIO_struct_t dio39 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_va
 
 DIO_struct_t dio40 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0};  // Mode and Initial Value
 DIO_struct_t dio41 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};  // Mode and Initial Value
-DIO_struct_t dio42 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};  // Mode and Initial Value
+DIO_struct_t dio42 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 1};  // Mode and Initial Value
 DIO_struct_t dio43 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};  // Mode and Initial Value
 DIO_struct_t dio44 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0};  // Mode and Initial Value
 DIO_struct_t dio45 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};  // Mode and Initial Value
 DIO_struct_t dio46 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0};  // Mode and Initial Value
-DIO_struct_t dio47 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0};  // Mode and Initial Value
+DIO_struct_t dio47 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};  // Mode and Initial Value
 DIO_struct_t dio48 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0};  // Mode and Initial Value
 DIO_struct_t dio49 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0};  // Mode and Initial Value
 
@@ -180,12 +180,12 @@ gpio_struct_t gpio_table[] = {
 
     {"LED_FB",       GPIO_NUM_1, (void*)&adc1_ch0},   // LED Feedback (Measure 12VDC)
     {"LED_PWM",      GPIO_NUM_2, (void*)&pwm0},       // LED_PWM
-    {"TXD",          GPIO_NUM_22, NULL},              // UART Transmit   Initialized in serial_io_init
-    {"RXD",          GPIO_NUM_23, NULL},              // UART Receive
+    {"TXD",          22, NULL},              // UART Transmit   Initialized in serial_io_init
+    {"RXD",          12, NULL},              // UART Receive
     {"LDAC*",        GPIO_NUM_42, (void*)&dio42},     // Load DAC* 
-    {"CLK_START*",   GPIO_NUM_41, (void*)&dio41},     // Clock Test Start
+    {"SPARE0",       GPIO_NUM_41, NULL},              // 
     {"FACE_HALF",    GPIO_NUM_40, (void*)&dio40},     // FACE Interrupt
-    {"STOP*",        GPIO_NUM_39, (void*)&dio39},     // STOP Clock
+    {"SPARE1",       GPIO_NUM_39, NULL},              // STOP Clock
     {"A",            GPIO_NUM_38, (void*)&dio38},     // Auxilary Input A
 
     {"B",            GPIO_NUM_37, (void*)&dio37},    // Auxilary Input B
@@ -194,8 +194,8 @@ gpio_struct_t gpio_table[] = {
     {"BOOT",         GPIO_NUM_0,  NULL},             // Hold in BOOT
     {"STATUS",       GPIO_NUM_45, (void*)&led_strip_config},// Status LEDs
     {"SPARE0",       GPIO_NUM_48, (void*)&dio48},    // SPARE 0
-    {"SPARE1",       GPIO_NUM_47, (void*)&dio47},    // Spare 1
-    {"V_REF_SET",    GPIO_NUM_21, (void*)&dio21},    // Set VREF 
+    {"CLK_START*",   GPIO_NUM_47, (void*)&dio47},    // Spare 1
+    {"STOP*",        GPIO_NUM_21, (void*)&dio21},    // Set VREF 
     {"SDA",          GPIO_NUM_14, (void*)&i2c},      // SDA
     {"SCL",          GPIO_NUM_13, NULL},             // SCL
     {0, 0, 0 } 

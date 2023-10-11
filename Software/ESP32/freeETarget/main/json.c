@@ -113,9 +113,9 @@ const json_message_t JSON[] = {
   {"\"CAL\":",            0,                                 0,                IS_VOID,   &set_trip_point,                  0,       0 },    // Enter calibration mode
   {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT32,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
   {"\"DELAY\":",          0,                                 0,                IS_INT32,  &diag_delay,                      0,       0 },    // Delay TBD seconds
-  {"\"DOPPLER\":",        0,                     &json_doppler,                IS_FLOAT,  0,                NONVOL_DOPPLER, (7.0d/(700.0d * 700.0d))},    // Adjust timing based on Doppler Inverse SQ
+  {"\"DOPPLER\":",        0,                     &json_doppler,                IS_FLOAT,  0,                NONVOL_DOPPLER,         40 },    // Adjust timing based on Doppler Inverse SQ
   {"\"ECHO\":",           0,                                 0,                IS_VOID,   (void*)&show_echo,                0,       0 },    // Echo test
-  {"\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT32,  0,                NONVOL_FACE_STRIKE,      5 },    // Face Strike Count 
+  {"\"FACE_STRIKE\":",    &json_face_strike,                 0,                IS_INT32,  0,                NONVOL_FACE_STRIKE,      0 },    // Face Strike Count 
   {"\"FOLLOW_THROUGH\":", &json_follow_through,              0,                IS_INT32,  0,                NONVOL_FOLLOW_THROUGH,   0 },    // Three second follow through
   {"\"INIT\":",           0,                                 0,                IS_INT32,  &init_nonvol,     NONVOL_INIT,             0 },    // Initialize the NONVOL memory
   {"\"KEEP_ALIVE\":",     &json_keep_alive,                  0,                IS_INT32,  0,                NONVOL_KEEP_ALIVE,     120 },    // TCPIP Keep alive period (in seconds)
@@ -154,8 +154,8 @@ const json_message_t JSON[] = {
   {"\"TOKEN\":",          &json_token,                       0,                IS_INT32,  0,                NONVOL_TOKEN,            0 },    // Token ring state
   {"\"TRACE\":",          0,                                 0,                IS_INT32,  &set_trace,       0,                       0 },    // Enter / exit diagnostic trace
 //  {"\"VERSION\":",        0,                                0,               IS_INT32,  &POST_version,    0,                       0 },    // Return the version string
-  {"\"VREF_LO\":",         0,                                &json_vref_lo,    IS_FLOAT,  &dac_init,        NONVOL_VREF_LO,          1 },    // Low trip point value (Volts)
-  {"\"VREF_HI\":",         0,                                &json_vref_hi,    IS_FLOAT,  &dac_init,        NONVOL_VREF_HI,          2 },    // High trip point value (Volts)
+  {"\"VREF_LO\":",         0,                                &json_vref_lo,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_LO,          1 },    // Low trip point value (Volts)
+  {"\"VREF_HI\":",         0,                                &json_vref_hi,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_HI,          2 },    // High trip point value (Volts)
    {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,               IS_INT32,  0,                NONVOL_WIFI_CHANNEL,     6 },    // Set the wifi channel
   {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_SECRET, 0,                NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
   {"\"WIFI_SSID\":",      (int*)&json_wifi_ssid,             0,                IS_TEXT,   0,                NONVOL_WIFI_SSID,        0 },    // Name of SSID to attach to 
@@ -377,6 +377,7 @@ static void handle_json(void)
                   m++;
                   nvs_set_u32(my_handle, JSON[j].non_vol+m, 0);             // Null terminate
                 }
+                nvs_commit(my_handle);
                 k++;
               }
               break;
@@ -398,6 +399,7 @@ static void handle_json(void)
               if ( JSON[j].non_vol != 0 )
               {
                 nvs_set_i32(my_handle, JSON[j].non_vol, x);    // Store into NON-VOL
+                nvs_commit(my_handle);
               }
               break;
   
@@ -410,7 +412,8 @@ static void handle_json(void)
               if ( JSON[j].non_vol != 0 )
               {
                 my_float.double64 = y;
-                nvs_set_i64(my_handle, JSON[j].non_vol, my_float.int64);                 // Store into NON-VOL
+                nvs_set_i64(my_handle, JSON[j].non_vol, my_float.int64);  // Store into NON-VOL
+                nvs_commit(my_handle);
               }
               break;
           }

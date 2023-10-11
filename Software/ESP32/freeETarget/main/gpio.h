@@ -54,8 +54,9 @@ void status_LED_init(unsigned int gpio_number);           // Initialize the RMT 
 #define PAPER_ON       0
 #define PAPER_OFF      1
 
-#define STOP_N          39      // V      
-#define CLOCK_START     41      // V
+#define STOP_N          47      // V      
+#define CLOCK_START     21      // V
+#define LDAC            42
 
 #define DIP_0           9
 #define RED_OUT         9                  // Rapid fire RED on DIP0

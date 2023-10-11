@@ -105,13 +105,7 @@ unsigned int is_running (void)
   unsigned int x;
 
   x = 0;
-  for (i=N; i <= W; i++)      // Look at all of the counters
-  {
-    if ( pcnt_read(i) != 0 )  // Timer running?
-    {
-      x |= (1 << i);          // Remember it
-    }
-  }
+
   
   return x;                   // Return the running mask
 }

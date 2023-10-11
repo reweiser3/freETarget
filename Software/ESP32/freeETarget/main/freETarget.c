@@ -105,13 +105,17 @@ void freeETarget_init(void)
 /*
  *  Set up the port pins
  */
-  dac_init(0);
   init_sensors();
   timer_new(&keep_alive,    (unsigned long)json_keep_alive * ONE_SECOND); // Keep alive timer
   timer_new(&state_timer,   0);                                           // Free running state timer
   timer_new(&in_shot_timer, FULL_SCALE);                                  // Time inside of the shot window
   timer_new(&power_save,    (unsigned long)(json_power_save) * (long)ONE_SECOND * 60L);// Power save timer
   timer_new(&token_tick,    5 * ONE_SECOND);                              // Token ring watchdog
+  set_VREF(DAC_LOW, 1.0);  
+  vTaskDelay(5);
+  set_VREF(DAC_HIGH, 2.0);
+ 
+
  #if(0) 
 /*
  * Initialize variables
@@ -137,6 +141,7 @@ void freeETarget_init(void)
  * Ready to go
  */ 
 #endif
+  show_echo();
   set_LED_PWM(json_LED_PWM);
   POST_LEDs();                            // Cycle the LEDs
   set_status_LED(LED_READY);              // to a client, then the RDY light is steady on

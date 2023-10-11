@@ -12,6 +12,7 @@
 #ifndef __GPIO_DEFINE_H__
 #define __GPIO_DEFINE_H__
 
+#if(0)
 #define GPIO_NUM_1   1
 #define GPIO_NUM_2   2
 #define GPIO_NUM_3   3
@@ -59,7 +60,7 @@
 #define GPIO_NUM_38 38
 #define GPIO_NUM_39 39
 #define GPIO_NUM_40 40
-
+#endif
 /*
  * @function Prototypes
  */

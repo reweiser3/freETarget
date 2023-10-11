@@ -83,7 +83,7 @@ void self_test
       printf("\r\n 2 - Advance paper backer");
       printf("\r\n 3 - LED brightness test");
       printf("\r\n 4 - Status LED driver");
-      printf("\r\n 5 - Temperaturen sendor test");
+      printf("\r\n 5 - Temperature and sendor test");
       printf("\r\n 6 - DAC test");
 
       printf("\r\n 7 - Count on the LEDs");
@@ -167,9 +167,9 @@ void self_test
       volts = 0.0;
       while(1)
       {
-        set_VRef(0, volts);
-        set_VRef(1, 2.048-volts);
-        volts += 0.001;
+        set_VREF(0, volts);
+        set_VREF(1, 2.048-volts);
+        volts += 0.0005;
         if ( volts > 2.048 )
         {
           volts = 0;
@@ -192,11 +192,17 @@ void self_test
  */
     case T_TIMER:
       printf("\r\nTimer Control ");
-//      for (i=0; i != 10000; i++)
-//      {
-//        gpio_set_level(39, i&1);      // Reset the timer
-//        gpio_set_level(CLOCK_START, i&1);
-//        paper_on_off(i&1);
+      i=0;
+      while (1)
+      {
+        gpio_set_level(CLOCK_START, i&1);
+        gpio_set_level(STOP_N, (~i) & 1);
+        gpio_set_level(STOP_N, i & 1);
+        i++;
+
+      }
+
+  
       volatile unsigned int* gpio_out;
       gpio_out = 0x60004004;
       volatile unsigned int* gpio_in;
