@@ -8,8 +8,6 @@
 #ifndef _GPIO_H_
 #define _GPIO_H_
 
-#include "freETarget.h"
-
 /*
  * Global functions
  */
@@ -17,12 +15,13 @@ void init_gpio(void);                                     // Initialize the GPIO
 void arm_timers(void);                                    // Make the board ready
 void clear_running(void);                                 // Clear the run flip flop 
 unsigned int is_running(void);                            // Return a bit mask of running sensors 
-void set_status_LED(char* new_state);                            // Manage the LEDs
+void set_status_LED(char* new_state);                     // Manage the LEDs
+void commit_status_LEDs(unsigned int blink_state);        // Write the LED control to the hardware
 unsigned int read_DIP(void);                              // Read the DIP switch register
 unsigned int read_counter(unsigned int direction);
 void stop_timers(void);                                   // Turn off the counter registers
 void trip_timers(void);
-bool_t read_in(unsigned int port);                        // Read the selected port
+bool read_in(unsigned int port);                        // Read the selected port
 void read_timers(unsigned int* timer_counts);             // Read and return the counter registers
 void drive_paper(void);                                   // Turn on the paper motor
 void aquire(void);                                        // Read the clock registers
@@ -35,28 +34,34 @@ void multifunction_switch(void);                          // Handle the actions 
 void multifuction_display(void);                          // Display the MFS settings
 void multifunction_wait_open(void);                       // Wait for both multifunction switches to be open
 void digital_test(void);                                  // Execute the digital test
-void paper_on_off(bool_t on);                             // Turn the motor on or off
+void paper_on_off(bool on);                             // Turn the motor on or off
 void rapid_green(unsigned int state);                     // Drive the GREEN light
 void rapid_red(unsigned int state);                       // Drive the RED light
 void multifunction_display(void);                         // Display the MFS settings as text
 void status_LED_init(unsigned int gpio_number);           // Initialize the RMT driver 
 
+
 /*
  *  Port Definitions
  */
-#define RUN_NORTH_LO   5                  // Address port but locations
-#define RUN_EAST_LO    6
-#define RUN_SOUTH_LO   7
-#define RUN_WEST_LO   49
-#define RUN_MASK      0x0f
+#define RUN_NORTH_LO   GPIO_NUM_5                  // Address port but locations
+#define RUN_EAST_LO    GPIO_NUM_6
+#define RUN_SOUTH_LO   GPIO_NUM_7
+#define RUN_WEST_LO    GPIO_NUM_15
+#define RUN_NORTH_HI   GPIO_NUM_16
+#define RUN_EAST_HI    GPIO_NUM_9
+#define RUN_SOUTH_HI   GPIO_NUM_10
+#define RUN_WEST_HI    GPIO_NUM_11
+#define RUN_MASK     0x00ff
+#define REF_CLK        GPIO_NUM_8
 
-#define PAPER         12                 // Paper advance drive active low
+#define PAPER          GPIO_NUM_12                 // Paper advance drive active low
 #define PAPER_ON       0
 #define PAPER_OFF      1
 
-#define STOP_N          47      // V      
-#define CLOCK_START     21      // V
-#define LDAC            42
+#define STOP_N          GPIO_NUM_47      // V      
+#define CLOCK_START     GPIO_NUM_21      // V
+#define LDAC            GPIO_NUM_42
 
 #define DIP_0           9
 #define RED_OUT         9                  // Rapid fire RED on DIP0
@@ -65,7 +70,6 @@ void status_LED_init(unsigned int gpio_number);           // Initialize the RMT 
 #define DIP_B           37      // V
 #define DIP_C           36      // V
 #define DIP_D           35      // V
-#define RUN_A_MASK  0xf     // All run bits set 
 
 #define GREEN_OUT   12                  // Rapid fire GREEN on DIP3
 

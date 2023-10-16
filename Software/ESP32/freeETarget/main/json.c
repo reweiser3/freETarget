@@ -133,7 +133,7 @@ const json_message_t JSON[] = {
   {"\"MIN_RING_TIME\":",  &json_min_ring_time,               0,                IS_INT32,  0,                NONVOL_MIN_RING_TIME,  500 },    // Minimum time for ringing to stop (ms)
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT32,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
   {"\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT32,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
-  {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT32,  0,                NONVOL_PAPER_TIME,      50 },    // Set the paper advance time
+  {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT32,  0,                NONVOL_PAPER_TIME,     500 },    // Set the paper advance time
   {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
   {"\"RAPID_COUNT\":",    &json_rapid_count,                 0,                IS_INT32,  0,                0,                       0 },    // Number of shots expected in series
 //  {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT32,  &rapid_enable,    0,                       0 },    // Enable the rapid fire fieature
@@ -207,8 +207,8 @@ static void diag_delay(int x) { printf("\r\n\"DELAY\":%d", x); vTaskDelay(x*1000
  *-----------------------------------------------------*/
 static unsigned int in_JSON = 0;
 static unsigned int got_right = 0;
-static bool_t not_found;
-static bool_t keep_space;   // Set to 1 if keeping spaces
+static bool not_found;
+static bool keep_space;   // Set to 1 if keeping spaces
 
 static int to_int(char h)
 {
@@ -377,7 +377,6 @@ static void handle_json(void)
                   m++;
                   nvs_set_u32(my_handle, JSON[j].non_vol+m, 0);             // Null terminate
                 }
-                nvs_commit(my_handle);
                 k++;
               }
               break;
@@ -399,7 +398,6 @@ static void handle_json(void)
               if ( JSON[j].non_vol != 0 )
               {
                 nvs_set_i32(my_handle, JSON[j].non_vol, x);    // Store into NON-VOL
-                nvs_commit(my_handle);
               }
               break;
   
@@ -413,11 +411,12 @@ static void handle_json(void)
               {
                 my_float.double64 = y;
                 nvs_set_i64(my_handle, JSON[j].non_vol, my_float.int64);  // Store into NON-VOL
-                nvs_commit(my_handle);
               }
               break;
           }
-            
+
+          nvs_commit(my_handle);                              // Save to memory
+
           if ( JSON[j].f != 0 )                               // Call the handler if it is available
           {
             JSON[j].f(x);

@@ -20,7 +20,7 @@
 struct sensor
 {
   unsigned int index;   // Which sensor is this one
-  bool_t is_valid;      // TRUE if the sensor contains a valid time
+  bool is_valid;      // TRUE if the sensor contains a valid time
   double angle_A;       // Angle to be computed
   double diagonal;      // Diagonal angle to next sensor (45')
   double x;             // Sensor Location (X us)
@@ -43,7 +43,7 @@ void          init_sensors(void);                                       // Initi
 unsigned int  compute_hit(shot_record_t* shot);                         // Find the location of the shot
 void          send_score(shot_record_t* shot);                          // Send the shot
 void          rotate_hit(unsigned int location, shot_record_t* shot);   // Rotate the shot back into the correct quadrant 
-bool_t        find_xy_3D(sensor_t* s, double estimate, double z_offset_clock);  // Estimated position including slant range
+bool        find_xy_3D(sensor_t* s, double estimate, double z_offset_clock);  // Estimated position including slant range
 void          send_timer(int sensor_status);                            // Show debugging information 
 void          send_miss(shot_record_t* shot);                           // Send a miss message
 double        speed_of_sound(double temperature, int relative_humidity);// Speed of sound in mm/us

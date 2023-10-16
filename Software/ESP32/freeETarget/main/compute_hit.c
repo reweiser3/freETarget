@@ -392,7 +392,7 @@ unsigned int compute_hit
  *                 
  *--------------------------------------------------------------*/
 
-bool_t find_xy_3D
+bool find_xy_3D
     (
      sensor_t* s,           // Sensor to be operatated on
      double estimate,       // Estimated position

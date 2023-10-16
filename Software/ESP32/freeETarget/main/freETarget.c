@@ -28,14 +28,14 @@
 /*
  *  Function Prototypes
  */
-static long   tabata(bool_t reset_time);// Tabata state machine
+static long   tabata(bool reset_time);// Tabata state machine
 static unsigned int set_mode(void);     // Set the target running mode
 static unsigned int arm(void);          // Arm the circuit for a shot
 static unsigned int wait(void);         // Wait for the shot to arrive
 static unsigned int reduce(void);       // Reduce the shot data
 static unsigned int finish(void);       // Finish uip and start over
 static void send_keep_alive(void);      // Send out at TCPIP message    
-static bool_t discard_shot(void);       // In TabataThrow away the shot
+static bool discard_shot(void);       // In TabataThrow away the shot
 static void freeETarget_task(void);
 extern void gpio_init(void);
 
@@ -105,12 +105,15 @@ void freeETarget_init(void)
 /*
  *  Set up the port pins
  */
-  init_sensors();
   timer_new(&keep_alive,    (unsigned long)json_keep_alive * ONE_SECOND); // Keep alive timer
   timer_new(&state_timer,   0);                                           // Free running state timer
   timer_new(&in_shot_timer, FULL_SCALE);                                  // Time inside of the shot window
   timer_new(&power_save,    (unsigned long)(json_power_save) * (long)ONE_SECOND * 60L);// Power save timer
   timer_new(&token_tick,    5 * ONE_SECOND);                              // Token ring watchdog
+
+/*
+ *  Finish setting up special IO
+ */
   set_VREF(DAC_LOW, 1.0);  
   vTaskDelay(5);
   set_VREF(DAC_HIGH, 2.0);
@@ -121,15 +124,14 @@ void freeETarget_init(void)
  * Initialize variables
  */
    tabata(true);                          // Reset the Tabata timers
-  
+#endif
+
 /*
  * Run the power on self test
  */
-
-  while ( (POST_counters() == false)      // If the timers fail
-              && !DLT(DLT_CRITICAL))      // and not in trace mode (DIAG jumper installed)
+  if ( POST_counters() == false )         // If the timers fail
   {
-    printf("POST_2 Failed\r\n");          // Failed the test
+    printf("POST_counters failed\r\n");   // Failed the test
   }
   
 /*
@@ -140,10 +142,8 @@ void freeETarget_init(void)
 /*
  * Ready to go
  */ 
-#endif
   show_echo();
   set_LED_PWM(json_LED_PWM);
-  POST_LEDs();                            // Cycle the LEDs
   set_status_LED(LED_READY);              // to a client, then the RDY light is steady on
   serial_flush(ALL);                      // Get rid of everything
 
@@ -186,12 +186,6 @@ char* loop_name[] = {"SET_MODE", "ARM", "WAIT", "AQUIRE", "REDUCE", "FINISH" };
 
 void freeETarget_task (void)
 {
-  
-  while(1)
-  {
-    vTaskDelay(10);
-  }
-
   while(1)
   {
 /*
@@ -379,38 +373,60 @@ unsigned int arm(void)
     {
       printf("Waiting...");
     }  
-    timer_new(&blink, ONE_SECOND);
     return WAIT;                   // Fall through to WAIT
   }
 
 /*
  * The sensors are tripping, display the error
  */
-  if ( sensor_status & RUN_NORTH_LO  )
+  if ( sensor_status & 0x80  )
   {
-    printf("\r\n{ \"Fault\": \"NORTH\" }");
+    printf("\r\n{ \"Fault\": \"NORTH_HI\" }");
     set_status_LED(LED_NORTH_FAILED);           // Fault code North
     vTaskDelay(ONE_SECOND);
   }
-  if ( sensor_status & RUN_EAST_LO  )
+  if ( sensor_status & 0x40  )
   {
-    printf("\r\n{ \"Fault\": \"EAST\" }");
+    printf("\r\n{ \"Fault\": \"EAST_HI\" }");
     set_status_LED(LED_EAST_FAILED);           // Fault code East
     vTaskDelay(ONE_SECOND);
   }
-  if ( sensor_status & RUN_SOUTH_LO)
+  if ( sensor_status & 0x20)
   {
-    printf("\n\r{ \"Fault\": \"SOUTH\" }");
+    printf("\n\r{ \"Fault\": \"SOUTH_HI\" }");
     set_status_LED(LED_SOUTH_FAILED);         // Fault code South
     vTaskDelay(ONE_SECOND);
   }
-  if ( sensor_status & RUN_WEST_LO)
+  if ( sensor_status & 0x10)
   {
-    printf("\r\n{ \"Fault\": \"WEST\" }");
+    printf("\r\n{ \"Fault\": \"WEST_HI\" }");
     set_status_LED(LED_WEST_FAILED);         // Fault code West
     vTaskDelay(ONE_SECOND);
   }
-
+  if ( sensor_status & 0x08  )
+  {
+    printf("\r\n{ \"Fault\": \"NORTH_LO\" }");
+    set_status_LED(LED_NORTH_FAILED);           // Fault code North
+    vTaskDelay(ONE_SECOND);
+  }
+  if ( sensor_status & 0x04  )
+  {
+    printf("\r\n{ \"Fault\": \"EAST_LO\" }");
+    set_status_LED(LED_EAST_FAILED);           // Fault code East
+    vTaskDelay(ONE_SECOND);
+  }
+  if ( sensor_status & 0x02)
+  {
+    printf("\n\r{ \"Fault\": \"SOUTH_LO\" }");
+    set_status_LED(LED_SOUTH_FAILED);         // Fault code South
+    vTaskDelay(ONE_SECOND);
+  }
+  if ( sensor_status & 0x01)
+  {
+    printf("\r\n{ \"Fault\": \"WEST_LO\" }");
+    set_status_LED(LED_WEST_FAILED);         // Fault code West
+    vTaskDelay(ONE_SECOND);
+  }
 /*
  * Got an error, try to arm again
  */
@@ -720,7 +736,7 @@ static uint16_t old_tabata_state = ~TABATA_OFF;
 
 static long tabata
   (
-  bool_t reset_time                   // TRUE if starting timer
+  bool reset_time                   // TRUE if starting timer
   )
 {
   char s[32];
@@ -832,7 +848,7 @@ static long tabata
  *  
  *--------------------------------------------------------------*/
 
-static bool_t discard_shot(void)
+static bool discard_shot(void)
 {
   if ( (json_rapid_enable != 0)                 // Rapid Fire
       &&  (rapid_count == 0) )                  // No shots remaining

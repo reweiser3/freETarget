@@ -13,6 +13,7 @@
  * https://docs.espressif.com/projects/esp-idf/en/v4.3/esp32/api-reference/peripherals/timer.html
  * 
  * ----------------------------------------------------*/
+#include "stdbool.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\gpio_types.h"
 #include "gpio.h"
 #include "json.h"
@@ -134,7 +135,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
 /*
  * Decide what to do if based on what inputs are present
  */
-  pin = is_running();                        // Read in the RUN bits
+  pin = is_running();                         // Read in the RUN bits
 
 /*
  * Read the timer hardware based on the ISR state
@@ -150,11 +151,10 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
       break;
           
     case PORT_STATE_WAIT:                       // Something is present, wait for all of the inputs
-      if ( (pin == RUN_A_MASK)                  // We have all of the inputs
+      if ( (pin == RUN_MASK)                    // We have all of the inputs
           || (isr_timer == 0) )                 // or ran out of time.  Read the timers and restart
        { 
         aquire();                               // Read the counters
-        stop_timers();                          // Reset the RUN flip Flop
         isr_timer = json_min_ring_time;         // Reset the timer
         isr_state = PORT_STATE_DONE;            // and wait for the all clear
       }

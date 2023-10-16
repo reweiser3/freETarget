@@ -14,6 +14,7 @@
  * 
  ***************************************************************************/
 #include <stdio.h>
+#include "stdbool.h"
 #include "driver/pulse_cnt.h"
 #include "esp_err.h"
 #include "led_strip.h"

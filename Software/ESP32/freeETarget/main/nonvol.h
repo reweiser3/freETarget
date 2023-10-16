@@ -18,7 +18,7 @@ extern nvs_handle_t my_handle;                    // Handle to NVS space
 /*
  * @function prototypes
  */
-void factory_nonvol(bool_t new_serial_number);    // Factory reset nonvol
+void factory_nonvol(bool new_serial_number);    // Factory reset nonvol
 void init_nonvol(int v);                          // Reset to defaults
 void read_nonvol(void);                           // Read in the locations
 void update_nonvol(unsigned int current_version); // Update the database if needed

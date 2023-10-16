@@ -99,15 +99,29 @@ unsigned int read_counter
  * register that is running.
  * 
  *-----------------------------------------------------*/
+static unsigned int clock[] = { RUN_NORTH_HI, RUN_EAST_HI, RUN_SOUTH_HI, RUN_WEST_HI, 
+                                RUN_NORTH_LO, RUN_EAST_LO, RUN_SOUTH_LO, RUN_WEST_LO};
+static unsigned int run_mask[] = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
+
 unsigned int is_running (void)
 {
-  unsigned int i;
-  unsigned int x;
+  unsigned int  return_value;
+  unsigned int  i;
 
-  x = 0;
+  return_value = 0;
+/*
+ * Read the running inputs
+ */
+  for (i=0; i != sizeof(clock)/sizeof(unsigned int); i++)
+  {
+    if ( gpio_get_level(clock[i]) != 0 )
+    {
+      return_value |= run_mask[i];
+    }
+  }
 
-  
-  return x;                   // Return the running mask
+
+  return return_value;                   // Return the running mask
 }
 
 /*-----------------------------------------------------
@@ -181,25 +195,16 @@ void trip_timers(void)
 unsigned int read_DIP(void)
 {
   unsigned int return_value = 0;
+  unsigned int dips[] = {DIP_A, DIP_B, DIP_C, DIP_D};
+  unsigned int bit_mask[] = {0x08, 0x04, 0x02, 0x01};
+  unsigned int i;
 
-  if (gpio_get_level(DIP_A) != 0)
+  for (i=0; i != sizeof(dips)/sizeof(unsigned int); i++)
   {
-   return_value |= 8;
-  }
-
-  if (gpio_get_level(DIP_B) != 0)
-  {
-    return_value |= 4;
-  }
-
-  if (gpio_get_level(DIP_C) != 0)
-  {
-    return_value |= 2;
-  }
-
-  if (gpio_get_level(DIP_D) != 0)
-  {
-    return_value |= 1;
+    if (gpio_get_level(dips[i]) != 0) 
+    {
+     return_value |= bit_mask[i];
+    }
   }
 
   return return_value;
@@ -293,10 +298,17 @@ void set_status_LED
       status[i].blue = 0;          // Turn off the LED
       switch (*new_state)
       {
-        case 'r':               // RED LED
+        case 'r':                 // RED LED
           status[i].blink = 1;    // Turn on Blinking
         case 'R':
           status[i].red   = LED_ON;
+          break;
+
+        case 'y':                 // RED LED
+          status[i].blink = 1;    // Turn on Blinking
+        case 'Y':
+          status[i].red   = LED_ON/2;
+          status[i].green = LED_ON/2;
           break;
 
         case 'g':               // GREEN LED
@@ -314,9 +326,9 @@ void set_status_LED
         case 'w':
           status[i].blink = 1;
         case 'W':
-          status[i].red   = LED_ON/2;
-          status[i].green = LED_ON/2;
-          status[i].blue  = LED_ON/2;
+          status[i].red   = LED_ON/3;
+          status[i].green = LED_ON/3;
+          status[i].blue  = LED_ON/3;
           break;
 
         case ' ':             // The LEDs are already off
@@ -328,13 +340,50 @@ void set_status_LED
   }
 
 /*
+ * Ready to output the LEDs
+ */
+  commit_status_LEDs(0);
+  return;
+}
+
+/*-----------------------------------------------------
+ * 
+ * @function: commit_status_LED
+ * 
+ * @brief:    Write the status LED settings to the hardware
+ * 
+ * @return:   None
+ * 
+ *-----------------------------------------------------
+ *
+ * This function looks at the blink state and outputs
+ * the bits to the hardware.
+ * 
+ * blink = 1 -> put to hardware
+ * blink = 0 -> turn off the LED 
+ *  
+ *-----------------------------------------------------*/
+void commit_status_LEDs
+  (
+    unsigned int blink_state
+  )
+{
+  unsigned int i;
+
+/*
  *  Send out the new settings
  */
   for (i=0; i < 3; i++)
   {
-    led_strip_pixels[i * 3 + 0] = status[i].green;
-    led_strip_pixels[i * 3 + 2] = status[i].blue;
-    led_strip_pixels[i * 3 + 1] = status[i].red;
+    led_strip_pixels[i * 3 + 0] = 0;
+    led_strip_pixels[i * 3 + 2] = 0;
+    led_strip_pixels[i * 3 + 1] = 0;
+    if ( (status[i].blink == 0) || (blink_state == 1) )
+    {
+      led_strip_pixels[i * 3 + 0] = status[i].green;
+      led_strip_pixels[i * 3 + 2] = status[i].blue;
+      led_strip_pixels[i * 3 + 1] = status[i].red;
+    }
   }
     
   ESP_ERROR_CHECK(rmt_transmit(led_chan, led_encoder, led_strip_pixels, sizeof(led_strip_pixels), &tx_config));
@@ -490,7 +539,7 @@ void drive_paper(void)
 
 void paper_on_off                               // Function to turn the motor on and off
 (
-  bool_t on                                     // on == true, turn on motor drive
+  bool on                                      // on == true, turn on motor drive
 )
 {
   if ( on == true )
@@ -960,9 +1009,6 @@ void digital_test(void)
   printf("\r\nTime: %4.2fs", (float)(esp_timer_get_time()/1000000));
   printf("\r\nBD Rev: %d", revision());  
   printf("\r\nDIP: 0x%02X", read_DIP()); 
-  gpio_set_level(STOP_N, 0);
-  gpio_set_level(STOP_N, 1);                        // Reset the fun flip flop
-  printf("\r\nRUN FlipFlop: 0x%02X", is_running());   
   printf("\r\nTemperature: %4.2fdC", temperature_C());
   printf("\r\nSpeed of Sound: %4.2fmm/us", speed_of_sound(temperature_C(), json_rh));
   printf("\r\nV_REF: %4.f Volts", volts);
@@ -996,10 +1042,7 @@ void aquire(void)
 /*
  * Pull in the data amd save it in the record array
  */
-  if ( DLT(DLT_CRITICAL) )
-  {
-    printf("Aquiring shot: %d", this_shot);
-  }
+
   stop_timers();                                    // Stop the counters
   read_timers(&record[this_shot].timer_count[0]);   // Record this count
   record[this_shot].shot_time = 0;//FULL_SCALE - in_shot_timer; // Capture the time into the shot
@@ -1009,7 +1052,7 @@ void aquire(void)
   this_shot = (this_shot+1) % SHOT_STRING;          // Prepare for the next shot
 
 /*
- * MAll done for now
+ * All done for now
  */
   return;
 }

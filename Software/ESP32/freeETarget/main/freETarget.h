@@ -80,7 +80,6 @@ extern const TickType_t json_delay;                   // Poll the serial port at
 /*
  *  Types
  */
-typedef unsigned int bool_t;
 typedef unsigned char byte_t;
 
 struct shot_r

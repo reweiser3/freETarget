@@ -15,6 +15,7 @@
  * 
  ***************************************************************************/
 #include "string.h"
+#include "stdbool.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "driver/gpio.h"
@@ -45,21 +46,21 @@ DIO_struct_t dio05 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_va
 DIO_struct_t dio06 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0}; // Mode and Initial Value
 DIO_struct_t dio07 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0}; // Mode and Initial Value
 DIO_struct_t dio08 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0}; // Mode and Initial Value
-DIO_struct_t dio09 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
+DIO_struct_t dio09 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0}; // Mode and Initial Value
 
-DIO_struct_t dio10 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
-DIO_struct_t dio11 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
+DIO_struct_t dio10 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0}; // Mode and Initial Value
+DIO_struct_t dio11 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0}; // Mode and Initial Value
 DIO_struct_t dio12 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0}; // Mode and Initial Value
-DIO_struct_t dio13 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};  // Mode and Initial Value
-DIO_struct_t dio14 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};  // Mode and Initial Value
-DIO_struct_t dio15 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};  // Mode and Initial Value
-DIO_struct_t dio16 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};  // Mode and Initial Value
-DIO_struct_t dio17 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};  // Mode and Initial Value
-DIO_struct_t dio18 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};  // Mode and Initial Value
-DIO_struct_t dio19 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};  // Mode and Initial Value
+DIO_struct_t dio13 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0}; // Mode and Initial Value
+DIO_struct_t dio14 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0}; // Mode and Initial Value
+DIO_struct_t dio15 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0}; // Mode and Initial Value
+DIO_struct_t dio16 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0}; // Mode and Initial Value
+DIO_struct_t dio17 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0}; // Mode and Initial Value
+DIO_struct_t dio18 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0};  // Mode and Initial Value
+DIO_struct_t dio19 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0};  // Mode and Initial Value
 
 DIO_struct_t dio20 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};  // Mode and Initial Value
-DIO_struct_t dio21 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT,.initial_value = 0};  // Mode and Initial Value
+DIO_struct_t dio21 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT,.initial_value = 1};  // Mode and Initial Value
 DIO_struct_t dio22 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};  // Mode and Initial Value
 DIO_struct_t dio23 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};  // Mode and Initial Value
 DIO_struct_t dio24 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT, .initial_value = 0};  // Mode and Initial Value
@@ -87,7 +88,7 @@ DIO_struct_t dio43 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_va
 DIO_struct_t dio44 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0};  // Mode and Initial Value
 DIO_struct_t dio45 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};  // Mode and Initial Value
 DIO_struct_t dio46 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0};  // Mode and Initial Value
-DIO_struct_t dio47 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};  // Mode and Initial Value
+DIO_struct_t dio47 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 1};  // Mode and Initial Value
 DIO_struct_t dio48 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0};  // Mode and Initial Value
 DIO_struct_t dio49 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0};  // Mode and Initial Value
 
@@ -177,11 +178,10 @@ gpio_struct_t gpio_table[] = {
     {"RUN_SOUTH_HI", GPIO_NUM_10, (void*)&dio10},     // RUN_SOUTH_HI
     {"RUN_WEST_HI",  GPIO_NUM_11, (void*)&dio11},     // RUN_WEST_HI
     {"PAPER",        GPIO_NUM_12, (void*)&dio12},     // PAPER  Drive
-
     {"LED_FB",       GPIO_NUM_1, (void*)&adc1_ch0},   // LED Feedback (Measure 12VDC)
     {"LED_PWM",      GPIO_NUM_2, (void*)&pwm0},       // LED_PWM
-    {"TXD",          22, NULL},              // UART Transmit   Initialized in serial_io_init
-    {"RXD",          12, NULL},              // UART Receive
+    {"TXD",          22, NULL},                       // UART Transmit   Initialized in serial_io_init
+    {"RXD",          12, NULL},                       // UART Receive
     {"LDAC*",        GPIO_NUM_42, (void*)&dio42},     // Load DAC* 
     {"SPARE0",       GPIO_NUM_41, NULL},              // 
     {"FACE_HALF",    GPIO_NUM_40, (void*)&dio40},     // FACE Interrupt

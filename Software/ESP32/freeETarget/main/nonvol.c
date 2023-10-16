@@ -220,7 +220,7 @@ void check_nonvol(void)
  *------------------------------------------------------------*/
 void factory_nonvol
   (
-   bool_t new_serial_number
+   bool new_serial_number
   )
 {
   unsigned int serial_number;             // Board serial number

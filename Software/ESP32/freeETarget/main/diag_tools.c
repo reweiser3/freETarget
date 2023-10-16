@@ -4,9 +4,13 @@
  * diag_tools.c
  *
  * Debug and test tools 
+ * 
+ * See
+ * https://www.espressif.com/sites/default/files/documentation/esp32-s3_technical_reference_manual_en.pdf
  *
  ******************************************************************************/
 
+#include "stdbool.h"
 #include "freETarget.h"
 #include "gpio.h"
 #include "diag_tools.h"
@@ -103,7 +107,7 @@ void self_test
     case T_PAPER:
       printf("\r\nAdvancing paper %d ms", json_paper_time);
       paper_on_off(true);
-      vTaskDelay(ONE_SECOND * json_paper_time / 1000);
+      vTaskDelay((ONE_SECOND * json_paper_time) / 1000);
       paper_on_off(false);
       printf(" done\r\n");
       break;
@@ -113,12 +117,12 @@ void self_test
  */
     case T_LED:
       printf("\r\nCycling the LED");
-      for (i=0; i <= 100; i += 5)
+      for (i=0; i <= 100; i++)
       {
         pwm_set(LED_PWM, i);       
         vTaskDelay(ONE_SECOND/10);
       }
-      for (i=100; i >= 0; i -= 5)
+      for (i=100; i >= 0; i--)
       {
         pwm_set(LED_PWM,i);       
         vTaskDelay(ONE_SECOND/10);
@@ -202,7 +206,7 @@ void self_test
 
       }
 
-  
+#if(0)
       volatile unsigned int* gpio_out;
       gpio_out = 0x60004004;
       volatile unsigned int* gpio_in;
@@ -229,13 +233,12 @@ while(1)
       }
       printf("done");
       break;
+#endif
 
 /*
  * Test 9, PCNT test
  */
     case T_PCNT:
-
-
       printf("\r\nRead PCNT\r\n");
       arm_timers();
       trip_timers();
@@ -254,8 +257,14 @@ while(1)
       freeETarget_timer_init();
       printf("\r\ndone");
       break;
-  }
 
+/*
+ *  Test 11: Sensor Trigger
+ */
+    case T_SENSOR:
+      POST_counters();
+      break;
+  }
  /* 
   *  All done, return;
   */
@@ -289,39 +298,6 @@ while(1)
  
 /*----------------------------------------------------------------
  * 
- * @function: POST_LEDs()
- * 
- * @brief: Show the LEDs are working
- * 
- * @return: None
- * 
- *----------------------------------------------------------------
- *
- *  Cycle the LEDs to show that the board has woken up and has
- *  freETarget software in it.
- *  
- *--------------------------------------------------------------*/
-
- void POST_LEDs(void)
- {
-  if ( DLT(DLT_CRITICAL) )
-  {
-    printf("POST LEDs");
-  }
-
-  set_status_LED("R  ");
-  vTaskDelay(ONE_SECOND/1);
-  set_status_LED(" R ");
-  vTaskDelay(ONE_SECOND/1);
-  set_status_LED("  R");
-  vTaskDelay(ONE_SECOND/1);
-  set_status_LED("G  ");
-  
-  return;
- }
-
-/*----------------------------------------------------------------
- * 
  * @function: void POST_counters()
  * 
  * @brief: Verify the counter circuit operation
@@ -335,129 +311,87 @@ while(1)
  *  
  *  Return TRUE if the complete circuit is working
  *  
- *  Test 1, Arm the circuit and make sure there are no random trips
- *          This test will fail if the sensor cable harness is not attached
- *  Test 2, Arm the circuit amd make sure it is off (No running counters
- *  Test 3: Trigger the counter and make sure that all sensors are triggered
- *  Test 4: Stop the clock and make sure that the counts have stopped
- *  Test 5: Verify that the counts are correctia
+ *  Test 1, Make sure the 10MHz clock is running
+ *  Test 2, Clear the flip flops and make sure the run latches are clear
+ *  Test 3, Trigger the flip flops and make sure the run latche are set
  *  
  *--------------------------------------------------------------*/
- #define POST_counteres_cycles 10 // Repeat the test 10x
- #define CLOCK_TEST_LIMIT 500    // Clock should be within 500 ticks
- 
- bool_t POST_counters(void)
+ bool POST_counters(void)
  {
-   unsigned int  i, j;            // Iteration counter
-   unsigned long random_delay;    // Delay duration
-   unsigned int  sensor_status;   // Sensor status
-   int           x;               // Time difference (signed)
-   bool_t        test_passed;     // Record if the test failed
+   unsigned int i;                  // Iteration counter
+   bool         test1, test2, test3;// Record if the test failed
    
 /*
  * The test only works on V2.2 and higher
  */
-  
   if ( DLT(DLT_CRITICAL) )
   {
     printf("POST_counters()");
   }
 
-  test_passed = true;                 // And assume that it will pass
+  test1 = false;                 // Start of assuming a fail
+  test2 = false;
+  test3 = false;
   
-/*
- * Test 1, Arm the circuit and see if there are any random trips
- */
-  stop_timers();                      // Get the circuit ready
-  arm_timers();                       // Arm it. 
-  vTaskDelay(1);                      // Wait a millisecond  
-  sensor_status = is_running();       // Remember all of the running timers
-  if ( (sensor_status != 0) && DLT(DLT_CRITICAL) )
+  set_status_LED("YRR");
+  vTaskDelay(ONE_SECOND);
+  for (i=0; i != 1000; i++)           // Clock Running
   {
-    printf("\r\nFailed Clock Test. Spurious trigger:"); show_sensor_status(sensor_status);
-    return false;                     // No point in any more tests
-  }
-  
-/*
- * Loop and verify the opertion of the clock circuit using random times
- */
-  for (i=0; i!= POST_counteres_cycles; i++)
-  {
-    
-/*
- *  Test 2, Arm the circuit amd make sure it is off
- */
-    stop_timers();                    // Get the circuit ready
-    arm_timers();
-    vTaskDelay(1);                         // Wait for a bit
-    
-    for (j=N; j <= W; j++ )           // Check all of the counters
+    if ( gpio_get_level(REF_CLK) != 0 )
     {
-      if ( (read_counter(j) != 0) && DLT(DLT_CRITICAL) )     // Make sure they stay at zero
-      {
-        printf("Failed Clock Test. Counter free running: %c", nesw[j]);
-        test_passed =  false;         // return a failed test
-      }   
-    }
-    
- /*
-  * Test 3: Trigger the counter and make sure that all sensors are triggered
-  */
-    stop_timers();                      // Get the circuit ready
-    arm_timers();
-    vTaskDelay(1);  
-    random_delay = 0; // Pick a random delay time in us
-    trip_timers();
-    sensor_status = is_running();       // Remember all of the running timers
-
-    timer_new(&random_delay, esp_random() % 6000);
-    while ( random_delay )
-    {
-      continue;
-    }
-    timer_delete(&random_delay);
-    stop_timers();
-    if ( (sensor_status != 0x0F) && DLT(DLT_CRITICAL) )      // The circuit was triggered but not all
-    {                                 // FFs latched
-      printf("Failed Clock Test. sensor_status:"); show_sensor_status(sensor_status);
-      test_passed = false;
-    }
-
-/*
- * Test 4: Stop the clock and make sure that the counts have stopped
- */
-    random_delay *= 8;                // Convert to clock ticks
-    for (j=N; j <= W; j++ )           // Check all of the counters
-    {
-      x  = read_counter(j);
-      if ( (read_counter(j) != x) && DLT(DLT_CRITICAL) )
-      {
-        printf("Failed Clock Test. Counter did not stop: %c", nesw[j]); show_sensor_status(sensor_status);
-        test_passed = false;          // since there is delay  in
-      }                               // Turning off the counters
- 
-/*
- * Test 5: Verify that the counts are correct
- */
-      x =x - random_delay;
-      if( x < 0 )
-      {
-        x = -x;
-      }
-      
-      if ( (x > CLOCK_TEST_LIMIT) && DLT(DLT_CRITICAL) )     // The time should be positive and within limits
-      { 
-        printf("Failed Clock Test. Counter: %c  Is: %d  Should be: %d   Delta: %d", nesw[j], read_counter(j), (int)random_delay, x);
-        test_passed = false;          // since there is delay  in
-      }                               // Turning off the counters
+      set_status_LED("G--");
+      test1 = true;
+      break;
     }
   }
-  
+  if ( test1 == false )
+  {
+      DLT(DLT_CRITICAL);
+      printf("REF_CLK not running");
+  }
+
+  gpio_set_level(CLOCK_START, 1);  
+  gpio_set_level(STOP_N, 0);
+  gpio_set_level(STOP_N, 1);        // Latch empty when stopped
+  set_status_LED("-YR");
+  vTaskDelay(ONE_SECOND);
+  if ( is_running() == 0  )
+  {
+    test2 = true;
+    set_status_LED("-G-");
+  }    
+  if ( test2 == false )
+  {
+      DLT(DLT_CRITICAL);
+      printf("Stuck bit in run latch: %02X", (~is_running()) & 0x00ff);
+      set_status_LED("-R-");
+  }      
+
+  set_status_LED("---Y");
+  vTaskDelay(ONE_SECOND);
+  gpio_set_level(STOP_N, 0);
+  gpio_set_level(STOP_N, 1);
+  gpio_set_level(CLOCK_START, 1);
+  gpio_set_level(CLOCK_START, 0);
+  gpio_set_level(CLOCK_START, 1);
+  if ( is_running() == 0xFF  )
+  {
+    set_status_LED("--G");
+    test3 = true;
+  }
+  else
+  {
+    DLT(DLT_CRITICAL);
+    printf("Failed to start clock in run latch: %02X", is_running());
+    set_status_LED("--R");
+  }
+
+  vTaskDelay(2*ONE_SECOND);
+
 /*
  * Got here, the test completed successfully
  */
-  set_status_LED("GGG");
-  return test_passed;
+  return test1 && test2 && test3;
 }
   
 /*----------------------------------------------------------------
@@ -632,7 +566,7 @@ void show_sensor_status
  * DLT_CRItiCAL levels are always printed
  *   
  *--------------------------------------------------------------*/
-bool_t do_dlt
+bool do_dlt
   (
   unsigned int level
   )

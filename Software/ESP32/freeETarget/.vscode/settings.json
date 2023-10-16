@@ -13,7 +13,8 @@
     "ratio": "cpp",
     "tuple": "cpp",
     "type_traits": "cpp",
-    "utility": "cpp"
+    "utility": "cpp",
+    "random": "c"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM3",

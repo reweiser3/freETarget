@@ -22,7 +22,7 @@ void pcnt_clear(int unit);                              // Clear the timer conte
 /*
  * Definitions
  */
-#define NORTH_LOW  0                    // Sensor counter registers
+#define NORTH_LO   4                   //input bits
 #define EAST_LOW   1
 #define SOUTH_LOW  2
 #define WEST_LOW   3

@@ -189,8 +189,7 @@ void set_LED_PWM                                  // Theatre lighting
  */
   while ( new_LED_percent != old_LED_percent )  // Change in the brightness level?
   {
-    //analogWrite(LED_PWM, old_LED_percent * 256 / 100);  // Write the value out
-    
+
     if ( new_LED_percent < old_LED_percent )
     {
       old_LED_percent--;                        // Ramp the value down

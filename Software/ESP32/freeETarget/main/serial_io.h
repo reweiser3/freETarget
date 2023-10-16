@@ -12,12 +12,12 @@
  * Global functions
  */
 void serial_io_init(void);                                // Initialize the Serial ports
-void serial_to_all(char* s, bool_t console, bool_t aux, bool_t tcpip);  // Multipurpose driver
-void serial_putch(char ch, bool_t console, bool_t aux, bool_t tcpip);   // Output a single character
-char serial_gets(bool_t console, bool_t aux, bool_t tcpip);             // Read from all of the ports
-char serial_getch(bool_t console, bool_t aux, bool_t tcpip);            // Read the selected port
-unsigned int serial_available(bool_t console, bool_t aux, bool_t tcpip);// Find out how much is waiting for us
-void serial_flush(bool_t console, bool_t aux, bool_t tcpip);            // Get rid of everything
+void serial_to_all(char* s, bool console, bool aux, bool tcpip);  // Multipurpose driver
+void serial_putch(char ch, bool console, bool aux, bool tcpip);   // Output a single character
+char serial_gets(bool console, bool aux, bool tcpip);             // Read from all of the ports
+char serial_getch(bool console, bool aux, bool tcpip);            // Read the selected port
+unsigned int serial_available(bool console, bool aux, bool tcpip);// Find out how much is waiting for us
+void serial_flush(bool console, bool aux, bool tcpip);            // Get rid of everything
 int serial_to_tcpip(char* buffer, int length);                          // Put serial data to the TCPIP port
 
 /*

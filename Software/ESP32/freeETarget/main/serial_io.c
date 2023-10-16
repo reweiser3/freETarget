@@ -122,9 +122,9 @@ void serial_io_init(void)
  ******************************************************************************/
 unsigned int serial_available
 (
-  bool_t console,    // TRUE if reading console
-  bool_t aux,        // TRUE if reading AUX port
-  bool_t tcpip       // TRUE if checking the TCPIP port
+  bool console,    // TRUE if reading console
+  bool aux,        // TRUE if reading AUX port
+  bool tcpip       // TRUE if checking the TCPIP port
 )
 {
   int n_available;
@@ -176,9 +176,9 @@ unsigned int serial_available
  ********************************************************************************/
 void serial_flush
 (
-  bool_t console,    // TRUE if reading console
-  bool_t aux,        // TRUE if reading AUX port
-  bool_t tcpip       // TRUE if flushing the TCPIP channel
+  bool console,    // TRUE if reading console
+  bool aux,        // TRUE if reading AUX port
+  bool tcpip       // TRUE if flushing the TCPIP channel
 )
 {
   if ( console )
@@ -214,9 +214,9 @@ void serial_flush
  *******************************************************************************-*/
 char serial_getch
   (
-    bool_t console,       // Read the console
-    bool_t aux,           // Read the AUX port
-    bool_t tcpip
+    bool console,       // Read the console
+    bool aux,           // Read the AUX port
+    bool tcpip
   )
 {
   char ch;
@@ -278,9 +278,9 @@ char serial_getch
  void serial_putch
  (
     char ch,
-    bool_t console, 
-    bool_t aux,
-    bool_t tcpip
+    bool console, 
+    bool aux,
+    bool tcpip
 )
 {
 
@@ -313,9 +313,9 @@ char serial_getch
 void serial_to_all
 (
   char*   str,                      // String to output
-  bool_t  console,                  // Output to the console
-  bool_t  aux,                      // Output to the aux port
-  bool_t  tcpip                     // Output to the TCPIP socket
+  bool  console,                  // Output to the console
+  bool  aux,                      // Output to the aux port
+  bool  tcpip                     // Output to the TCPIP socket
 )
 {
   unsigned int len;
