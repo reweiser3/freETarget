@@ -271,6 +271,13 @@ while(1)
     case T_SENSOR:
       POST_counters();
       break;
+
+/*
+ *  Test 12: Delete NONVOL
+ */
+    case T_NONVOL:
+      POST_counters();
+      break;
   }
  /* 
   *  All done, return;

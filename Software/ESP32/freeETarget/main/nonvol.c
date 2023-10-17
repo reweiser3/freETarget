@@ -7,19 +7,15 @@
  *-------------------------------------------------------
  *
  * See https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/nvs_flash.html
-  * 
+ *
  * 
  * ----------------------------------------------------*/
 #include <stdio.h>
 #include "freETarget.h"
 #include "json.h"
-
-//#include "serial_io.h"
 #include "esp_system.h"
 #include "nvs_flash.h"
 #include "nvs.h"
-
-//#include "gpio.h"
 #include "diag_tools.h"
 #include "serial_io.h"
 #include "timer.h"
@@ -64,8 +60,10 @@ void read_nonvol(void)
   * Initialize NVS
   */
     err = nvs_flash_init();
-    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    if (err != 0)
     {
+        DLT(DLT_CRITICAL);
+        printf("read_nonvol(): Failed to initialize NVM");
         ESP_ERROR_CHECK(nvs_flash_erase());        // NVS partition was truncated and needs to be erased
         err = nvs_flash_init();
     }
@@ -138,12 +136,12 @@ void read_nonvol(void)
         case IS_FLOAT:
           if ( JSON[i].non_vol != 0 )
           {
-            nvs_get_i64(my_handle, JSON[i].non_vol, (int64_t*)&nvm64.int64);       // Read in the value as an integer
-            *JSON[i].d_value = nvm64.double64;
+            nvs_get_i32(my_handle, JSON[i].non_vol, &x);       // Read in the value as an integer
+            *JSON[i].d_value = (float)x / 1000.0;
           }
           else
           {
-            *JSON[i].d_value = (double)JSON[i].init_value;  
+            *JSON[i].d_value = (double)JSON[i].init_value /1000.0;  
           }
           break;
       }
@@ -197,7 +195,7 @@ void factory_nonvol
   {
     nvs_set_u32(my_handle, "NONVOL_V_SET", serial_number);
   }
- 
+
 /*
  * Use the JSON table to initialize the local variables
  */
@@ -228,10 +226,10 @@ void factory_nonvol
         break;
 
       case IS_FLOAT:
-        nvm64.double64 = (double)JSON[i].init_value;
+        x = JSON[i].init_value;                                               // Read in the value 
         if ( JSON[i].non_vol != 0 )
-        {        
-          nvs_set_i64(my_handle, JSON[i].non_vol, nvm64.int64);              // Read in the value
+        {
+          nvs_set_i32(my_handle, JSON[i].non_vol, x);                         // Read in the value
         }
         break;
     }

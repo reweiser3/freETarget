@@ -106,9 +106,11 @@ struct GPIO {
 typedef struct GPIO GPIO_t;
 
 union pack {                    // Put a floating point number
-  unsigned int int64;           // into a 64 bit number
+  unsigned int int64[2];        // into a 64 bit number
   double       double64;        // for NVS storage
 };
+
+
 
 /*
  *  Global Variables

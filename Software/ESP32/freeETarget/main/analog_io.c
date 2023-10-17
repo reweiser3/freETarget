@@ -134,13 +134,17 @@ unsigned int adc_read
   return raw;
 }
 
+#define V12_RESISITOR ((40.2 + 5.0) / 5.0) // Resistor divider
+#define V12_ATTENUATION 3.548              // 11 DB
+#define V12_CAL       0.719                // Calibration Factor
+#define V12_REF       1.1                  // ESP32 VREF
 float v12_supply(void)
 {
-  float raw;                          // Raw voltage from ADC
+  float raw;                               // Raw voltage from ADC
 
   raw = (float)adc_read(V_12_LED);
 
-  return 3.3 * raw / 4096.0 * 5.0;
+  return V12_REF * V12_ATTENUATION * (raw / 4095.0) * V12_RESISITOR * V12_CAL;
 }
 
 /*----------------------------------------------------------------
