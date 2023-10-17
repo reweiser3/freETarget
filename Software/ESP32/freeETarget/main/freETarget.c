@@ -114,11 +114,8 @@ void freeETarget_init(void)
 /*
  *  Finish setting up special IO
  */
-  set_VREF(DAC_LOW, 1.0);  
-  vTaskDelay(5);
-  set_VREF(DAC_HIGH, 2.0);
+  set_VREF();
  
-
  #if(0) 
 /*
  * Initialize variables
@@ -131,7 +128,9 @@ void freeETarget_init(void)
  */
   if ( POST_counters() == false )         // If the timers fail
   {
+    DLT(DLT_CRITICAL);
     printf("POST_counters failed\r\n");   // Failed the test
+    vTaskDelay(2*ONE_SECOND);
   }
   
 /*
@@ -148,10 +147,8 @@ void freeETarget_init(void)
   serial_flush(ALL);                      // Get rid of everything
 
   
-  if ( DLT(DLT_CRITICAL) )
-  {
-    printf("Initialization complete");
-  }
+  DLT(DLT_CRITICAL);
+  printf("Initialization complete");
 
 /*
  * Start the tasks running

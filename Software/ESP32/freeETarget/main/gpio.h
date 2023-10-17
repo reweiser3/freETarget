@@ -56,8 +56,8 @@ void status_LED_init(unsigned int gpio_number);           // Initialize the RMT 
 #define REF_CLK        GPIO_NUM_8
 
 #define PAPER          GPIO_NUM_12                 // Paper advance drive active low
-#define PAPER_ON       0
-#define PAPER_OFF      1
+#define PAPER_ON       1
+#define PAPER_OFF      0
 
 #define STOP_N          GPIO_NUM_47      // V      
 #define CLOCK_START     GPIO_NUM_21      // V

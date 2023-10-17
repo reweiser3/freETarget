@@ -633,11 +633,6 @@ void paper_on_off                               // Function to turn the motor on
     return;                             // Carry On
   }
 
-  if ( CALIBRATE )                      // Calibration jumper in?
-  {
-    set_trip_point(0);
-  }
-
   if ( DIP_SW_A && DIP_SW_B )           // Both switches closed?
   {
     factory_nonvol(false);              // Initalize the nonvol but do not calibrate
@@ -1010,14 +1005,11 @@ void digital_test(void)
   printf("\r\nBD Rev: %d", revision());  
   printf("\r\nDIP: 0x%02X", read_DIP()); 
   printf("\r\nTemperature: %4.2fdC", temperature_C());
-  printf("\r\nSpeed of Sound: %4.2fmm/us", speed_of_sound(temperature_C(), json_rh));
-  printf("\r\nV_REF: %4.f Volts", volts);
+  printf("\r\nRelative Humidity: %4.2f", humidity_RH());
+  printf("\r\nSpeed of Sound: %4.2fmm/us", speed_of_sound(temperature_C(), humidity_RH()));
+  printf("\r\nLED_FB: %4.2f Volts",  v12_supply());
   printf("\r\n");
 
- /*
-  * Blink the LEDs and exit
-  */
-//   POST_LEDs();
    return;
 }
 

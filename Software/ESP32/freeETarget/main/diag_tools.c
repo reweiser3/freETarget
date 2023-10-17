@@ -106,9 +106,17 @@ void self_test
  */
     case T_PAPER:
       printf("\r\nAdvancing paper %d ms", json_paper_time);
-      paper_on_off(true);
-      vTaskDelay((ONE_SECOND * json_paper_time) / 1000);
-      paper_on_off(false);
+      for (i=0; i != 10; i++)
+      {
+        paper_on_off(true);
+        timer_new(&i, 500); 
+        while(i != 0)
+        {
+          continue;
+        }
+        paper_on_off(false);
+        vTaskDelay(50);
+      }
       printf(" done\r\n");
       break;
 
@@ -171,8 +179,7 @@ void self_test
       volts = 0.0;
       while(1)
       {
-        set_VREF(0, volts);
-        set_VREF(1, 2.048-volts);
+        set_VREF();
         volts += 0.0005;
         if ( volts > 2.048 )
         {
@@ -187,7 +194,7 @@ void self_test
  */
     case T_AIN:
       printf("\r\nAnalog Input ");
-      printf("\r\n12V %d", adc_read(V_12_LED));
+      printf("\r\n12V %5.3f", v12_supply());
       printf("\r\nBoard Rev %d", revision());
       break;
 
@@ -346,8 +353,10 @@ while(1)
   }
   if ( test1 == false )
   {
+      set_status_LED("R--");
       DLT(DLT_CRITICAL);
       printf("REF_CLK not running");
+      vTaskDelay(5*ONE_SECOND);
   }
 
   gpio_set_level(CLOCK_START, 1);  
@@ -362,12 +371,13 @@ while(1)
   }    
   if ( test2 == false )
   {
+      set_status_LED("-R-");
       DLT(DLT_CRITICAL);
       printf("Stuck bit in run latch: %02X", (~is_running()) & 0x00ff);
-      set_status_LED("-R-");
+      vTaskDelay(5*ONE_SECOND);
   }      
 
-  set_status_LED("---Y");
+  set_status_LED("--Y");
   vTaskDelay(ONE_SECOND);
   gpio_set_level(STOP_N, 0);
   gpio_set_level(STOP_N, 1);
@@ -381,93 +391,16 @@ while(1)
   }
   else
   {
+    set_status_LED("--R");
     DLT(DLT_CRITICAL);
     printf("Failed to start clock in run latch: %02X", is_running());
-    set_status_LED("--R");
+    vTaskDelay(5*ONE_SECOND);
   }
-
-  vTaskDelay(2*ONE_SECOND);
 
 /*
  * Got here, the test completed successfully
  */
   return test1 && test2 && test3;
-}
-  
-/*----------------------------------------------------------------
- * 
- * @function: void POST_trip_point()
- * 
- * @brief: Display the trip point
- * 
- * @return: None
- *----------------------------------------------------------------
- *
- *  Run the set_trip_point function once
- *  
- *--------------------------------------------------------------*/
- void POST_trip_point(void)
- {
-   if ( DLT(DLT_APPLICATION) )
-   {
-    printf("POST trip point");
-   }
-   
-   set_trip_point(0);                // Show the trip point once (20 cycles used for blinking values)
-   set_status_LED(LED_RESET);              // Show test test Ending
-   return;
- }
- 
-/*----------------------------------------------------------------
- * 
- * @function: set_trip_point
- * 
- * @brief:  Prompt the user for a voltage
- * 
- * @return: None
- *----------------------------------------------------------------
- *
- * The user is promted or a channel number and voltage.
- * 
- * These are validated and sent to the DAC driver for output
- *  
- *--------------------------------------------------------------*/
-#define C_MAX   3             // V_REF set to 2.048 volts
-#define V_MAX   2.047         // Maximum voltage setting
-
-void set_trip_point(int x)
-{
-  int   channel;              // DAC channel
-  float value;                // Voltage to write
-
-/*
- * Prompt for the settings
- */
-  printf("\r\nChannel (0-3): ");
-  channel = get_int();
-  if ( (channel < 0 ) || (channel > C_MAX))
-  {
-    printf("/r/nInvalid channel");
-    return;
-  }
-
-  printf("\r\nVoltage (0-2.047): ");
-  value = get_float(); 
-  if ( (value < 0 ) || (value > V_MAX))
-  {
-    printf("/r/nInvalid Voltage");
-    return;
-  }
-
-/*
- *  Output the value
- */  
-  dac_write(channel, value);
-
-/*
-  * @return
-  */
-  return;
 }
 
 /*----------------------------------------------------------------

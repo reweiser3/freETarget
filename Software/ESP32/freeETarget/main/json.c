@@ -7,8 +7,12 @@
  * ----------------------------------------------------*/
 #include "freETarget.h"
 #include "json.h"
+#include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\gpio_types.h"
+#include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\adc_types.h"
+#include "C:\Users\allan\esp\esp-idf\esp-idf\components\esp_adc\include\esp_adc\adc_oneshot.h"
 #include "ctype.h"
 #include "stdio.h"
+#include "gpio_define.h"
 #include "diag_tools.h"
 #include "serial_io.h"
 #include "nvs.h"
@@ -84,7 +88,6 @@ int     json_rapid_wait;            // Delay applied to rapid start
 char    json_wifi_ssid[SSID_SIZE];  // Stored value of SSID
 char    json_wifi_pwd[PWD_SIZE];    // Stored value of password
 int     json_wifi_dhcp;             // The ESP is a DHCP server
-int     json_rh;                    // Relative Humidity 0-1005
 int     json_min_ring_time;         // Time to wait for ringing to stop
 double  json_doppler;               // Adjust for dopper inverse square
 int     json_token;                 // Token ring state
@@ -99,7 +102,6 @@ int     json_clock[4];              // Storage for clock test
 
        void show_echo(void);        // Display the current settings
 static void show_test(int v);       // Execute the self test once
-//static void show_test0(int v);      // Help Menu
 static void show_names(int v);
 //static void nop(void);
 static void set_trace(int v);       // Set the trace on and off
@@ -110,7 +112,6 @@ const json_message_t JSON[] = {
 //    token                 value stored in RAM     double stored in RAM        convert    service fcn()     NONVOL location      Initial Value
   {"\"ANGLE\":",          &json_sensor_angle,                0,                IS_INT32,  0,                NONVOL_SENSOR_ANGLE,    45 },    // Locate the sensor angles
   {"\"BYE\":",            0,                                 0,                IS_VOID,  (void *)&bye,                      0,       0 },    // Shut down the target
-  {"\"CAL\":",            0,                                 0,                IS_VOID,   &set_trip_point,                  0,       0 },    // Enter calibration mode
   {"\"CALIBREx10\":",     &json_calibre_x10,                 0,                IS_INT32,  0,                NONVOL_CALIBRE_X10,     45 },    // Enter the projectile calibre (mm x 10)
   {"\"DELAY\":",          0,                                 0,                IS_INT32,  &diag_delay,                      0,       0 },    // Delay TBD seconds
   {"\"DOPPLER\":",        0,                     &json_doppler,                IS_FLOAT,  0,                NONVOL_DOPPLER,         40 },    // Adjust timing based on Doppler Inverse SQ
@@ -136,15 +137,15 @@ const json_message_t JSON[] = {
   {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT32,  0,                NONVOL_PAPER_TIME,     500 },    // Set the paper advance time
   {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
   {"\"RAPID_COUNT\":",    &json_rapid_count,                 0,                IS_INT32,  0,                0,                       0 },    // Number of shots expected in series
-//  {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT32,  &rapid_enable,    0,                       0 },    // Enable the rapid fire fieature
+  {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT32,  &rapid_enable,    0,                       0 },    // Enable the rapid fire fieature
   {"\"RAPID_TIME\":",     &json_rapid_time,                  0,                IS_INT32,  0,                0,                       0 },    // Set the duration of the rapid fire event and start
   {"\"RAPID_WAIT\":",     &json_rapid_wait,                  0,                IS_INT32,  0,                0,                       0 },    // Delay applied between enable and ready
   {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT32,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
-  {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  &gen_position,    NONVOL_SENSOR_DIA,     230 },    // Generate the sensor postion array
+  {"\"SENSOR\":",         0,                                 &json_sensor_dia, IS_FLOAT,  0,                NONVOL_SENSOR_DIA,     230 },    // Generate the sensor postion array
   {"\"SN\":",             &json_serial_number,               0,                IS_FIXED,  0,                NONVOL_SERIAL_NO,   0xffff },    // Board serial number
   {"\"STEP_COUNT\":",     &json_step_count,                  0,                IS_INT32,  0,                NONVOL_STEP_COUNT,       0 },    // Set the duration of the stepper motor ON time
   {"\"STEP_TIME\":",      &json_step_time,                   0,                IS_INT32,  0,                NONVOL_STEP_TIME,        0 },    // Set the number of times stepper motor is stepped
-//  {"\"TABATA_ENABLE\":",  &json_tabata_enable,               0,                IS_INT32,  &tabata_enable,   0,                       0 },    // Enable the tabata feature
+  {"\"TABATA_ENABLE\":",  &json_tabata_enable,               0,                IS_INT32,  &tabata_enable,   0,                       0 },    // Enable the tabata feature
   {"\"TABATA_ON\":",      &json_tabata_on,                   0,                IS_INT32,  0,                0,                       0 },    // Time that the LEDs are ON for a Tabata timer (1/10 seconds)
   {"\"TABATA_REST\":",    &json_tabata_rest,                 0,                IS_INT32,  0,                0,                       0 },    // Time that the LEDs are OFF for a Tabata timer
   {"\"TABATA_WARN_OFF\":",&json_tabata_warn_off,             0,                IS_INT32,  0,                0,                       0 },    // Time that the LEDs are ON during a warning cycle
@@ -153,10 +154,10 @@ const json_message_t JSON[] = {
   {"\"TEST\":",           0,                                 0,                IS_INT32,  &show_test,       0,                       0 },    // Execute a self test
   {"\"TOKEN\":",          &json_token,                       0,                IS_INT32,  0,                NONVOL_TOKEN,            0 },    // Token ring state
   {"\"TRACE\":",          0,                                 0,                IS_INT32,  &set_trace,       0,                       0 },    // Enter / exit diagnostic trace
-//  {"\"VERSION\":",        0,                                0,               IS_INT32,  &POST_version,    0,                       0 },    // Return the version string
-  {"\"VREF_LO\":",         0,                                &json_vref_lo,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_LO,          1 },    // Low trip point value (Volts)
-  {"\"VREF_HI\":",         0,                                &json_vref_hi,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_HI,          2 },    // High trip point value (Volts)
-   {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,               IS_INT32,  0,                NONVOL_WIFI_CHANNEL,     6 },    // Set the wifi channel
+  {"\"VERSION\":",        0,                                 0,                IS_INT32,  &POST_version,    0,                       0 },    // Return the version string
+  {"\"VREF_LO\":",        0,                                 &json_vref_lo,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_LO,          1 },    // Low trip point value (Volts)
+  {"\"VREF_HI\":",        0,                                 &json_vref_hi,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_HI,          2 },    // High trip point value (Volts)
+  {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT32,  0,                NONVOL_WIFI_CHANNEL,     6 },    // Set the wifi channel
   {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_SECRET, 0,                NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
   {"\"WIFI_SSID\":",      (int*)&json_wifi_ssid,             0,                IS_TEXT,   0,                NONVOL_WIFI_SSID,        0 },    // Name of SSID to attach to 
   {"\"Z_OFFSET\":",       &json_z_offset,                    0,                IS_INT32,  0,                NONVOL_Z_OFFSET,        13 },    // Distance from paper to sensor plane (mm)
@@ -327,6 +328,7 @@ static void handle_json(void)
 /*
  * Found out where the braces are, extract the contents.
  */
+  nvs_flash_init();
   not_found = true;
   for ( i=0; i != got_right; i++)                             // Go across the JSON input 
   {
@@ -409,13 +411,12 @@ static void handle_json(void)
               }
               if ( JSON[j].non_vol != 0 )
               {
-                my_float.double64 = y;
+                my_float.double64 = (float)y;
                 nvs_set_i64(my_handle, JSON[j].non_vol, my_float.int64);  // Store into NON-VOL
               }
               break;
           }
 
-          nvs_commit(my_handle);                              // Save to memory
 
           if ( JSON[j].f != 0 )                               // Call the handler if it is available
           {
@@ -425,6 +426,7 @@ static void handle_json(void)
       }
     j++;
     }
+     nvs_commit(my_handle);                                   // Save to memory
   }
 
 /*
@@ -575,17 +577,14 @@ void show_echo(void)
   
   sprintf(s, "\"TEMPERATURE\": %4.2f, \n\r", temperature_C());                          // Temperature in degrees C
   serial_to_all(s, ALL);
-  
-  sprintf(s, "\"SPEED_SOUND\": %4.2f, \n\r", speed_of_sound(temperature_C(), json_rh));
+
+  sprintf(s, "\"RELATIVE_HUMIDITY\": %4.2f, \n\r", humidity_RH());
   serial_to_all(s, ALL);
 
-//  sprintf(s, "\"V_REF\": %4.2f, \n\r", TO_VOLTS(analogRead(V_REFERENCE)));                                               // Trip point reference
+  sprintf(s, "\"SPEED_SOUND\": %4.2f, \n\r", speed_of_sound(temperature_C(), humidity_RH()));
   serial_to_all(s, ALL);
-  
-//  sprintf(s, "\"V_12_LED\": %4.2f, \n\r", (float)analogRead(V_12_LED) * K_12 / 1023.0);                                            // 12 Volt LED supply
-  serial_to_all(s, ALL);
-  
-  sprintf(s, "\"VSET_PWM\": %d, \n\r", json_vset_PWM);                                    // Setpoint adjust PWM
+
+  sprintf(s, "\"V_12_LED\": %4.2f, \n\r", v12_supply());                                            // 12 Volt LED supply
   serial_to_all(s, ALL);
   
   sprintf(s, "\"TIMER_COUNT\": %d, \n\r", (int)(SHOT_TIME * OSCILLATOR_MHZ));             // Maximum number of clock cycles to record shot (target dependent)

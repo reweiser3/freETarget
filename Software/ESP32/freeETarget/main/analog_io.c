@@ -134,6 +134,15 @@ unsigned int adc_read
   return raw;
 }
 
+float v12_supply(void)
+{
+  float raw;                          // Raw voltage from ADC
+
+  raw = (float)adc_read(V_12_LED);
+
+  return 3.3 * raw / 4096.0 * 5.0;
+}
+
 /*----------------------------------------------------------------
  * 
  * @function: set_LED_PWM()
@@ -261,8 +270,6 @@ unsigned int revision(void)
  * A simple interrogation is used. 
  * 
  *--------------------------------------------------------------*/
-#define RTD_SCALE      (0.5)   // 1/2C / LSB
-#define RH_SCALE    (0.5)
 static float  t_c;              // Temperature from sensor
 static float  rh;               // Humidity from sensor
 
@@ -311,10 +318,9 @@ double temperature_C(void)
  * A simple interrogation is used. 
  * 
  *--------------------------------------------------------------*/
- #define RH_SCALE      (0.5)   // 1/2C / LSB
-
 double humidity_RH(void)
 {
+  temperature_C();          // Read in the temperature and humidity
   return rh;
 }
 
@@ -354,13 +360,10 @@ double humidity_RH(void)
  * Figure 5-8
  * 
  *--------------------------------------------------------------*/
-void set_VREF
-(
-  unsigned int channel,         // Channel 0-3 to control
-  float        volts            // Voltage to set output
-)
+void set_VREF(void)
 {
-  dac_write(channel, volts);
+  dac_write(0, json_vref_lo);
+  dac_write(1, json_vref_hi);
 
 /*
  *  All done, return

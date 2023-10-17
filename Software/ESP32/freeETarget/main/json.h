@@ -37,7 +37,7 @@ extern const json_message_t JSON[];
 #define IS_INT32      0x20       // Value is a 64 bit int
 #define IS_FLOAT      0x10       // Value is a floating point number
 #define IS_FIXED      0x08       // The value cannot be changed
-#define IS_MASK       (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FIXED  )
+#define IS_MASK       (IS_VOID | IS_TEXT | IS_SECRET | IS_INT32 | IS_FLOAT | IS_FIXED)
 #define FLOAT_MASK    ((~IS_MASK) & 0xFF)    // Scaling factor
 
 #define SSID_SIZE     32          // Reserve 32 bytes for SSID
@@ -97,7 +97,6 @@ extern int    json_wifi_dhcp;     // TRUE if the DHCP server is enabled
 extern char   json_wifi_ssid[];   // Text of WiFI SSID
 extern char   json_wifi_pwd[];    // Text of WiFI password
 extern char   json_wifi_ip[];     // Text of IP address
-extern int    json_rh;            // Relative Humidity, 0-100%
 extern int    json_min_ring_time; // Time to wait for ringing to stop
 extern double json_doppler;       // Adjutment for inverse square
 extern int    json_token;         // Token ring setting

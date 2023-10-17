@@ -81,7 +81,7 @@ void read_nonvol(void)
   }
         
   nvs_get_i32(my_handle, "NONVOL_INIT", &nonvol_init);
-  
+
   if ( nonvol_init != INIT_DONE)                       // EEPROM never programmed
   {
     factory_nonvol(true);                              // Force in good values
@@ -136,8 +136,15 @@ void read_nonvol(void)
           break;
 
         case IS_FLOAT:
-          nvs_get_i64(my_handle, JSON[i].non_vol, (int64_t*)&nvm64.int64);       // Read in the value as an iny
-          *JSON[i].d_value = nvm64.double64;
+          if ( JSON[i].non_vol != 0 )
+          {
+            nvs_get_i64(my_handle, JSON[i].non_vol, (int64_t*)&nvm64.int64);       // Read in the value as an integer
+            *JSON[i].d_value = nvm64.double64;
+          }
+          else
+          {
+            *JSON[i].d_value = (double)JSON[i].init_value;  
+          }
           break;
       }
    }
@@ -155,55 +162,6 @@ void read_nonvol(void)
   return;
 }
 
-
-
-#if(0)
-/*----------------------------------------------------------------
- * 
- * @funciton: check_nonvol
- * 
- * @brief:    Read nonvol and set up variables
- * 
- * @return:   Nonvol values copied to RAM
- * 
- *---------------------------------------------------------------
- *
- * Check to see if the NONVOL has been initialized correctly
- *
- *------------------------------------------------------------*/
-void check_nonvol(void)
-{
-  unsigned long nonvol_init;
-  
-  if ( DLT(DLT_DIAG) )
-  {
-    printf("check_nonvol()");
-  }
-  
-/*
- * Read the nonvol marker and if uninitialized then set up values
- */
-  nvs_get_u32(my_handle, "NONVOL_INIT", &nonvol_init);
-  if ( nonvol_init != INIT_DONE)                       // EEPROM never programmed
-  {
-    factory_nonvol(true);                              // Force in good values
-  }
-
-/*
- * Check to see if there has been a change to the persistent storage version
- */
-  nvs_get_u32(my_handle, "NONVOL_PS_VERSION", &nonvol_init);
-  if ( nonvol_init != PS_VERSION )                    // Is what is in memory not the same as now
-  {
-    update_nonvol(nonvol_init);                       // Then update the version
-  }
-  
-/*
- * All OK now
- */
-  return;
-}
-#endif
 
 /*----------------------------------------------------------------
  * 
@@ -230,8 +188,9 @@ void factory_nonvol
   int          length;
   union pack nvm64;
   
+  DLT(DLT_CRITICAL); printf("factory_nonvol()\r\n");
+
   serial_number = 0;
-  gen_position(0); 
   x = 0;
   nvs_set_u32(my_handle, "NONVOL_V_SET", 0);
   if ( new_serial_number == false )
@@ -239,18 +198,13 @@ void factory_nonvol
     nvs_set_u32(my_handle, "NONVOL_V_SET", serial_number);
   }
  
-  if ( DLT(DLT_CRITICAL) )
-  {
-    printf("factory_nonvol()\r\n");
-  }
-
 /*
  * Use the JSON table to initialize the local variables
  */
   i=0;
   while ( JSON[i].token != 0 )
   {
-    switch ( JSON[i].convert )
+    switch ( JSON[i].convert & IS_MASK )
     {
        case IS_VOID:                                        // Variable does not contain anything 
        case IS_FIXED:                                       // Variable cannot be overwritten
@@ -258,7 +212,6 @@ void factory_nonvol
        
        case IS_TEXT:
        case IS_SECRET:
-        printf("\r\n%s \"\"", JSON[i].token);
         if ( JSON[i].non_vol != 0 )
         {
           length = JSON[i].convert & FLOAT_MASK;
@@ -268,7 +221,6 @@ void factory_nonvol
         
       case IS_INT32:
         x = JSON[i].init_value;                                               // Read in the value 
-        printf("\r\n%s %d", JSON[i].token, x);
         if ( JSON[i].non_vol != 0 )
         {
           nvs_set_i32(my_handle, JSON[i].non_vol, x);                         // Read in the value
@@ -277,8 +229,10 @@ void factory_nonvol
 
       case IS_FLOAT:
         nvm64.double64 = (double)JSON[i].init_value;
-        printf("\r\n%s %4.2f", JSON[i].token, nvm64.double64);
-        nvs_set_i64(my_handle, JSON[i].non_vol, nvm64.int64);                    // Read in the value
+        if ( JSON[i].non_vol != 0 )
+        {        
+          nvs_set_i64(my_handle, JSON[i].non_vol, nvm64.int64);              // Read in the value
+        }
         break;
     }
    i++;
@@ -300,14 +254,9 @@ void factory_nonvol
       paper_on_off(false);
       vTaskDelay(ONE_SECOND/4);
     }
+    paper_on_off(false);
     printf(" Test Complete\r\n");
   }
-#if (0)
-/*
- * Set the trip point
- */
-  set_trip_point(0);                      // And stay forever in the set trip mode
-#endif
 
 /*
  * Ask for the serial number.  Exit when you get !
@@ -419,7 +368,7 @@ void init_nonvol
  * 
  * @function: update_nonvol
  * 
- * @brief:  Update the nonvol values to the current persistent 
+ * @brief:  Update the nonvol to the current persistent storage version
  * 
  * @return: None
  *---------------------------------------------------------------
@@ -475,41 +424,3 @@ void update_nonvol
  */
   return;
 }
-
-/*----------------------------------------------------------------
- *
- * @function: gen_postion
- * 
- * @brief: Generate new position varibles based on new sensor diameter
- * 
- * @return: Position values stored in NONVOL
- * 
- *---------------------------------------------------------------
- *
- *  This function resets the offsets to 0 whenever a new 
- *  sensor diameter is entered.
- *  
- *------------------------------------------------------------*/
-void gen_position(int v)
-{
- /*
-  * Work out the geometry of the sensors
-  */
-  json_north_x = 0;
-  json_north_y = 0;
-  
-  json_east_x = 0;
-  json_east_y = 0;
-
-  json_south_x = 0;
-  json_south_y = 0;
-  
-  json_west_x = 0;
-  json_west_y = 0;
-   
- /* 
-  *  All done, return
-  */
-  return;
-}
-

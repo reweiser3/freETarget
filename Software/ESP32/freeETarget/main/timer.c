@@ -221,7 +221,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
 unsigned int timer_new
 (
   unsigned long* new_timer,         // Pointer to new down counter
-  unsigned long  start_time         // Starting value
+  unsigned long  duration           // Duration of the timer
 )
 {
   unsigned int i;
@@ -232,7 +232,7 @@ unsigned int timer_new
       || (timers[i] == new_timer) ) // or it already exists
     {
       timers[i] = new_timer;        // Add it in
-      *timers[i] = start_time;
+      *timers[i] = duration;
       return 1;
     }
   }

@@ -70,7 +70,7 @@ void init_sensors(void)
 /*
  * Determine the speed of sound and ajust
  */
-  s_of_sound = speed_of_sound(temperature_C(), json_rh);
+  s_of_sound = speed_of_sound(temperature_C(), humidity_RH());
   pellet_calibre = ((double)json_calibre_x10 / s_of_sound / 2.0d / 10.0d) * OSCILLATOR_MHZ; // Clock adjustement
   
  /*
