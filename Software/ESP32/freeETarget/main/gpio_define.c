@@ -94,27 +94,27 @@ DIO_struct_t dio49 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_va
 /*
  *  Analog IO usage
  */
-ADC_struct_t adc1_ch0 = { .type = ANALOG_IO, .adc_channel = ADC(1,0) };   // CHANNEL 1, ADC 0
-ADC_struct_t adc1_ch1 = { .type = ANALOG_IO, .adc_channel = ADC(1,1) };   // CHANNEL 1, ADC 1
-ADC_struct_t adc1_ch2 = { .type = ANALOG_IO, .adc_channel = ADC(1,2) };   // CHANNEL 1, ADC 2
-ADC_struct_t adc1_ch3 = { .type = ANALOG_IO, .adc_channel = ADC(1,3) };   // CHANNEL 1, ADC 3
-ADC_struct_t adc1_ch4 = { .type = ANALOG_IO, .adc_channel = ADC(1,4) };   // CHANNEL 1, ADC 4
-ADC_struct_t adc1_ch5 = { .type = ANALOG_IO, .adc_channel = ADC(1,5) };   // CHANNEL 1, ADC 5
-ADC_struct_t adc1_ch6 = { .type = ANALOG_IO, .adc_channel = ADC(1,6) };   // CHANNEL 1, ADC 6
-ADC_struct_t adc1_ch7 = { .type = ANALOG_IO, .adc_channel = ADC(1,7) };   // CHANNEL 1, ADC 7
-ADC_struct_t adc1_ch8 = { .type = ANALOG_IO, .adc_channel = ADC(1,8) };   // CHANNEL 1, ADC 9
-ADC_struct_t adc1_ch9 = { .type = ANALOG_IO, .adc_channel = ADC(1,9) };   // CHANNEL 1, ADC 10
+ADC_struct_t adc1_ch0 = { .type = ANALOG_IO, .adc_channel = ADC(1,0), .adc_attenuation = ADC_ATTEN_DB_11 };   // CHANNEL 1, ADC 0
+ADC_struct_t adc1_ch1 = { .type = ANALOG_IO, .adc_channel = ADC(1,1), .adc_attenuation = ADC_ATTEN_DB_11 };   // CHANNEL 1, ADC 1
+ADC_struct_t adc1_ch2 = { .type = ANALOG_IO, .adc_channel = ADC(1,2), .adc_attenuation = ADC_ATTEN_DB_11 };   // CHANNEL 1, ADC 2
+ADC_struct_t adc1_ch3 = { .type = ANALOG_IO, .adc_channel = ADC(1,3), .adc_attenuation = ADC_ATTEN_DB_11 };   // CHANNEL 1, ADC 3
+ADC_struct_t adc1_ch4 = { .type = ANALOG_IO, .adc_channel = ADC(1,4), .adc_attenuation = ADC_ATTEN_DB_11 };   // CHANNEL 1, ADC 4
+ADC_struct_t adc1_ch5 = { .type = ANALOG_IO, .adc_channel = ADC(1,5), .adc_attenuation = ADC_ATTEN_DB_11 };   // CHANNEL 1, ADC 5
+ADC_struct_t adc1_ch6 = { .type = ANALOG_IO, .adc_channel = ADC(1,6), .adc_attenuation = ADC_ATTEN_DB_11 };   // CHANNEL 1, ADC 6
+ADC_struct_t adc1_ch7 = { .type = ANALOG_IO, .adc_channel = ADC(1,7), .adc_attenuation = ADC_ATTEN_DB_11 };   // CHANNEL 1, ADC 7
+ADC_struct_t adc1_ch8 = { .type = ANALOG_IO, .adc_channel = ADC(1,8), .adc_attenuation = ADC_ATTEN_DB_11 };   // CHANNEL 1, ADC 9
+ADC_struct_t adc1_ch9 = { .type = ANALOG_IO, .adc_channel = ADC(1,9), .adc_attenuation = ADC_ATTEN_DB_11 };   // CHANNEL 1, ADC 10
 
-ADC_struct_t adc2_ch0 = { .type = ANALOG_IO, .adc_channel = ADC(2,0) };  // CHANNEL 2, ADC 0
-ADC_struct_t adc2_ch1 = { .type = ANALOG_IO, .adc_channel = ADC(2,1) };  // CHANNEL 2, ADC 1
-ADC_struct_t adc2_ch2 = { .type = ANALOG_IO, .adc_channel = ADC(2,2) };  // CHANNEL 2, ADC 2
-ADC_struct_t adc2_ch3 = { .type = ANALOG_IO, .adc_channel = ADC(2,3) };  // CHANNEL 2, ADC 3
-ADC_struct_t adc2_ch4 = { .type = ANALOG_IO, .adc_channel = ADC(2,4) };  // CHANNEL 2, ADC 4
-ADC_struct_t adc2_ch5 = { .type = ANALOG_IO, .adc_channel = ADC(2,5) };  // CHANNEL 2, ADC 5
-ADC_struct_t adc2_ch6 = { .type = ANALOG_IO, .adc_channel = ADC(2,6) };  // CHANNEL 2, ADC 6
-ADC_struct_t adc2_ch7 = { .type = ANALOG_IO, .adc_channel = ADC(2,7) };  // CHANNEL 2, ADC 7
-ADC_struct_t adc2_ch8 = { .type = ANALOG_IO, .adc_channel = ADC(2,8) };  // CHANNEL 2, ADC 8
-ADC_struct_t adc2_ch9 = { .type = ANALOG_IO, .adc_channel = ADC(2,9) };  // CHANNEL 2, ADC 9
+ADC_struct_t adc2_ch0 = { .type = ANALOG_IO, .adc_channel = ADC(2,0), .adc_attenuation = ADC_ATTEN_DB_11 };  // CHANNEL 2, ADC 0
+ADC_struct_t adc2_ch1 = { .type = ANALOG_IO, .adc_channel = ADC(2,1), .adc_attenuation = ADC_ATTEN_DB_11 };  // CHANNEL 2, ADC 1
+ADC_struct_t adc2_ch2 = { .type = ANALOG_IO, .adc_channel = ADC(2,2), .adc_attenuation = ADC_ATTEN_DB_11 };  // CHANNEL 2, ADC 2
+ADC_struct_t adc2_ch3 = { .type = ANALOG_IO, .adc_channel = ADC(2,3), .adc_attenuation = ADC_ATTEN_DB_11 };  // CHANNEL 2, ADC 3
+ADC_struct_t adc2_ch4 = { .type = ANALOG_IO, .adc_channel = ADC(2,4), .adc_attenuation = ADC_ATTEN_DB_11 };  // CHANNEL 2, ADC 4
+ADC_struct_t adc2_ch5 = { .type = ANALOG_IO, .adc_channel = ADC(2,5), .adc_attenuation = ADC_ATTEN_DB_11 };  // CHANNEL 2, ADC 5
+ADC_struct_t adc2_ch6 = { .type = ANALOG_IO, .adc_channel = ADC(2,6), .adc_attenuation = ADC_ATTEN_DB_11 };  // CHANNEL 2, ADC 6
+ADC_struct_t adc2_ch7 = { .type = ANALOG_IO, .adc_channel = ADC(2,7), .adc_attenuation = ADC_ATTEN_DB_11 };  // CHANNEL 2, ADC 7
+ADC_struct_t adc2_ch8 = { .type = ANALOG_IO, .adc_channel = ADC(2,8), .adc_attenuation = ADC_ATTEN_DB_11 };  // CHANNEL 2, ADC 8
+ADC_struct_t adc2_ch9 = { .type = ANALOG_IO, .adc_channel = ADC(2,9), .adc_attenuation = ADC_ATTEN_DB_11 };  // CHANNEL 2, ADC 9
 
 /*
  *  PWM Control, GPIO filled in by GPIO definition above
@@ -177,7 +177,7 @@ gpio_struct_t gpio_table[] = {
     {"RUN_SOUTH_HI", GPIO_NUM_10, (void*)&dio10},     // RUN_SOUTH_HI
     {"RUN_WEST_HI",  GPIO_NUM_11, (void*)&dio11},     // RUN_WEST_HI
     {"PAPER",        GPIO_NUM_12, (void*)&dio12},     // PAPER  Drive
-    {"LED_FB",       GPIO_NUM_1, (void*)&adc1_ch0},   // LED Feedback (Measure 12VDC)
+    {"V12_REF",      GPIO_NUM_1, (void*)&adc1_ch0},   // LED Feedback (Measure 12VDC)
     {"LED_PWM",      GPIO_NUM_2, (void*)&pwm0},       // LED_PWM
     {"TXD",          22, NULL},                       // UART Transmit   Initialized in serial_io_init
     {"RXD",          12, NULL},                       // UART Receive
@@ -236,10 +236,9 @@ void gpio_init(void)
     {
         if (gpio_table[i].gpio_uses != NULL )
         {   
-            if ( DLT(DLT_CRITICAL) )
-            {
-                printf("%s: %d  %s",gpio_table[i].gpio_name, gpio_table[i].gpio_number, gpio_use[((DIO_struct_t*)(gpio_table[i].gpio_uses))->type]);
-            }
+            DLT(DLT_CRITICAL); 
+            printf("%s: %d  %s",gpio_table[i].gpio_name, gpio_table[i].gpio_number, gpio_use[((DIO_struct_t*)(gpio_table[i].gpio_uses))->type]);
+
             switch (((DIO_struct_t*)(gpio_table[i].gpio_uses))->type)
             {      
                 default:
@@ -269,7 +268,7 @@ void gpio_init(void)
 
                 case ANALOG_IO:
                     adc_init(((ADC_struct_t*)(gpio_table[i].gpio_uses))->adc_channel, \
-                        gpio_table[i].gpio_number );
+                        ((ADC_struct_t*)(gpio_table[i].gpio_uses))->adc_attenuation );
                     break;
 
                 case PWM_OUT:
@@ -288,7 +287,7 @@ void gpio_init(void)
                         ((PCNT_struct_t*)(gpio_table[i].gpio_uses))->pcnt_signal);
                     break;             
 
-                case LED_STRIP: 
+                case LED_STRIP:
                     status_LED_init(gpio_table[i].gpio_number);
                     break;
                 

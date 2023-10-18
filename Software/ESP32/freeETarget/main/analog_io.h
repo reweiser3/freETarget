@@ -11,7 +11,7 @@
 /*
  * Global functions
  */
-void adc_init(unsigned int channel, unsigned int gpio); // Setup the analog hardware
+void adc_init(unsigned int channel, unsigned int attenuation); // Setup the analog hardware
 unsigned int adc_read(unsigned int channel);// Return the raw value
 unsigned int revision(void);                // Return the board revision
 double temperature_C(void);                 // Temperature in degrees C

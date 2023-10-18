@@ -88,10 +88,12 @@ typedef struct DIO_struct  {
 typedef struct ADC_struct  {
     gpio_type_t     type;                               // What type of structure am I
     int             adc_channel;                        // What channel are we using?
+    int             adc_attenuation;                        // What is the attenuation setting
 } ADC_struct_t;
 
-#define ADC(channel, adc) (((channel) * 10) | (adc))    // Pack the channel and ADC into an integer
-#define ADC_CH(id) (id/10)                              // Unpack the chanel from the integer
+#define ADC(adc, channel) (((adc) * 10) + (channel))    // Pack the channel and ADC into an integer
+#define ADC_ADC(id) (id / 10)                           // Unpack the ADC from the integer
+#define ADC_CHANNEL(id) (id % 10)                       // Unpack the channel from the interger
 
 typedef struct serialIO_struct  {
     gpio_type_t     type;                                // What type of structure am I

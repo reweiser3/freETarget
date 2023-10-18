@@ -10,7 +10,6 @@
  * 
  * See: 
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/ledc.html
- * https://github.com/espressif/esp-idf/tree/272b4091f1/examples/peripherals/ledc/ledc_fade
  * 
  ***************************************************************************/
 #include "driver/ledc.h"
@@ -40,7 +39,7 @@ ledc_channel_config_t ledc_channel[4];
  * 
  * description:  Set the PWM duty cycle
  * 
- * @return:  Nope
+ * @return:  None
  * 
  **************************************************************************
  *
@@ -65,11 +64,12 @@ void pwm_init
 /*
  * Configure the timer channel
  */
-    if ( !pwm_ready )
+    if ( pwm_ready == 0 )
     {
         ledc_timer_config(&ledc_timer); // Setup the timer
         pwm_ready = 1;
     }
+    printf("channel: %d  gpio:%d", pwm_channel, pwm_gpio);
 /*
  * Configure the output port
  */
@@ -117,7 +117,7 @@ void pwm_set
     unsigned int scaled;
 
     scaled = (1<<13) * percent / 100;
-    printf(" %d ", scaled);
+    printf("channel: %d %d ", pwm_channel, scaled);
     ledc_set_duty(PWM_MODE, ledc_channel[pwm_channel].channel, scaled);
     ledc_update_duty(PWM_MODE, ledc_channel[pwm_channel].channel);
 }

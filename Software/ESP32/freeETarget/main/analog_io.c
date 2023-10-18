@@ -52,20 +52,19 @@ void set_vset_PWM(unsigned int pwm);
  * 
  *--------------------------------------------------------------*/  
 
-#define ADC_ATTENUATION  ADC_ATTEN_DB_11  //ADC Attenuation
-
 void adc_init
 (
     unsigned int adc_channel,   // What ADC channel are we accessing
-    unsigned int adc_gpio       // What GPIO is used
+    unsigned int adc_attenuation// What is the channel attenuation
 )
 {
   unsigned int adc;             // Which ADC (1/2)
   unsigned int channel;         // Which channel attached to the ADC (0-10)
 
-  adc = ADC_CH(adc_channel);    // What ADC are we on
-  channel = adc_channel % 10;   // What channel are we using
+  adc = ADC_ADC(adc_channel);    // What ADC are we on
+  channel = ADC_CHANNEL(adc_channel);
 
+  printf(" ADC %d %d %d", adc_channel, adc, channel);
 /*
  * Setup the channel
  */
@@ -73,11 +72,11 @@ void adc_init
     switch (adc)
     {
       case 1: 
-        ESP_ERROR_CHECK(adc1_config_channel_atten(channel, ADC_ATTENUATION));
+        ESP_ERROR_CHECK(adc1_config_channel_atten(channel, adc_attenuation));
         break;
       
       case 2:
-        ESP_ERROR_CHECK(adc2_config_channel_atten(channel, ADC_ATTENUATION));
+        ESP_ERROR_CHECK(adc2_config_channel_atten(channel, adc_attenuation));
         break;
     }
 
@@ -107,13 +106,14 @@ unsigned int adc_read
   unsigned int adc_channel          // What input are we reading?
 )
 {
-  unsigned int adc;             // Which ADC (1/2)
-  unsigned int channel;         // Which channel attached to the ADC (0-10)
-           int raw;             // Raw value from the ADC
+  unsigned int adc;                   // Which ADC (1/2)
+  unsigned int channel;               // Which channel attached to the ADC (0-10)
+           int raw;                   // Raw value from the ADC
 
-  adc = ADC_CH(adc_channel);    // What ADC are we on
-  channel = adc_channel % 10;   // What channel are we using
+  adc = ADC_ADC(adc_channel);         // What ADC are we on
+  channel = ADC_CHANNEL(adc_channel); // What channel are we using
 
+  printf(" ADC %d %d %d", adc_channel, adc, channel);
 /*
  *  Read the appropriate channel
  */
