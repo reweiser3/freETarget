@@ -543,7 +543,7 @@ void send_score
 /*
  * Grab the token ring if needed
  */
-  if ( json_token != TOKEN_WIFI )
+  if ( json_token != TOKEN_NONE )
   {
      while(my_ring != whos_ring)
     {
@@ -584,7 +584,7 @@ void send_score
   serial_to_all(str, ALL);
   
 #if ( S_SHOT )
-  if ( (json_token == TOKEN_WIFI) || (my_ring == TOKEN_UNDEF))
+  if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF))
   {
     sprintf(str, "\"shot\":%d, \"miss\":0, \"name\":\"%s\"", shot->shot_number,  names[json_name_id]);
   }
@@ -598,7 +598,7 @@ void send_score
 #endif
 
 #if ( S_SCORE )
-  if ( json_token == TOKEN_WIFI )
+  if ( json_token == TOKEN_NONE )
   {
     coeff = 9.9 / (((double)json_1_ring_x10 + (double)json_calibre_x10) / 20.0d);
     score = 10.9 - (coeff * radius);
@@ -621,7 +621,7 @@ void send_score
 #endif
 
 #if ( S_POLAR )
-  if ( json_token == TOKEN_WIFI )
+  if ( json_token == TOKEN_NONE )
   {
     dtostrf(radius, 4, 2, str_c );
     sprintf(str, ", \"r\":%4.2f,  \"a\":%s, ", radius, angle``);
@@ -629,7 +629,7 @@ void send_score
 #endif
 
 #if ( S_TIMERS )
-  if ( json_token == TOKEN_WIFI )
+  if ( json_token == TOKEN_NONE )
   {
     sprintf(str, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)s[N].count, (int)s[E].count, (int)s[S].count, (int)s[W].count);
     serial_to_all(str, ALL);
@@ -642,7 +642,7 @@ void send_score
 /*
  * All done, return
  */
-  if ( json_token != TOKEN_WIFI )
+  if ( json_token != TOKEN_NONE )
   {
     token_give();                            // Give up the token ring
     set_status_LED(LED_READY);
@@ -680,7 +680,7 @@ void send_miss
 /*
  * Grab the token ring if needed
  */
-  if ( json_token != TOKEN_WIFI )
+  if ( json_token != TOKEN_NONE )
   {
      while(my_ring != whos_ring)
     {
@@ -702,7 +702,7 @@ void send_miss
   serial_to_all(str, ALL);
   
  #if ( S_SHOT )
-   if ( (json_token == TOKEN_WIFI) || (my_ring == TOKEN_UNDEF))
+   if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF))
   {
     sprintf(str, "\"shot\":%d, \"miss\":0, \"name\":\"%s\"", shot->shot_number,  names[json_name_id]);
   }
@@ -715,7 +715,7 @@ void send_miss
 #endif
 
 #if ( S_XY )
-  if ( json_token == TOKEN_WIFI )
+  if ( json_token == TOKEN_NONE )
   { 
     sprintf(str, ", \"x\":0, \"y\":0 ");
     serial_to_all(str, ALL);
@@ -726,7 +726,7 @@ void send_miss
 #endif
 
 #if ( S_TIMERS )
-  if ( json_token == TOKEN_WIFI )
+  if ( json_token == TOKEN_NONE )
   {
     sprintf(str, ", \"N\":%d, \"E\":%d, \"S\":%d, \"W\":%d ", (int)shot->timer_count[N], (int)shot->timer_count[E], (int)shot->timer_count[S], (int)shot->timer_count[W]);
     serial_to_all(str, ALL);

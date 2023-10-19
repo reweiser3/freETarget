@@ -69,13 +69,13 @@ void pcnt_init
     unit_config[unit].low_limit  = -0x7fff;
     unit_config[unit].high_limit = 0x7fff;
     pcnt_unit[unit] = NULL;
-    pcnt_new_unit(&unit_config[unit], &pcnt_unit[unit]);
-
+    ESP_ERROR_CHECK(pcnt_new_unit(&unit_config[unit], &pcnt_unit[unit]));
+printf("unit %d control %d signal %d", unit, control, signal);
 /*
  *  Setup the glitch filter
  */
-    filter_config[unit].max_glitch_ns = 10;
-    pcnt_unit_set_glitch_filter(pcnt_unit[unit], &filter_config[unit]);
+//    filter_config[unit].max_glitch_ns = 10;
+//    pcnt_unit_set_glitch_filter(pcnt_unit[unit], &filter_config[unit]);
 
 /*
  *  Setup the channel.  Only Channel A is used.  B is left idle
@@ -83,28 +83,28 @@ void pcnt_init
     pcnt_chan_a[unit] = NULL;
     chan_a_config[unit].edge_gpio_num = signal;     // Counter
     chan_a_config[unit].level_gpio_num = control;   // Enable 
-    pcnt_new_channel(pcnt_unit[unit], &chan_a_config[unit], &pcnt_chan_a[unit]);
+    ESP_ERROR_CHECK(pcnt_new_channel(pcnt_unit[unit], &chan_a_config[unit], &pcnt_chan_a[unit]));
 
     pcnt_chan_b[unit] = NULL;
-    chan_b_config[unit].edge_gpio_num = signal;
-    chan_b_config[unit].level_gpio_num = control;
-    pcnt_new_channel(pcnt_unit[unit], &chan_b_config[unit], &pcnt_chan_b[unit]);
+    chan_b_config[unit].edge_gpio_num = -1;
+    chan_b_config[unit].level_gpio_num = -1;
+    ESP_ERROR_CHECK(pcnt_new_channel(pcnt_unit[unit], &chan_b_config[unit], &pcnt_chan_b[unit]));
 
 /*
  *  Setup the control.  Count only when the control is HIGH.
  */
 //                                Channel                       Rising Edge                        Falling Edge
-    pcnt_channel_set_edge_action( pcnt_chan_a[unit], PCNT_CHANNEL_EDGE_ACTION_INCREASE, PCNT_CHANNEL_EDGE_ACTION_HOLD);    // Counter
+    ESP_ERROR_CHECK(pcnt_channel_set_edge_action( pcnt_chan_a[unit], PCNT_CHANNEL_EDGE_ACTION_DECREASE, PCNT_CHANNEL_EDGE_ACTION_HOLD));    // Counter
 //                                Channel                        When High                          When Low
-    pcnt_channel_set_level_action(pcnt_chan_a[unit], PCNT_CHANNEL_LEVEL_ACTION_KEEP, PCNT_CHANNEL_LEVEL_ACTION_HOLD);      // Control
-//  Not Used
-    pcnt_channel_set_edge_action( pcnt_chan_b[unit], PCNT_CHANNEL_EDGE_ACTION_HOLD,  PCNT_CHANNEL_EDGE_ACTION_HOLD);       // Not Used
-    pcnt_channel_set_level_action(pcnt_chan_b[unit], PCNT_CHANNEL_LEVEL_ACTION_HOLD, PCNT_CHANNEL_LEVEL_ACTION_HOLD);      // Not Used
+    ESP_ERROR_CHECK(pcnt_channel_set_level_action(pcnt_chan_a[unit], PCNT_CHANNEL_LEVEL_ACTION_KEEP, PCNT_CHANNEL_LEVEL_ACTION_HOLD));      // Control
+
 
 /*
  *  All done, Clear the counter and return
  */
+    ESP_ERROR_CHECK(pcnt_unit_enable(pcnt_unit[unit]));
     pcnt_unit_clear_count(pcnt_unit[unit]); 
+    ESP_ERROR_CHECK(pcnt_unit_start(pcnt_unit[unit]));
     return;
 }
 
@@ -125,35 +125,37 @@ void pcnt_init
 
 unsigned int pcnt_read
 (
-    int unit                   // What timer to read
+    unsigned int unit                   // What timer to read
 )
 {
     int value;
 
     pcnt_unit_get_count(pcnt_unit[unit], &value);
 
-    return value;
+    return (unsigned int)(value & 0x7fff);
 }
 
 /*************************************************************************
  * 
  * @function: pcnt_clear()
  * 
- * description:  Clear the pcnt register
+ * description:  Clear the pcnt registers
  * `
  * @return:   Nothing
  * 
  **************************************************************************
  *
- * Clear the indicated counter
+ * Clear all of the registers at once
  * 
  **************************************************************************/
-void pcnt_clear
-(
-    int unit                   // What timer to clear
-)
+void pcnt_clear(void)
 {
-    pcnt_unit_clear_count(pcnt_unit[unit]);
+    int i;
+
+    for (i=0; i != SOC_PCNT_UNITS_PER_GROUP; i++)
+    {
+     pcnt_unit_clear_count(pcnt_unit[i]);
+    }
 
     return;
 }

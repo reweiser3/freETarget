@@ -64,7 +64,6 @@ void adc_init
   adc = ADC_ADC(adc_channel);    // What ADC are we on
   channel = ADC_CHANNEL(adc_channel);
 
-  printf(" ADC %d %d %d", adc_channel, adc, channel);
 /*
  * Setup the channel
  */
@@ -113,7 +112,6 @@ unsigned int adc_read
   adc = ADC_ADC(adc_channel);         // What ADC are we on
   channel = ADC_CHANNEL(adc_channel); // What channel are we using
 
-  printf(" ADC %d %d %d", adc_channel, adc, channel);
 /*
  *  Read the appropriate channel
  */
@@ -136,8 +134,8 @@ unsigned int adc_read
 
 #define V12_RESISITOR ((40.2 + 5.0) / 5.0) // Resistor divider
 #define V12_ATTENUATION 3.548              // 11 DB
-#define V12_CAL       0.719                // Calibration Factor
 #define V12_REF       1.1                  // ESP32 VREF
+#define V12_CAL       0.88
 float v12_supply(void)
 {
   float raw;                               // Raw voltage from ADC

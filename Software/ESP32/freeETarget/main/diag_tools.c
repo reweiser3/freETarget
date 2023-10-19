@@ -70,7 +70,7 @@ void self_test
   unsigned int test                 // What test to execute
 )
 {
-  int   i;
+  int   i, j;
   float x, volts;
 
 /*
@@ -110,13 +110,12 @@ void self_test
       {
         paper_on_off(true);
         timer_new(&i, 500); 
-        while(i != 0)
-        {
-          continue;
-        }
+        timer_delay(i);
         paper_on_off(false);
-        vTaskDelay(50);
+        timer_new(&i, 500); 
+        timer_delay(i);
       }
+      timer_delete(&i);
       printf(" done\r\n");
       break;
 
@@ -142,21 +141,15 @@ void self_test
  * Test 4, Set status LEDs
  */
     case T_STATUS:
-      printf("\r\nSending out status");
-      while(1)
-      {
       set_status_LED("R--");
       vTaskDelay(ONE_SECOND);
-      
       set_status_LED("RG-");
       vTaskDelay(ONE_SECOND);
-
       set_status_LED("RGB");
       vTaskDelay(ONE_SECOND);
-      
       set_status_LED("WWW");
       vTaskDelay(ONE_SECOND);
-      }
+      set_status_LED(LED_READY);
       printf(" done\r\n");
       break;
 
@@ -164,11 +157,8 @@ void self_test
  * Test 5, Temperature
  */
     case T_TEMPERATURE:
-    while(1)
-    {
       printf("\r\nTemperature: %f", temperature_C());
       printf("\r\nHumidity: %f\r\n", humidity_RH());
-    }
       break;
 
 /*
@@ -179,6 +169,8 @@ void self_test
       volts = 0.0;
       while(1)
       {
+        json_vref_lo = volts;
+        json_vref_hi = 2.048 - volts;
         set_VREF();
         volts += 0.0005;
         if ( volts > 2.048 )
@@ -186,7 +178,6 @@ void self_test
           volts = 0;
         }
       }
-      printf("done");
       break;
 
 /*
@@ -194,8 +185,12 @@ void self_test
  */
     case T_AIN:
       printf("\r\nAnalog Input ");
-      printf("\r\n12V %5.3f", v12_supply());
-      printf("\r\nBoard Rev %d", revision());
+      while(1)
+      {
+        printf("\r\n12V %5.3f", v12_supply());
+        printf("\r\nBoard Rev %d", revision());
+        vTaskDelay(ONE_SECOND/4);
+      }
       break;
 
 /*
@@ -206,11 +201,9 @@ void self_test
       i=0;
       while (1)
       {
-        gpio_set_level(CLOCK_START, i&1);
-        gpio_set_level(STOP_N, (~i) & 1);
+        gpio_set_level(CLOCK_START, i&4);
         gpio_set_level(STOP_N, i & 1);
         i++;
-
       }
 
 #if(0)
@@ -246,24 +239,56 @@ while(1)
  * Test 9, PCNT test
  */
     case T_PCNT:
-      printf("\r\nRead PCNT\r\n");
-      arm_timers();
-      trip_timers();
-      for (i=0; i != 4; i++)
+      printf("\r\nTEST 9-1  Counters cleared and not running ");
+      gpio_set_level(STOP_N, 0);
+      gpio_set_level(STOP_N, 1);
+      gpio_set_level(CLOCK_START, 0);
+      pcnt_clear();
+      for (j=0; j != 10; j++)
       {
-        printf("%s: %d    ", which_one[i], pcnt_read(i));
+        printf("\r\nis_running(): %02X  ", is_running());
+        for (i=0; i != 4; i++)
+        {
+          printf("%s: %d  ", which_one[i], pcnt_read(i));
+        }
+      }
+
+      printf("\r\n\r\nTEST 9-2  Start/stop counters together.  ");
+      gpio_set_level(STOP_N, 0);
+      gpio_set_level(STOP_N, 1);
+      pcnt_clear();
+      gpio_set_level(CLOCK_START, 0);
+      gpio_set_level(CLOCK_START, 1);
+      gpio_set_level(CLOCK_START, 0);
+      gpio_set_level(STOP_N, 0);
+      gpio_set_level(STOP_N, 1);
+      for (j=0; j != 10; j++)
+      {
+        printf("\r\nis_running(): %02X  ", is_running());
+        for (i=0; i != 4; i++)
+        {
+          printf("%s: %d  ", which_one[i], pcnt_read(i));
+        }
+      }
+
+      printf("\r\n\r\nTEST 9-3  Start counters apart and do not stop. ");
+      gpio_set_level(STOP_N, 0);
+      gpio_set_level(STOP_N, 1);
+      pcnt_clear();
+      gpio_set_level(CLOCK_START, 0);
+      gpio_set_level(CLOCK_START, 1);
+      gpio_set_level(CLOCK_START, 0);
+      for (j=0; j != 10; j++)
+      {
+        printf("\r\nis_running(): %02X  ", is_running());
+        for (i=0; i != 4; i++)
+        {
+          printf("%s: %d  ", which_one[i], pcnt_read(i));
+        }
       }
       printf("\r\ndone");
       break;
 
-/*
- * Test 10, Timer Interrupt Test
- */
-    case T_ISR:
-      printf("\r\nStarting Timers\r\n");
-      freeETarget_timer_init();
-      printf("\r\ndone");
-      break;
 
 /*
  *  Test 11: Sensor Trigger
@@ -272,12 +297,6 @@ while(1)
       POST_counters();
       break;
 
-/*
- *  Test 12: Delete NONVOL
- */
-    case T_NONVOL:
-      POST_counters();
-      break;
   }
  /* 
   *  All done, return;

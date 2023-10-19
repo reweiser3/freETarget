@@ -120,7 +120,9 @@ unsigned int is_running (void)
     }
   }
 
-
+/*
+ *  Return the run mask
+ */
   return return_value;                   // Return the running mask
 }
 
@@ -145,11 +147,9 @@ unsigned int is_running (void)
  *-----------------------------------------------------*/
 void arm_timers(void)
 {
+  return;
   gpio_set_level(STOP_N, 0);      // Reset the timer
-  pcnt_clear(N);
-  pcnt_clear(E);                  // Reset the counters
-  pcnt_clear(S);
-  pcnt_clear(W);
+  pcnt_clear();
   gpio_set_level(STOP_N, 1);      // Then enable it
   
   return;
@@ -160,6 +160,7 @@ void arm_timers(void)
  */
 void stop_timers(void)
 {
+  return;
   gpio_set_level(STOP_N, 0);      // Reset the timer
 
   return;
@@ -169,10 +170,13 @@ void stop_timers(void)
  *  Trip the counters for a self test
  */
 void trip_timers(void)
-{
+{  
+  return;
+  gpio_set_level(STOP_N, 1);            // Let the flipflops go
   gpio_set_level(STOP_N, 1);            // Let the flipflops go
   gpio_set_level(CLOCK_START, 1);       // and trigger the output 
   gpio_set_level(CLOCK_START, 0);
+  gpio_set_level(CLOCK_START, 1);       // and trigger the output 
   return;
 }
 

@@ -100,6 +100,7 @@ void freeETarget_init(void)
   POST_version();                         // Show the version string on all ports
   gpio_init();  
   set_status_LED(LED_HELLO_WORLD);        // Hello World
+  vTaskDelay(ONE_SECOND);
   read_nonvol();
   
 /*
@@ -116,12 +117,10 @@ void freeETarget_init(void)
  */
   set_VREF();
  
- #if(0) 
 /*
  * Initialize variables
  */
    tabata(true);                          // Reset the Tabata timers
-#endif
 
 /*
  * Run the power on self test
@@ -197,7 +196,7 @@ void freeETarget_task (void)
 
     switch (json_token )
     {
-      case TOKEN_WIFI:
+      case TOKEN_NONE:
 //      esp01_receive();
        break;
 
@@ -455,8 +454,8 @@ unsigned int wait(void)
  * Monitor the WiFi and blink if WiFi is present but not connected
  * Set RDY to solid red if there is a connection to the PC client
  */
-  if ( (json_token == TOKEN_WIFI)         // If the esp01 is not present, or connected
-          || ((json_token != TOKEN_WIFI) && (my_ring != TOKEN_UNDEF)) )
+  if ( (json_token == TOKEN_NONE)         // If the esp01 is not present, or connected
+          || ((json_token != TOKEN_NONE) && (my_ring != TOKEN_UNDEF)) )
   {
     set_status_LED(LED_READY);                 // to a client, then the RDY light is steady on
   }
@@ -1012,7 +1011,7 @@ void bye(unsigned int x)
 /*
  * The BYE function does not work if we are a token ring.
  */
-  if ( json_token != TOKEN_WIFI )
+  if ( json_token != TOKEN_NONE )
   {
     return;
   }

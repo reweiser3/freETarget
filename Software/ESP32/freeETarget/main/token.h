@@ -33,7 +33,7 @@ extern int whos_ring;                         // WHo owns the token ring
 #define TOKEN_CONTROL ( TOKEN_ENUM_REQUEST | TOKEN_ENUM | TOKEN_TAKE_REQUEST | TOKEN_TAKE | TOKEN_RELEASE_REQUEST | TOKEN_RELEASE )
  
 #define TOKEN_RING    0x07                    // Which token ring location
-#define TOKEN_WIFI    0x00                    // No token ring installed
+#define TOKEN_NONE    0x00                    // No token ring installed
 #define TOKEN_MASTER  0x01                    // I am the token ring master
 #define TOKEN_SLAVE   0x02                    // I am a token ring slave
 

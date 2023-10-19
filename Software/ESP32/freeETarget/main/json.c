@@ -503,7 +503,7 @@ void show_echo(void)
   unsigned int i, j;
   char   s[512], str_c[32];   // String holding buffers
 
-  if ( (json_token == TOKEN_WIFI) || (my_ring == TOKEN_UNDEF) )
+  if ( (json_token == TOKEN_NONE) || (my_ring == TOKEN_UNDEF) )
   {
     sprintf(s, "\r\n{\r\n\"NAME\":\"%s\", \r\n", names[json_name_id]);
   }
@@ -590,7 +590,7 @@ void show_echo(void)
   serial_to_all(s, ALL);
 
 
-  if ( json_token == TOKEN_WIFI )
+  if ( json_token == TOKEN_NONE )
   {
  //     esp01_myIP(str_c);
       sprintf(s, "\"WiFi_IP_ADDRESS\": \"%s:1090\", \n\r", str_c);                        // Print out the IP address

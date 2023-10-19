@@ -12,7 +12,7 @@
  *  
  *  The token ring driver has a number of modes of operation
  *  
- *  1 - TOKEN_WIFI -    The auxilary port is used for the ESP01 
+ *  1 - TOKEN_NONE -    The auxilary port is used for the ESP01 
  *                      WiFi adapter, andno token ring operations
  *                      are supported
  *
@@ -93,7 +93,7 @@ void token_init(void)
 /*
  * If not in token ring mode or WiFi is present,do nothing
  */
-  if (json_token == TOKEN_WIFI)                 // Not in token ring mode
+  if (json_token == TOKEN_NONE)                 // Not in token ring mode
   {
     return;
   }
@@ -147,7 +147,7 @@ void token_poll(void)
  */
   switch ( json_token )
   {
-    case TOKEN_WIFI:                                  // No token ring installed
+    case TOKEN_NONE:                                  // No token ring installed
       while ( serial_available(AUX) )                 // Is there something waiting for us?
       {
           token = serial_getch(AUX);                    //  Pick it up
@@ -323,7 +323,7 @@ int token_take(void)
 /*
  * If not in token ring mode or WiFi is present,do nothing
  */
-  if (json_token == TOKEN_WIFI)                 // Not in token ring mode
+  if (json_token == TOKEN_NONE)                 // Not in token ring mode
   {
     return 0;
   }
@@ -371,7 +371,7 @@ int token_give(void)
 /*
  * If not in token ring mode or WiFi is present,do nothing
  */
-  if (json_token == TOKEN_WIFI)                 // Not in token ring mode
+  if (json_token == TOKEN_NONE)                 // Not in token ring mode
   {
     return 0;
   }
@@ -424,7 +424,7 @@ int token_available(void)
 /*
  * If not in token ring mode or WiFi is present,do nothing
  */
-  if ( (json_token == TOKEN_WIFI)                 // Not in token ring mode
+  if ( (json_token == TOKEN_NONE)                 // Not in token ring mode
     || ((whos_ring == my_ring ) && (my_ring != TOKEN_UNDEF)))  // Or the ring belong to me
   {
     return 1;
