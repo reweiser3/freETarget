@@ -179,8 +179,8 @@ gpio_struct_t gpio_table[] = {
     {"PAPER",        GPIO_NUM_12, (void*)&dio12},     // PAPER  Drive
     {"V12_REF",      GPIO_NUM_1, (void*)&adc1_ch0},   // LED Feedback (Measure 12VDC)
     {"LED_PWM",      GPIO_NUM_2, (void*)&pwm0},       // LED_PWM
-    {"TXD",          22, NULL},                       // UART Transmit   Initialized in serial_io_init
-    {"RXD",          12, NULL},                       // UART Receive
+    {"TXD",          43, NULL},                       // UART Transmit   Initialized in serial_io_init
+    {"RXD",          44, NULL},                       // UART Receive
     {"LDAC*",        GPIO_NUM_42, (void*)&dio42},     // Load DAC* 
     {"SPARE0",       GPIO_NUM_41, NULL},              // 
     {"FACE_HALF",    GPIO_NUM_40, (void*)&dio40},     // FACE Interrupt

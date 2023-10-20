@@ -32,7 +32,7 @@ bool  do_dlt(unsigned int level);                     // Diagnostics Log and Tra
 #define T_PCNT         9        // Read the PCNT registers 
 #define T_ISR         10        // Test the Timer ISR
 #define T_SENSOR      11        // Read the sensor input
-#define T_NONVOL      12        // Reset the NONVOL
+#define T_AUX_SERIAL  12        // AUX Serial Port loopback
 
 /*
  * LED status messages

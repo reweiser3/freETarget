@@ -40,6 +40,7 @@
 #include "gpio_define.h"
 #include "driver\gpio.h"
 #include "pcnt.h"
+#include "driver/uart.h"
 
 const char* which_one[4] = {"North", "East", "South", "West"};
 
@@ -72,6 +73,7 @@ void self_test
 {
   int   i, j;
   float x, volts;
+  char  ch;
 
 /*
  * Figure out what test to run
@@ -239,21 +241,31 @@ while(1)
  * Test 9, PCNT test
  */
     case T_PCNT:
-      printf("\r\nTEST 9-1  Counters cleared and not running ");
+      int array[10][4];
+      printf("\r\nPCNT-1  Counters cleared and not running.  Should all be Zero");
       gpio_set_level(STOP_N, 0);
       gpio_set_level(STOP_N, 1);
       gpio_set_level(CLOCK_START, 0);
       pcnt_clear();
-      for (j=0; j != 10; j++)
+      printf("\r\nis_running(): %02X", is_running());
+      for (i=0; i != 10; i++)
       {
-        printf("\r\nis_running(): %02X  ", is_running());
-        for (i=0; i != 4; i++)
+        for (j=0; j != 4; j++)
         {
-          printf("%s: %d  ", which_one[i], pcnt_read(i));
+          array[i][j] = pcnt_read(j);
         }
       }
+      for (i=0; i != 10; i++)
+      {
+        printf("\r\n");
+        for (j=0; j != 4; j++)
+        {
+          printf("%s: %d  ", which_one[j], array[i][j]);
+        }
+      }
+      printf("\r\nis_running(): %02X  ", is_running());
 
-      printf("\r\n\r\nTEST 9-2  Start/stop counters together.  ");
+      printf("\r\n\r\nPCNT-2  Start/stop counters together. Should all be the same");
       gpio_set_level(STOP_N, 0);
       gpio_set_level(STOP_N, 1);
       pcnt_clear();
@@ -262,30 +274,48 @@ while(1)
       gpio_set_level(CLOCK_START, 0);
       gpio_set_level(STOP_N, 0);
       gpio_set_level(STOP_N, 1);
-      for (j=0; j != 10; j++)
+      printf("\r\nis_running(): %02X", is_running());
+      for (i=0; i != 10; i++)
       {
-        printf("\r\nis_running(): %02X  ", is_running());
-        for (i=0; i != 4; i++)
+        for (j=0; j != 4; j++)
         {
-          printf("%s: %d  ", which_one[i], pcnt_read(i));
+          array[i][j] = pcnt_read(j);
         }
       }
+      for (i=0; i != 10; i++)
+      {
+        printf("\r\n");
+        for (j=0; j != 4; j++)
+        {
+          printf("%s: %d  ", which_one[j], array[i][j]);
+        }
+      }
+      printf("\r\nis_running(): %02X\r\n", is_running());
 
-      printf("\r\n\r\nTEST 9-3  Start counters apart and do not stop. ");
+      printf("\r\n\r\nPCNT-3  Start counters and do not stop. Should increase left-right, top-bottom");
       gpio_set_level(STOP_N, 0);
       gpio_set_level(STOP_N, 1);
       pcnt_clear();
       gpio_set_level(CLOCK_START, 0);
       gpio_set_level(CLOCK_START, 1);
       gpio_set_level(CLOCK_START, 0);
-      for (j=0; j != 10; j++)
+      printf("\r\nis_running(): %02X  ", is_running());
+      for (i=0; i != 10; i++)
       {
-        printf("\r\nis_running(): %02X  ", is_running());
-        for (i=0; i != 4; i++)
+        for (j=0; j != 4; j++)
         {
-          printf("%s: %d  ", which_one[i], pcnt_read(i));
+          array[i][j] = pcnt_read(j);
         }
       }
+      for (i=0; i != 10; i++)
+      {
+        printf("\r\n");
+        for (j=0; j != 4; j++)
+        {
+          printf("%s: %d  ", which_one[j], array[i][j]);
+        }
+      }
+      printf("\r\nis_running(): %02X  ", is_running());
       printf("\r\ndone");
       break;
 
@@ -296,7 +326,23 @@ while(1)
     case T_SENSOR:
       POST_counters();
       break;
+/*
+ *  Test 12: AUX Serial Port
+ */
+    case T_AUX_SERIAL:
+      printf("\r\nAUX Serial Port Loopback.  Make sure AUX port is looped back\r\n");
+      for (i='A'; i != 0x7F; i++)
+      {
+        serial_putch(i, AUX);    // Output to the AUX Port
 
+        if ( serial_available(AUX) != 0 )
+        {
+          ch = serial_getch(AUX);
+          serial_putch(ch, CONSOLE);
+        }
+      }
+      printf("\r\ndone");
+      break;
   }
  /* 
   *  All done, return;

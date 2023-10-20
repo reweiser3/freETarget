@@ -59,8 +59,8 @@ static pcnt_channel_handle_t       pcnt_chan_b[SOC_PCNT_UNITS_PER_GROUP];
 void pcnt_init
 (
     int  unit,                           // What unit to use
-    int  control,                        // GPIO associated with PCNT control
-    int  signal                          // GPIO associated with PCNT signal
+    int  run,                            // GPIO associated with PCNT control
+    int  clock                           // GPIO associated with PCNT signal
 )
 {
 /*
@@ -70,7 +70,7 @@ void pcnt_init
     unit_config[unit].high_limit = 0x7fff;
     pcnt_unit[unit] = NULL;
     ESP_ERROR_CHECK(pcnt_new_unit(&unit_config[unit], &pcnt_unit[unit]));
-printf("unit %d control %d signal %d", unit, control, signal);
+
 /*
  *  Setup the glitch filter
  */
@@ -81,8 +81,8 @@ printf("unit %d control %d signal %d", unit, control, signal);
  *  Setup the channel.  Only Channel A is used.  B is left idle
  */
     pcnt_chan_a[unit] = NULL;
-    chan_a_config[unit].edge_gpio_num = signal;     // Counter
-    chan_a_config[unit].level_gpio_num = control;   // Enable 
+    chan_a_config[unit].edge_gpio_num = clock;     // Counter
+    chan_a_config[unit].level_gpio_num = run;      // Enable 
     ESP_ERROR_CHECK(pcnt_new_channel(pcnt_unit[unit], &chan_a_config[unit], &pcnt_chan_a[unit]));
 
     pcnt_chan_b[unit] = NULL;
@@ -94,10 +94,9 @@ printf("unit %d control %d signal %d", unit, control, signal);
  *  Setup the control.  Count only when the control is HIGH.
  */
 //                                Channel                       Rising Edge                        Falling Edge
-    ESP_ERROR_CHECK(pcnt_channel_set_edge_action( pcnt_chan_a[unit], PCNT_CHANNEL_EDGE_ACTION_DECREASE, PCNT_CHANNEL_EDGE_ACTION_HOLD));    // Counter
+    ESP_ERROR_CHECK(pcnt_channel_set_edge_action( pcnt_chan_a[unit], PCNT_CHANNEL_EDGE_ACTION_INCREASE, PCNT_CHANNEL_EDGE_ACTION_HOLD));    // Counter
 //                                Channel                        When High                          When Low
     ESP_ERROR_CHECK(pcnt_channel_set_level_action(pcnt_chan_a[unit], PCNT_CHANNEL_LEVEL_ACTION_KEEP, PCNT_CHANNEL_LEVEL_ACTION_HOLD));      // Control
-
 
 /*
  *  All done, Clear the counter and return
@@ -123,7 +122,7 @@ printf("unit %d control %d signal %d", unit, control, signal);
  **************************************************************************/
 #define PCNT_BASE 0x60017000+0x00030    // Pointer to start of PCNT registers
 
-unsigned int pcnt_read
+int pcnt_read
 (
     unsigned int unit                   // What timer to read
 )
@@ -132,7 +131,7 @@ unsigned int pcnt_read
 
     pcnt_unit_get_count(pcnt_unit[unit], &value);
 
-    return (unsigned int)(value & 0x7fff);
+    return value;
 }
 
 /*************************************************************************
