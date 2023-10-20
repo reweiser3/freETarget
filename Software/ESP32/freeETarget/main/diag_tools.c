@@ -107,18 +107,7 @@ void self_test
  * Test 2, Advance the paper
  */
     case T_PAPER:
-      printf("\r\nAdvancing paper %d ms", json_paper_time);
-      for (i=0; i != 10; i++)
-      {
-        paper_on_off(true);
-        timer_new(&i, 500); 
-        timer_delay(i);
-        paper_on_off(false);
-        timer_new(&i, 500); 
-        timer_delay(i);
-      }
-      timer_delete(&i);
-      printf(" done\r\n");
+      paper_test();
       break;
 
 /*
@@ -143,56 +132,22 @@ void self_test
  * Test 4, Set status LEDs
  */
     case T_STATUS:
-      set_status_LED("R--");
-      vTaskDelay(ONE_SECOND);
-      set_status_LED("RG-");
-      vTaskDelay(ONE_SECOND);
-      set_status_LED("RGB");
-      vTaskDelay(ONE_SECOND);
-      set_status_LED("WWW");
-      vTaskDelay(ONE_SECOND);
-      set_status_LED(LED_READY);
-      printf(" done\r\n");
+      status_LED_test();
       break;
 
-/*
- * Test 5, Temperature
- */
-    case T_TEMPERATURE:
-      printf("\r\nTemperature: %f", temperature_C());
-      printf("\r\nHumidity: %f\r\n", humidity_RH());
-      break;
 
 /*
  * Test 6, V_REF
  */
     case T_VREF:
-      printf("\r\nRamping DACs 0 & 1 ");
-      volts = 0.0;
-      while(1)
-      {
-        json_vref_lo = volts;
-        json_vref_hi = 2.048 - volts;
-        set_VREF();
-        volts += 0.0005;
-        if ( volts > 2.048 )
-        {
-          volts = 0;
-        }
-      }
+      DAC_test();
       break;
 
 /*
  * Test 7, Analog In
  */
     case T_AIN:
-      printf("\r\nAnalog Input ");
-      while(1)
-      {
-        printf("\r\n12V %5.3f", v12_supply());
-        printf("\r\nBoard Rev %d", revision());
-        vTaskDelay(ONE_SECOND/4);
-      }
+      analog_input_test();
       break;
 
 /*
@@ -241,84 +196,8 @@ while(1)
  * Test 9, PCNT test
  */
     case T_PCNT:
-      int array[10][4];
-      printf("\r\nPCNT-1  Counters cleared and not running.  Should all be Zero");
-      gpio_set_level(STOP_N, 0);
-      gpio_set_level(STOP_N, 1);
-      gpio_set_level(CLOCK_START, 0);
-      pcnt_clear();
-      printf("\r\nis_running(): %02X", is_running());
-      for (i=0; i != 10; i++)
-      {
-        for (j=0; j != 4; j++)
-        {
-          array[i][j] = pcnt_read(j);
-        }
-      }
-      for (i=0; i != 10; i++)
-      {
-        printf("\r\n");
-        for (j=0; j != 4; j++)
-        {
-          printf("%s: %d  ", which_one[j], array[i][j]);
-        }
-      }
-      printf("\r\nis_running(): %02X  ", is_running());
-
-      printf("\r\n\r\nPCNT-2  Start/stop counters together. Should all be the same");
-      gpio_set_level(STOP_N, 0);
-      gpio_set_level(STOP_N, 1);
-      pcnt_clear();
-      gpio_set_level(CLOCK_START, 0);
-      gpio_set_level(CLOCK_START, 1);
-      gpio_set_level(CLOCK_START, 0);
-      gpio_set_level(STOP_N, 0);
-      gpio_set_level(STOP_N, 1);
-      printf("\r\nis_running(): %02X", is_running());
-      for (i=0; i != 10; i++)
-      {
-        for (j=0; j != 4; j++)
-        {
-          array[i][j] = pcnt_read(j);
-        }
-      }
-      for (i=0; i != 10; i++)
-      {
-        printf("\r\n");
-        for (j=0; j != 4; j++)
-        {
-          printf("%s: %d  ", which_one[j], array[i][j]);
-        }
-      }
-      printf("\r\nis_running(): %02X\r\n", is_running());
-
-      printf("\r\n\r\nPCNT-3  Start counters and do not stop. Should increase left-right, top-bottom");
-      gpio_set_level(STOP_N, 0);
-      gpio_set_level(STOP_N, 1);
-      pcnt_clear();
-      gpio_set_level(CLOCK_START, 0);
-      gpio_set_level(CLOCK_START, 1);
-      gpio_set_level(CLOCK_START, 0);
-      printf("\r\nis_running(): %02X  ", is_running());
-      for (i=0; i != 10; i++)
-      {
-        for (j=0; j != 4; j++)
-        {
-          array[i][j] = pcnt_read(j);
-        }
-      }
-      for (i=0; i != 10; i++)
-      {
-        printf("\r\n");
-        for (j=0; j != 4; j++)
-        {
-          printf("%s: %d  ", which_one[j], array[i][j]);
-        }
-      }
-      printf("\r\nis_running(): %02X  ", is_running());
-      printf("\r\ndone");
+      pcnt_test();
       break;
-
 
 /*
  *  Test 11: Sensor Trigger
@@ -326,23 +205,14 @@ while(1)
     case T_SENSOR:
       POST_counters();
       break;
+
 /*
  *  Test 12: AUX Serial Port
  */
     case T_AUX_SERIAL:
-      printf("\r\nAUX Serial Port Loopback.  Make sure AUX port is looped back\r\n");
-      for (i='A'; i != 0x7F; i++)
-      {
-        serial_putch(i, AUX);    // Output to the AUX Port
-
-        if ( serial_available(AUX) != 0 )
-        {
-          ch = serial_getch(AUX);
-          serial_putch(ch, CONSOLE);
-        }
-      }
-      printf("\r\ndone");
+      serial_port_test();
       break;
+
   }
  /* 
   *  All done, return;

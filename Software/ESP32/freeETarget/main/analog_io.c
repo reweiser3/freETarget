@@ -364,8 +364,8 @@ double humidity_RH(void)
  *--------------------------------------------------------------*/
 void set_VREF(void)
 {
-  dac_write(0, json_vref_lo);
-  dac_write(1, json_vref_hi);
+  DAC_write(0, json_vref_lo);
+  DAC_write(1, json_vref_hi);
 
 /*
  *  All done, return
@@ -373,3 +373,27 @@ void set_VREF(void)
   return;
 
 }
+
+
+/*----------------------------------------------------------------
+ * 
+ * @function: analog_input_test()
+ * 
+ * @brief:    Read the analog input and display the results
+ * 
+ * @return:   None
+ * 
+ *----------------------------------------------------------------
+ * 
+ *--------------------------------------------------------------*/
+void analog_input_test(void)
+{
+  printf("\r\nAnalog Input ");
+  printf("\r\n12V %5.3f", v12_supply());
+  printf("\r\nBoard Rev %d", revision());
+  printf("\r\nTemperature: %f", temperature_C());
+  printf("\r\nHumidity: %f\r\n", humidity_RH());
+  printf("\r\nSpeed of Sound: %4.2fmm/us", speed_of_sound(temperature_C(), humidity_RH()));
+  printf("\r\nDone\r\n");
+  return;
+}  

@@ -34,12 +34,13 @@ void multifunction_switch(void);                          // Handle the actions 
 void multifuction_display(void);                          // Display the MFS settings
 void multifunction_wait_open(void);                       // Wait for both multifunction switches to be open
 void digital_test(void);                                  // Execute the digital test
-void paper_on_off(bool on);                             // Turn the motor on or off
+void paper_on_off(bool on);                               // Turn the motor on or off
 void rapid_green(unsigned int state);                     // Drive the GREEN light
 void rapid_red(unsigned int state);                       // Drive the RED light
 void multifunction_display(void);                         // Display the MFS settings as text
 void status_LED_init(unsigned int gpio_number);           // Initialize the RMT driver 
-
+void status_LED_test(void);                               // Cycle the status LEDs
+void paper_test(void);                                    // Advance the motor
 
 /*
  *  Port Definitions

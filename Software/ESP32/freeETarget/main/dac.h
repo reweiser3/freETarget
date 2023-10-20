@@ -22,5 +22,6 @@
 /*
  *  Functions
  */
-void dac_init(int not_used);      // Initialize the DAC
-void dac_write(unsigned int channel, float value);
+void DAC_init(int not_used);      // Initialize the DAC
+void DAC_write(unsigned int channel, float value);
+void DAC_test(void);              // Ramp the DACs

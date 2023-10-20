@@ -185,7 +185,7 @@ esp-idf/main/libmain.a(pwm.c.obj)
 esp-idf/main/libmain.a(i2c.c.obj)
                               esp-idf/main/libmain.a(gpio_define.c.obj) (i2c_init)
 esp-idf/main/libmain.a(dac.c.obj)
-                              esp-idf/main/libmain.a(diag_tools.c.obj) (dac_write)
+                              esp-idf/main/libmain.a(diag_tools.c.obj) (DAC_write)
 esp-idf/main/libmain.a(pcnt.c.obj)
                               esp-idf/main/libmain.a(gpio_define.c.obj) (pcnt_init)
 esp-idf/main/libmain.a(token.c.obj)
@@ -18245,12 +18245,12 @@ LOAD c:/users/allan/esp/esp-idf/tools/tools/xtensa-esp32s3-elf/esp-2022r1-11.2.0
  .bss.got_right
                 0x000000003fc95780        0x4 esp-idf/main/libmain.a(json.c.obj)
  .bss.in_JSON   0x000000003fc95784        0x4 esp-idf/main/libmain.a(json.c.obj)
- .bss.json_dac_high
+ .bss.json_DAC_high
                 0x000000003fc95788        0x4 esp-idf/main/libmain.a(json.c.obj)
-                0x000000003fc95788                json_dac_high
- .bss.json_dac_low
+                0x000000003fc95788                json_DAC_high
+ .bss.json_DAC_low
                 0x000000003fc9578c        0x4 esp-idf/main/libmain.a(json.c.obj)
-                0x000000003fc9578c                json_dac_low
+                0x000000003fc9578c                json_DAC_low
  .bss.json_token
                 0x000000003fc95790        0x4 esp-idf/main/libmain.a(json.c.obj)
                 0x000000003fc95790                json_token
@@ -19360,10 +19360,10 @@ LOAD c:/users/allan/esp/esp-idf/tools/tools/xtensa-esp32s3-elf/esp-2022r1-11.2.0
  .literal.i2c_write
                 0x0000000042000c38        0x0 esp-idf/main/libmain.a(i2c.c.obj)
                                           0x4 (size before relaxing)
- .literal.dac_write
+ .literal.DAC_write
                 0x0000000042000c38       0x10 esp-idf/main/libmain.a(dac.c.obj)
                                          0x24 (size before relaxing)
- .literal.dac_init
+ .literal.DAC_init
                 0x0000000042000c48        0x8 esp-idf/main/libmain.a(dac.c.obj)
                                          0x10 (size before relaxing)
  .literal.gen_position
@@ -21884,15 +21884,15 @@ LOAD c:/users/allan/esp/esp-idf/tools/tools/xtensa-esp32s3-elf/esp-2022r1-11.2.0
  .text.i2c_write
                 0x0000000042009ffc       0x30 esp-idf/main/libmain.a(i2c.c.obj)
                 0x0000000042009ffc                i2c_write
- .text.dac_write
+ .text.DAC_write
                 0x000000004200a02c       0x52 esp-idf/main/libmain.a(dac.c.obj)
                                          0x56 (size before relaxing)
-                0x000000004200a02c                dac_write
+                0x000000004200a02c                DAC_write
  *fill*         0x000000004200a07e        0x2 
- .text.dac_init
+ .text.DAC_init
                 0x000000004200a080       0x26 esp-idf/main/libmain.a(dac.c.obj)
                                          0x2e (size before relaxing)
-                0x000000004200a080                dac_init
+                0x000000004200a080                DAC_init
  *fill*         0x000000004200a0a6        0x2 
  .text.gen_position
                 0x000000004200a0a8       0x2f esp-idf/main/libmain.a(nonvol.c.obj)
@@ -30738,12 +30738,12 @@ LOAD c:/users/allan/esp/esp-idf/tools/tools/xtensa-esp32s3-elf/esp-2022r1-11.2.0
                 0x00000000400061c8                rom_bb_bss_cbw40_ana = 0x400061c8
                 0x00000000400061d4                rom_chan_to_freq = 0x400061d4
                 0x00000000400061e0                rom_open_i2c_xpd = 0x400061e0
-                0x00000000400061ec                rom_dac_rate_set = 0x400061ec
+                0x00000000400061ec                rom_DAC_rate_set = 0x400061ec
                 0x00000000400061f8                rom_tsens_read_init = 0x400061f8
                 0x0000000040006204                rom_tsens_code_read = 0x40006204
                 0x0000000040006210                rom_tsens_index_to_dac = 0x40006210
                 0x000000004000621c                rom_tsens_index_to_offset = 0x4000621c
-                0x0000000040006228                rom_tsens_dac_cal = 0x40006228
+                0x0000000040006228                rom_tsens_DAC_cal = 0x40006228
                 0x0000000040006234                rom_code_to_temp = 0x40006234
                 0x0000000040006240                rom_write_pll_cap_mem = 0x40006240
                 0x000000004000624c                rom_pll_correct_dcap = 0x4000624c
@@ -36398,9 +36398,9 @@ cos                                               c:/users/allan/esp/esp-idf/too
                                                   esp-idf/main/libmain.a(compute_hit.c.obj)
 cpu_domain_pd_allowed                             esp-idf/esp_hw_support/libesp_hw_support.a(sleep_retention.c.obj)
                                                   esp-idf/esp_hw_support/libesp_hw_support.a(sleep_modes.c.obj)
-dac_init                                          esp-idf/main/libmain.a(dac.c.obj)
+DAC_init                                          esp-idf/main/libmain.a(dac.c.obj)
                                                   esp-idf/main/libmain.a(json.c.obj)
-dac_write                                         esp-idf/main/libmain.a(dac.c.obj)
+DAC_write                                         esp-idf/main/libmain.a(dac.c.obj)
                                                   esp-idf/main/libmain.a(diag_tools.c.obj)
 default_router_list                               esp-idf/lwip/liblwip.a(nd6.c.obj)
 delay                                             esp-idf/main/libmain.a(timer.c.obj)
@@ -38303,9 +38303,9 @@ json_LED_PWM                                      esp-idf/main/libmain.a(json.c.
 json_calibre_x10                                  esp-idf/main/libmain.a(json.c.obj)
                                                   esp-idf/main/libmain.a(compute_hit.c.obj)
 json_d_echo                                       esp-idf/main/libmain.a(json.c.obj)
-json_dac_high                                     esp-idf/main/libmain.a(json.c.obj)
+json_DAC_high                                     esp-idf/main/libmain.a(json.c.obj)
                                                   esp-idf/main/libmain.a(dac.c.obj)
-json_dac_low                                      esp-idf/main/libmain.a(json.c.obj)
+json_DAC_low                                      esp-idf/main/libmain.a(json.c.obj)
                                                   esp-idf/main/libmain.a(dac.c.obj)
 json_delay                                        esp-idf/main/libmain.a(freETarget.c.obj)
                                                   esp-idf/main/libmain.a(json.c.obj)

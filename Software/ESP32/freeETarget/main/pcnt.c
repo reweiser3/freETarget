@@ -158,3 +158,113 @@ void pcnt_clear(void)
 
     return;
 }
+      
+/*************************************************************************
+ * 
+ * @function:     pcnt_test()
+ * 
+ * @description:  Put the PCNT into a knonw state and observe the results
+ * `
+ * @return:   Nothing
+ * 
+ **************************************************************************
+ *
+ * Clear all of the registers at once
+ * 
+ **************************************************************************/      
+ 
+ void pcnt_test(void)
+ {
+    int array[10][4];                       // Test result storage 
+    unsigned int i, j;
+
+/*
+ * Test 1, verify that the counters can be cleared
+ */
+  printf("\r\nPCNT-1  Counters cleared and not running.  Should all be Zero");
+  gpio_set_level(STOP_N, 0);
+  gpio_set_level(STOP_N, 1);
+  gpio_set_level(CLOCK_START, 0);
+  pcnt_clear();
+  printf("\r\nis_running(): %02X", is_running());
+  for (i=0; i != 10; i++)
+  {
+    for (j=0; j != 4; j++)
+    {
+        array[i][j] = pcnt_read(j);
+    }
+  }
+  for (i=0; i != 10; i++)
+  {
+    printf("\r\n");
+    for (j=0; j != 4; j++)
+    {
+        printf("%s: %d  ", which_one[j], array[i][j]);
+    }
+  }
+  printf("\r\nis_running(): %02X  ", is_running());
+
+/*
+ *  Verify that the counters can be started and stopped together 
+ */
+    printf("\r\n\r\nPCNT-2  Start/stop counters together. Should all be the same");
+    gpio_set_level(STOP_N, 0);
+    gpio_set_level(STOP_N, 1);
+    pcnt_clear();
+    gpio_set_level(CLOCK_START, 0);
+    gpio_set_level(CLOCK_START, 1);
+    gpio_set_level(CLOCK_START, 0);
+    gpio_set_level(STOP_N, 0);
+    gpio_set_level(STOP_N, 1);
+    printf("\r\nis_running(): %02X", is_running());
+    for (i=0; i != 10; i++)
+    {
+      for (j=0; j != 4; j++)
+      {
+        array[i][j] = pcnt_read(j);
+      }
+    }
+    for (i=0; i != 10; i++)
+    {
+      printf("\r\n");
+      for (j=0; j != 4; j++)
+      {
+        printf("%s: %d  ", which_one[j], array[i][j]);
+      }
+    }
+    printf("\r\nis_running(): %02X\r\n", is_running());
+
+/*
+ * Turn on the counters and verify that they increment in the right direction 
+ */
+  printf("\r\n\r\nPCNT-3  Start counters and do not stop. Should increase left-right, top-bottom");
+  gpio_set_level(STOP_N, 0);
+  gpio_set_level(STOP_N, 1);
+  pcnt_clear();
+  gpio_set_level(CLOCK_START, 0);
+  gpio_set_level(CLOCK_START, 1);
+  gpio_set_level(CLOCK_START, 0);
+  printf("\r\nis_running(): %02X  ", is_running());
+  for (i=0; i != 10; i++)
+  {
+    for (j=0; j != 4; j++)
+    {
+      array[i][j] = pcnt_read(j);
+    }
+  }
+  for (i=0; i != 10; i++)
+  {
+    printf("\r\n");
+    for (j=0; j != 4; j++)
+      {
+        printf("%s: %d  ", which_one[j], array[i][j]);
+      }
+  }
+  printf("\r\nis_running(): %02X  ", is_running());
+  
+/*
+ * Test Over
+ */
+  printf("\r\ndone");
+  return;
+}

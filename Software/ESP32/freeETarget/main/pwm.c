@@ -117,7 +117,6 @@ void pwm_set
     unsigned int scaled;
 
     scaled = (1<<13) * percent / 100;
-    printf("channel: %d %d ", pwm_channel, scaled);
     ledc_set_duty(PWM_MODE, ledc_channel[pwm_channel].channel, scaled);
     ledc_update_duty(PWM_MODE, ledc_channel[pwm_channel].channel);
 }

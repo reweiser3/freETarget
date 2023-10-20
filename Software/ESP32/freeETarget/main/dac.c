@@ -48,7 +48,7 @@
 
 /*----------------------------------------------------------------
  *
- * @function: dac_write()
+ * @function: DAC_write()
  *
  * @brief:    Write a value (in mV) to the DAC
  * 
@@ -62,7 +62,7 @@
 #define V_REF 2.048
 #define DAC_FS 4095.0
 
-void dac_write
+void DAC_write
 (
   unsigned int channel,               // What register are we writing to
   float        volts                  // What value are we setting it to
@@ -75,7 +75,7 @@ void dac_write
 
   if ( DLT(DLT_CRITICAL) )
   {
-    printf("dac_write(channel:%d scale: %d)", channel, scaled_value);
+    printf("DAC_write(channel:%d scale: %d)", channel, scaled_value);
   }
 
   data[0] = DAC_WRITE + ((channel & 0x3) << 1) + 0; // Write, channel, update now
@@ -93,4 +93,41 @@ void dac_write
   *  All done, return;
   */
     return;
+}
+
+/*************************************************************************
+ * 
+ * @function:     DAC_test
+ * 
+ * @description:  Ramp the DACs
+ * 
+ * @return:       None
+ * 
+ **************************************************************************
+ *
+ * The DACS are ramped
+ * 
+ ***************************************************************************/
+void DAC_test(void)
+{
+  float volts;
+  float lo, hi;
+
+  lo = json_vref_lo;
+  hi = json_vref_hi;
+
+  printf("\r\nRamping DACs 0 & 1 ");
+  volts = 0.0;
+  while (volts < 2.048)
+  {
+    json_vref_lo = volts;
+    json_vref_hi = 2.048 - volts;
+    set_VREF();
+    volts += 0.0005;
+  }
+
+  json_vref_lo = lo;
+  json_vref_hi = hi;
+  printf("\r\nDone\r\n");
+  return;
 }

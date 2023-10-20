@@ -984,40 +984,6 @@ void multifunction_display(void)
   return;
 }
 
-/*-----------------------------------------------------
- * 
- * @function: digital_test()
- * 
- * @brief:    Exercise the GPIO digital ports
- * 
- * @return:   None
- * 
- *-----------------------------------------------------
- *
- * Read in all of the digial ports and report the 
- * results
- * 
- *-----------------------------------------------------*/
-void digital_test(void)
-{
-  double       volts;         // Reference Voltage
-  volts = 0.0;
-/*
- * Read in the fixed digital inputs
- */
-  printf("\r\nTime: %4.2fs", (float)(esp_timer_get_time()/1000000));
-  printf("\r\nBD Rev: %d", revision());  
-  printf("\r\nDIP: 0x%02X", read_DIP()); 
-  printf("\r\nTemperature: %4.2fdC", temperature_C());
-  printf("\r\nRelative Humidity: %4.2f", humidity_RH());
-  printf("\r\nSpeed of Sound: %4.2fmm/us", speed_of_sound(temperature_C(), humidity_RH()));
-  printf("\r\nLED_FB: %4.2f Volts",  v12_supply());
-  printf("\r\n");
-
-   return;
-}
-
-
 /*----------------------------------------------------------------
  * 
  * @function: aquire()
@@ -1126,6 +1092,103 @@ void rapid_green
   {
       gpio_set_level(DIP_A, state);
   }
+
+  return;
+}
+
+/*-----------------------------------------------------
+ * 
+ * @function: digital_test()
+ * 
+ * @brief:    Exercise the GPIO digital ports
+ * 
+ * @return:   None
+ * 
+ *-----------------------------------------------------
+ *
+ * Read in all of the digial ports and report the 
+ * results
+ * 
+ *-----------------------------------------------------*/
+void digital_test(void)
+{
+  double       volts;         // Reference Voltage
+  volts = 0.0;
+
+  printf("\r\nDigital test");
+
+/*
+ * Read in the fixed digital inputs
+ */
+  printf("\r\nTime: %4.2fs", (float)(esp_timer_get_time()/1000000));
+  printf("\r\nDIP: 0x%02X", read_DIP()); 
+  printf("\r\nDone\r\n");
+
+   return;
+}
+
+
+/*----------------------------------------------------------------
+ * 
+ * @function: status_LED_test()
+ * 
+ * @brief:    Cycle the status LEDs
+ * 
+ * @return:   Nothing
+ * 
+ *----------------------------------------------------------------
+ *
+ *--------------------------------------------------------------*/
+void status_LED_test(void)
+{
+  printf("\r\nStatus LED test");
+  set_status_LED("R--");
+  vTaskDelay(ONE_SECOND);
+  set_status_LED("RG-");
+  vTaskDelay(ONE_SECOND);
+  set_status_LED("RGB");
+  vTaskDelay(ONE_SECOND);
+  set_status_LED("WWW");
+  vTaskDelay(ONE_SECOND);
+  set_status_LED(LED_READY);
+  printf("\r\nDone\r\n");
+  return;
+}
+
+/*----------------------------------------------------------------
+ * 
+ * @function: paper_test
+ * 
+ * @brief:    Drive the motor
+ * 
+ * @return:   Nothing
+ * 
+ *----------------------------------------------------------------
+ *
+ *  Drive the motor in 500 ms increments
+ *--------------------------------------------------------------*/
+void paper_test(void)
+{
+  volatile int time_delay;
+  int i;
+
+  timer_new(&time_delay, 500); 
+
+  printf("\r\nAdvancing paper 500 ms at a time");
+  for (i=0; i != 10; i++)
+  {
+    printf("  %d+", (i+1));
+    paper_on_off(true);
+    time_delay = 500;
+    timer_delay(time_delay);
+    printf("-");
+    paper_on_off(false);
+    time_delay = 500;
+    timer_delay(time_delay);
+  }
+
+  timer_delete(&time_delay);
+  printf("\r\nDone\r\n");
 
   return;
 }

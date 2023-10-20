@@ -69,7 +69,7 @@
 double speed_of_sound
 (
   double temperature,         // Current temperature in degrees C
-  int relative_humidity       // RH, 0-100%
+  double relative_humidity    // RH, 0-100%
 )
 {
   double speed_MPS;           // Speed Metres per second
@@ -128,7 +128,7 @@ double speed_of_sound
   
   if ( DLT(DLT_DIAG) )
   {
-    printf("Temperature: %4.2f Humidity: %d Speed of Sound: %4.2f", temperature, relative_humidity, speed_MPS);
+    printf("Temperature: %4.2f Humidity: %4.2f Speed of Sound: %4.2f", temperature, relative_humidity, speed_MPS);
   }
 
 /*
@@ -136,31 +136,4 @@ double speed_of_sound
  */
   return speed_mmPuS;
 
-}
-
-
-/*----------------------------------------------------------------
- *
- * @function: sound_test()
- *
- * @brief: Dispolay the speed of souind at various temperatures and Humidites
- *
- *----------------------------------------------------------------*/
-void sound_test(void)
-{
-  int trace_memory;
-
-  trace_memory = is_trace;         // Remember the trace level 
-  is_trace = DLT_DIAG;             // Set to DLT_DIAG for the test
-  
-  speed_of_sound(-10.0,   0);
-  speed_of_sound( 20.0,   0);
-  speed_of_sound( 30.0,   0);
-  speed_of_sound(-10.0, 100);
-  speed_of_sound( 20.0, 100);
-  speed_of_sound( 30.0, 100);
-
-  is_trace = trace_memory;        // Put the trace level back
-  
-  return;
 }

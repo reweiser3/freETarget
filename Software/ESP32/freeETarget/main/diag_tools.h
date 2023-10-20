@@ -83,4 +83,8 @@ bool  do_dlt(unsigned int level);                     // Diagnostics Log and Tra
 #define DLT_DIAG          0x02                    // Diagnostics messages displayed
 #define DLT_INFO          0x04                    // Informational messages
 
+/*
+ *  Variables
+ */
+extern const char* which_one[4];
 #endif
