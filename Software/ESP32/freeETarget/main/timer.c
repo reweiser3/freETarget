@@ -198,7 +198,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
 /*-----------------------------------------------------
  * 
  * @function: timer_new()
- *           timer_delete()
+ *            timer_delete()
  * 
  * @brief:    Add or remove timers
  *  
@@ -263,4 +263,45 @@ unsigned int timer_new
 
   return 0;
   
+}
+/*-----------------------------------------------------
+ * 
+ * @function: freeETarget_synchronous
+ * 
+ * @brief:    Synbchronous task scheduler
+ *  
+ * @return:   None
+ * 
+ *-----------------------------------------------------
+ *
+ * This is a simple task scheduler to run tasks at a 
+ * controlled rate.
+ * 
+ *-----------------------------------------------------*/
+
+void freeETarget_synchronous
+(
+    void *pvParameters              // Select IPV4 or 6
+)
+{
+  static int cycle_count;
+  static int cycle_count_500ms;
+  static int toggle;
+
+  cycle_count = 0;
+  cycle_count_500ms =0;
+  toggle = 0;
+
+  while (1)
+  {
+    cycle_count_500ms = cycle_count % 50;
+    if ( cycle_count_100ms == 0 )
+    {
+      commit_status_LEDs( toggle );
+      toggle = !toggle;
+    }
+    cycle_count++;
+    vTaskDelay(1);
+  }
+
 }

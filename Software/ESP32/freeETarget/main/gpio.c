@@ -346,7 +346,7 @@ void set_status_LED
 /*
  * Ready to output the LEDs
  */
-  commit_status_LEDs(0);
+  commit_status_LEDs(1);
   return;
 }
 
@@ -1150,6 +1150,8 @@ void status_LED_test(void)
   vTaskDelay(ONE_SECOND);
   set_status_LED("WWW");
   vTaskDelay(ONE_SECOND);
+  set_status_LED("rwb");
+  vTaskDelay(5*ONE_SECOND);         // Blink for 5 seconds
   set_status_LED(LED_READY);
   printf("\r\nDone\r\n");
   return;
