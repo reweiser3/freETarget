@@ -24,6 +24,7 @@
 #include "serial_io.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\freertos\FreeRTOS-Kernel\include\freertos\mpu_wrappers.h"
 #include "dac.h"
+#include "driver\gpio.h"
 
 /*
  *  Function Prototypes
@@ -68,8 +69,7 @@ volatile unsigned long  in_shot_timer;  // Time inside of the shot window
 
 static volatile unsigned long  keep_alive;        // Keep alive timer
 static volatile unsigned long  state_timer;       // Free running state timer
-static volatile unsigned long  power_save;        // Power save timer
-static volatile unsigned long  token_tick;        // Token ring watchdog
+       volatile unsigned long  power_save;        // Power save timer
 
 const char* names[] = { "TARGET",                                                                                           //  0
                         "1",      "2",        "3",     "4",      "5",       "6",       "7",     "8",     "9",      "10",    //  1
@@ -110,7 +110,6 @@ void freeETarget_init(void)
   timer_new(&state_timer,   0);                                           // Free running state timer
   timer_new(&in_shot_timer, FULL_SCALE);                                  // Time inside of the shot window
   timer_new(&power_save,    (unsigned long)(json_power_save) * (long)ONE_SECOND * 60L);// Power save timer
-  timer_new(&token_tick,    5 * ONE_SECOND);                              // Token ring watchdog
 
 /*
  *  Finish setting up special IO
@@ -187,39 +186,8 @@ void freeETarget_task (void)
 /*
  * First thing, handle polled devices
  */
-    multifunction_switch();         // Read the switches
     tabata(false);                  // Update the Tabata state
-  
-/*
- * Take care of any commands coming through
- */
-
-    switch (json_token )
-    {
-      case TOKEN_NONE:
-//      esp01_receive();
-       break;
-
-      case TOKEN_MASTER:
-        if ( token_tick == 0)             // Time to check the token ring?
-        {
-          token_init();                   // Request an enumeration
-          if ( my_ring == TOKEN_UNDEF )
-          {
-            token_tick = ONE_SECOND * 5;  //  Waiting to start up
-          }
-          else
-          {
-            token_tick = ONE_SECOND * 60; // Just check
-          }
-        }
-        break;
-
-      case TOKEN_SLAVE:
-        token_poll();                     // Check the token ring
-        break;
-    }
-    
+ 
 /*
  * Take care of the TCPIP keep alive
  */

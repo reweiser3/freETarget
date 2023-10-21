@@ -65,9 +65,11 @@
 #include "json.h"
 #include "stdio.h"
 #include "serial_io.h"
+#include "timer.h"
 
-int my_ring = TOKEN_UNDEF;          // Token ring address
-int whos_ring = TOKEN_UNDEF;        // Who owns the ring right now?
+int my_ring = TOKEN_UNDEF;                        // Token ring address
+int whos_ring = TOKEN_UNDEF;                      // Who owns the ring right now?
+static volatile unsigned long  token_tick;        // Token ring watchdog
 
 /*-----------------------------------------------------
  * 
@@ -97,7 +99,9 @@ void token_init(void)
   {
     return;
   }
-  
+
+  timer_new(&token_tick,    5 * ONE_SECOND);                              // Token ring watchdog
+
   if ( DLT(DLT_CRITICAL) ) 
   {
     printf("token_init()");  
@@ -121,6 +125,55 @@ void token_init(void)
   return;
 }
 
+ 
+/*-----------------------------------------------------
+ * 
+ * @function: token_cycle
+ * 
+ * @brief:    Manage polling the token ring
+ * 
+ * @return:   None
+ * 
+ *-----------------------------------------------------
+ *
+ * This listens for token ring comands to come along
+ * and if available then carry out the action.  Otherwise
+ * just send the character along to the next processor on
+ * the ring
+ * 
+ *-----------------------------------------------------*/
+void token_cycle(void)
+{
+  switch (json_token )
+  {
+    case TOKEN_NONE:
+      break;
+
+    case TOKEN_MASTER:
+      if ( token_tick == 0)             // Time to check the token ring?
+      {
+        token_init();                   // Request an enumeration
+        if ( my_ring == TOKEN_UNDEF )
+        {
+          token_tick = ONE_SECOND * 5;  //  Waiting to start up
+        }
+        else
+        {
+          token_tick = ONE_SECOND * 60; // Just check
+        }
+      }
+      break;
+
+    case TOKEN_SLAVE:
+      token_poll();                     // Check the token ring
+      break;
+  }
+    
+/*
+ *  Finished, return to the scheduler
+ */
+  return;
+}
 
 /*-----------------------------------------------------
  * 

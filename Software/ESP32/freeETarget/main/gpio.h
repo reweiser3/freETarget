@@ -89,10 +89,10 @@ void paper_test(void);                                    // Advance the motor
 /*
  * DIP Switch Use. 
  */
-//                      From DIP             
-#define CALIBRATE       (DIP_A)         // 1 Go to Calibration Mode
-#define DIP_SW_A        (DIP_B)         // 2 When CALIBRATE is asserted, use lower trip point
-#define DIP_SW_B        (DIP_C)         // 4 When CALIBRATE is asserted, use higher trip point
+#define DIP_SW_A        (gpio_get_level(DIP_A) == 0)  // Switch Input A
+#define DIP_SW_B        (gpio_get_level(DIP_B) == 0)  // Switch Input B
+#define DIP_SW_C        (gpio_get_level(DIP_C) == 0)  // Switch Input C
+#define DIP_SW_D        (gpio_get_level(DIP_C) == 0)  // Switch Input D
 #define VERBOSE_TRACE   (DIP_D)         // 8 Show the verbose software trace
 
 

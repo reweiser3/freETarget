@@ -67,6 +67,10 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args);
  * system
  * 
  *-----------------------------------------------------*/
+#include "freETarget.h"
+#include "token.h"
+#include "mfs.h"
+
 
 #define TIMER_DIVIDER         (16)                    //  Hardware timer clock divider
 #define TIMER_SCALE           (1000/ TIMER_DIVIDER)   // convert counter value to seconds
@@ -268,7 +272,7 @@ unsigned int timer_new
  * 
  * @function: freeETarget_synchronous
  * 
- * @brief:    Synbchronous task scheduler
+ * @brief:    Synchronous task scheduler
  *  
  * @return:   None
  * 
@@ -298,8 +302,10 @@ void freeETarget_synchronous
     if ( cycle_count_500ms == 0 )
     {
       commit_status_LEDs( toggle );
+      multifunction_switch();
       toggle = !toggle;
     }
+    token_cycle();
     cycle_count++;
     vTaskDelay(1);
   }

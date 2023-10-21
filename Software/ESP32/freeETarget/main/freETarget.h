@@ -102,12 +102,13 @@ extern shot_record_t record[SHOT_STRING];      //Array of shot records
 /*
  *  Global Variables
  */
-extern double  s_of_sound;
-extern const char* names[];
-extern const char to_hex[];
-extern unsigned int face_strike;
-extern const char nesw[];             // Cardinal Points
-extern unsigned int is_trace;         // Tracing level(s)
-extern unsigned int this_shot;        // Index into the shot array
-extern unsigned int shot_number;
+extern double        s_of_sound;
+extern const char*   names[];
+extern const char    to_hex[];
+extern unsigned int  face_strike;
+extern const char    nesw[];             // Cardinal Points
+extern unsigned int  is_trace;         // Tracing level(s)
+extern unsigned int  this_shot;        // Index into the shot array
+extern unsigned int  shot_number;
+extern volatile unsigned long power_save;       // Power down timer
 #endif
