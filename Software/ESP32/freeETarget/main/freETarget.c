@@ -22,7 +22,7 @@
 #include "math.h"
 #include "esp_random.h"
 #include "serial_io.h"
-#include "C:\Users\allan\esp\esp-idf\esp-idf\components\freertos\FreeRTOS-Kernel\include\freertos\mpu_wrappers.h"
+#include "mpu_wrappers.h"
 #include "dac.h"
 #include "driver\gpio.h"
 

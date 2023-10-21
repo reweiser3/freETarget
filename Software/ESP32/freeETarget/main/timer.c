@@ -14,7 +14,7 @@
  * 
  * ----------------------------------------------------*/
 #include "stdbool.h"
-#include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\gpio_types.h"
+#include "gpio_types.h"
 #include "gpio.h"
 #include "json.h"
 #include "diag_tools.h"

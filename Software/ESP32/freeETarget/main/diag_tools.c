@@ -28,9 +28,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\gpio_types.h"
-#include "C:\Users\allan\esp\esp-idf\esp-idf\components\hal\include\hal\adc_types.h"
-#include "C:\Users\allan\esp\esp-idf\esp-idf\components\esp_adc\include\esp_adc\adc_oneshot.h"
+#include "gpio_types.h"
+#include "adc_types.h"
+#include "adc_oneshot.h"
 
 #include "timer.h"
 #include "esp_timer.h"

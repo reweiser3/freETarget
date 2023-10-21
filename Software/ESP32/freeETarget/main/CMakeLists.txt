@@ -1,5 +1,7 @@
-idf_component_register(SRCS  "main.c" "dac.c" "pcnt.c"
+idf_component_register(SRCS  "main.c" 
                     "freETarget.c"
+                    "dac.c" 
+                    "pcnt.c"
                     "diag_tools.c"
                     "token.c"
                     "nonvol.c"
@@ -15,4 +17,7 @@ idf_component_register(SRCS  "main.c" "dac.c" "pcnt.c"
                     "pwm.c"
                     "pcnt.c"
                     "i2c.c"
-                    INCLUDE_DIRS ".")
+                    INCLUDE_DIRS "." 
+                    "C:/Users/allan/esp/esp-idf/esp-idf/components/freertos/FreeRTOS-Kernel/include/freertos"
+                    "C:/Users/allan/esp/esp-idf/esp-idf/components/hal/include/hal"
+                    "C:/Users/allan/esp/esp-idf/esp-idf/components/esp_adc/include/esp_adc")

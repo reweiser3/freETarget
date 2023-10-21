@@ -304,7 +304,7 @@ static void sw_state
       led_step = 5;
       while ( (DIP_SW_A || DIP_SW_B) )    // Keep it on while the switches are pressed 
       {
-        json_LED_PWM += led_step;                 // Bump up the LED by 5%
+        json_LED_PWM += led_step;         // Bump up the LED by 5%
         if ( json_LED_PWM > 100 )
         {
           json_LED_PWM = 100;
@@ -315,12 +315,13 @@ static void sw_state
           json_LED_PWM = 0;
           led_step = +5;                 // Force to zero on wrap around
         }
-        set_LED_PWM_now(json_LED_PWM);      // Set the brightness
-        nvs_set_i32(my_handle, NONVOL_LED_PWM, json_LED_PWM);   
+        set_LED_PWM_now(json_LED_PWM);   // Set the brightness
         sprintf(s, "\r\n{\"LED_BRIGHT\": %d}\n\r", json_LED_PWM);
         serial_to_all(s, ALL);
         vTaskDelay(ONE_SECOND/4);
       }
+      nvs_set_i32(my_handle, NONVOL_LED_PWM, json_LED_PWM);
+      nvs_commit(my_handle);
       break;
 
     case TARGET_TYPE:                     // Over ride the target type if the switch is closed
