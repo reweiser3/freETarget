@@ -87,65 +87,66 @@ void pcnt_init
 /*
  * Setup the unit
  */
-    unit_config[unit].low_limit  = -0x7fff;
-    unit_config[unit].high_limit = 0x7fff;
-    pcnt_unit[unit] = NULL;
-    ESP_ERROR_CHECK(pcnt_new_unit(&unit_config[unit], &pcnt_unit[unit]));
+  unit_config[unit].low_limit  = -0x7fff;
+  unit_config[unit].high_limit = 0x7fff;
+  pcnt_unit[unit] = NULL;
+  ESP_ERROR_CHECK(pcnt_new_unit(&unit_config[unit], &pcnt_unit[unit]));
 
 /*
  *  Setup the glitch filter
  */
-    filter_config[unit].max_glitch_ns = 10;
-    pcnt_unit_set_glitch_filter(pcnt_unit[unit], &filter_config[unit]);
+  filter_config[unit].max_glitch_ns = 10;
+  pcnt_unit_set_glitch_filter(pcnt_unit[unit], &filter_config[unit]);
 
 /*
  *  Setup the channel.  Only Channel A is used.  B is left idle
  */
-    pcnt_chan_a[unit] = NULL;
-    chan_a_config[unit].edge_gpio_num = clock;     // Counter
-    chan_a_config[unit].level_gpio_num = run;      // Enable 
-    ESP_ERROR_CHECK(pcnt_new_channel(pcnt_unit[unit], &chan_a_config[unit], &pcnt_chan_a[unit]));
+  pcnt_chan_a[unit] = NULL;
+  chan_a_config[unit].edge_gpio_num = clock;     // Counter
+  chan_a_config[unit].level_gpio_num = run;      // Enable 
+  ESP_ERROR_CHECK(pcnt_new_channel(pcnt_unit[unit], &chan_a_config[unit], &pcnt_chan_a[unit]));
 
-    pcnt_chan_b[unit] = NULL;
-    chan_b_config[unit].edge_gpio_num = -1;
-    chan_b_config[unit].level_gpio_num = -1;
-    ESP_ERROR_CHECK(pcnt_new_channel(pcnt_unit[unit], &chan_b_config[unit], &pcnt_chan_b[unit]));
+  pcnt_chan_b[unit] = NULL;
+  chan_b_config[unit].edge_gpio_num = -1;
+  chan_b_config[unit].level_gpio_num = -1;
+  ESP_ERROR_CHECK(pcnt_new_channel(pcnt_unit[unit], &chan_b_config[unit], &pcnt_chan_b[unit]));
 
 /*
  *  Setup the control.  Count only when the control is HIGH.
  */
 //                                Channel                       Rising Edge                        Falling Edge
-    ESP_ERROR_CHECK(pcnt_channel_set_edge_action( pcnt_chan_a[unit], PCNT_CHANNEL_EDGE_ACTION_INCREASE, PCNT_CHANNEL_EDGE_ACTION_HOLD));    // Counter
+  ESP_ERROR_CHECK(pcnt_channel_set_edge_action( pcnt_chan_a[unit], PCNT_CHANNEL_EDGE_ACTION_INCREASE, PCNT_CHANNEL_EDGE_ACTION_HOLD));    // Counter
 //                                Channel                        When High                          When Low
-    ESP_ERROR_CHECK(pcnt_channel_set_level_action(pcnt_chan_a[unit], PCNT_CHANNEL_LEVEL_ACTION_KEEP, PCNT_CHANNEL_LEVEL_ACTION_HOLD));      // Control
+  ESP_ERROR_CHECK(pcnt_channel_set_level_action(pcnt_chan_a[unit], PCNT_CHANNEL_LEVEL_ACTION_KEEP, PCNT_CHANNEL_LEVEL_ACTION_HOLD));      // Control
 
 /*
  *  Setup the GPIO interrupts for the PCNT hi counts
  */
-    if ( is_first )
-    {
-      gpio_install_isr_service(0);                                          // Per GPIO interrupt handler
-      gpio_set_intr_type(RUN_NORTH_HI, GPIO_INTR_POSEDGE);                  // RUN_XXX_HI interrupt on 
-      gpio_set_intr_type(RUN_EAST_HI, GPIO_INTR_POSEDGE);                   // rising edge
-      gpio_set_intr_type(RUN_SOUTH_HI, GPIO_INTR_POSEDGE);   
-      gpio_set_intr_type(RUN_WEST_HI, GPIO_INTR_POSEDGE);
-      gpio_isr_handler_add(RUN_NORTH_HI, north_hi_pcnt_isr_callback, NULL); // Collect PCNT for North trigger
-      gpio_isr_handler_add(RUN_EAST_HI,  east_hi_pcnt_isr_callback, NULL);
-      gpio_isr_handler_add(RUN_SOUTH_HI, south_hi_pcnt_isr_callback, NULL);
-      gpio_isr_handler_add(RUN_WEST_HI,  west_hi_pcnt_isr_callback, NULL);
-      gpio_intr_enable(RUN_NORTH_HI);                                       // Turn on the interrupts
-      gpio_intr_enable(RUN_EAST_HI);
-      gpio_intr_enable(RUN_SOUTH_HI);
-      gpio_intr_enable(RUN_WEST_HI);
-    }
+  if ( is_first )
+  {
+    gpio_install_isr_service(0);                                          // Per GPIO interrupt handler
+    gpio_set_intr_type(RUN_NORTH_HI, GPIO_INTR_POSEDGE);                  // RUN_XXX_HI interrupt on 
+    gpio_set_intr_type(RUN_EAST_HI, GPIO_INTR_POSEDGE);                   // rising edge
+    gpio_set_intr_type(RUN_SOUTH_HI, GPIO_INTR_POSEDGE);   
+    gpio_set_intr_type(RUN_WEST_HI, GPIO_INTR_POSEDGE);
+    gpio_isr_handler_add(RUN_NORTH_HI, north_hi_pcnt_isr_callback, NULL); // Collect PCNT for North trigger
+    gpio_isr_handler_add(RUN_EAST_HI,  east_hi_pcnt_isr_callback, NULL);
+    gpio_isr_handler_add(RUN_SOUTH_HI, south_hi_pcnt_isr_callback, NULL);
+    gpio_isr_handler_add(RUN_WEST_HI,  west_hi_pcnt_isr_callback, NULL);
+    gpio_intr_enable(RUN_NORTH_HI);                                       // Turn on the interrupts
+    gpio_intr_enable(RUN_EAST_HI);
+    gpio_intr_enable(RUN_SOUTH_HI);
+    gpio_intr_enable(RUN_WEST_HI);
+    is_first = false;
+  }
     
 /*
  *  All done, Clear the counter and return
  */
-    ESP_ERROR_CHECK(pcnt_unit_enable(pcnt_unit[unit]));
-    pcnt_unit_clear_count(pcnt_unit[unit]); 
-    ESP_ERROR_CHECK(pcnt_unit_start(pcnt_unit[unit]));
-    return;
+  ESP_ERROR_CHECK(pcnt_unit_enable(pcnt_unit[unit]));
+  pcnt_unit_clear_count(pcnt_unit[unit]); 
+  ESP_ERROR_CHECK(pcnt_unit_start(pcnt_unit[unit]));
+  return;
 }
 
 /*************************************************************************
@@ -168,23 +169,23 @@ int pcnt_read
     unsigned int unit                   // What timer to read
 )
 {
-    int value;
+  int value;
 
-    switch (unit)
-    {
-      case 0:
-      case 1:
-      case 2:
-      case 3:
-        pcnt_unit_get_count(pcnt_unit[unit], &value);
-        break;
-      case 4: value = north_pcnt_hi; break;
-      case 5: value = east_pcnt_hi;  break;
-      case 6: value = south_pcnt_hi; break;
-      case 7: value = west_pcnt_hi;  break;
-    }
+  switch (unit)
+  {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+      pcnt_unit_get_count(pcnt_unit[unit], &value);
+      break;
+    case 4: value = north_pcnt_hi; break;
+    case 5: value = east_pcnt_hi;  break;
+    case 6: value = south_pcnt_hi; break;
+    case 7: value = west_pcnt_hi;  break;
+  }
       
-    return value;
+  return value;
 }
 
 /*************************************************************************
@@ -202,19 +203,19 @@ int pcnt_read
  **************************************************************************/
 void pcnt_clear(void)
 {
-    int i;
+  int i;
 
-    for (i=0; i != SOC_PCNT_UNITS_PER_GROUP; i++)
-    {
-     pcnt_unit_clear_count(pcnt_unit[i]);
-    }
+  for (i=0; i != SOC_PCNT_UNITS_PER_GROUP; i++)
+  {
+    pcnt_unit_clear_count(pcnt_unit[i]);
+  }
 
-    north_pcnt_hi = 0;
-    east_pcnt_hi  = 0;
-    south_pcnt_hi = 0;
-    west_pcnt_hi  = 0;
+  north_pcnt_hi = 0;
+  east_pcnt_hi  = 0;
+  south_pcnt_hi = 0;
+  west_pcnt_hi  = 0;
 
-    return;
+  return;
 }
       
 /*************************************************************************
@@ -343,13 +344,6 @@ void pcnt_clear(void)
  * register on the rising edge of the RUN_XX_HI control.  THis gives the 
  * time interval from when the signal crosses VREF_LO to VREF_HI and hence
  * to the start of the pulse.
- * 
- * In this test the RUN_XX_HI flipflop is asserted at the same instant, so 
- * each ISR should see the same counter value.  In practice the highest priority
- * interrupt will catch the first, then the second, and so forth.  Thus each
- * interrupt will be a little bit off from the enxt one, but the time delay
- * between each will represent the time to receive the interrupt, process it and
- * (ultimatly) transfer control to the next interrupt.
  * 
  * Empirically, this has been found to be 5-6 clock cycles between each
  * interrupt.  Thus the XXX_HI counters should be decrimented by 5 before 
