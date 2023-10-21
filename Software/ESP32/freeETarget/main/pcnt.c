@@ -23,6 +23,8 @@
 #include "gpio_define.h"
 #include "pcnt.h"
 #include "diag_tools.h"
+#include "driver\gpio.h"
+#include "driver\timer.h"
 
 /*
  *  Working variables
@@ -36,6 +38,16 @@ static pcnt_channel_handle_t       pcnt_chan_a[SOC_PCNT_UNITS_PER_GROUP];
 
 static pcnt_chan_config_t          chan_b_config[SOC_PCNT_UNITS_PER_GROUP];  // Counter Configuration B
 static pcnt_channel_handle_t       pcnt_chan_b[SOC_PCNT_UNITS_PER_GROUP];
+
+static int north_pcnt_hi, east_pcnt_hi, south_pcnt_hi, west_pcnt_hi;
+
+/*
+ *  Function prototypes
+ */
+static bool north_hi_pcnt_isr_callback(void *args);
+static bool east_hi_pcnt_isr_callback(void *args);
+static bool south_hi_pcnt_isr_callback(void *args);
+static bool west_hi_pcnt_isr_callback(void *args);
 
 /*************************************************************************
  * 
@@ -63,6 +75,15 @@ void pcnt_init
     int  clock                           // GPIO associated with PCNT signal
 )
 {
+    static bool is_first = 1;             // Set to 0 on subsequent passes
+
+/*
+ * Make sure everything is turned off
+ */
+  gpio_set_level(STOP_N, 0);
+  gpio_set_level(STOP_N, 1);
+  gpio_set_level(CLOCK_START, 0);
+
 /*
  * Setup the unit
  */
@@ -74,8 +95,8 @@ void pcnt_init
 /*
  *  Setup the glitch filter
  */
-//    filter_config[unit].max_glitch_ns = 10;
-//    pcnt_unit_set_glitch_filter(pcnt_unit[unit], &filter_config[unit]);
+    filter_config[unit].max_glitch_ns = 10;
+    pcnt_unit_set_glitch_filter(pcnt_unit[unit], &filter_config[unit]);
 
 /*
  *  Setup the channel.  Only Channel A is used.  B is left idle
@@ -98,6 +119,26 @@ void pcnt_init
 //                                Channel                        When High                          When Low
     ESP_ERROR_CHECK(pcnt_channel_set_level_action(pcnt_chan_a[unit], PCNT_CHANNEL_LEVEL_ACTION_KEEP, PCNT_CHANNEL_LEVEL_ACTION_HOLD));      // Control
 
+/*
+ *  Setup the GPIO interrupts for the PCNT hi counts
+ */
+    if ( is_first )
+    {
+      gpio_install_isr_service(0);                                          // Per GPIO interrupt handler
+      gpio_set_intr_type(RUN_NORTH_HI, GPIO_INTR_POSEDGE);                  // RUN_XXX_HI interrupt on 
+      gpio_set_intr_type(RUN_EAST_HI, GPIO_INTR_POSEDGE);                   // rising edge
+      gpio_set_intr_type(RUN_SOUTH_HI, GPIO_INTR_POSEDGE);   
+      gpio_set_intr_type(RUN_WEST_HI, GPIO_INTR_POSEDGE);
+      gpio_isr_handler_add(RUN_NORTH_HI, north_hi_pcnt_isr_callback, NULL); // Collect PCNT for North trigger
+      gpio_isr_handler_add(RUN_EAST_HI,  east_hi_pcnt_isr_callback, NULL);
+      gpio_isr_handler_add(RUN_SOUTH_HI, south_hi_pcnt_isr_callback, NULL);
+      gpio_isr_handler_add(RUN_WEST_HI,  west_hi_pcnt_isr_callback, NULL);
+      gpio_intr_enable(RUN_NORTH_HI);                                       // Turn on the interrupts
+      gpio_intr_enable(RUN_EAST_HI);
+      gpio_intr_enable(RUN_SOUTH_HI);
+      gpio_intr_enable(RUN_WEST_HI);
+    }
+    
 /*
  *  All done, Clear the counter and return
  */
@@ -129,8 +170,20 @@ int pcnt_read
 {
     int value;
 
-    pcnt_unit_get_count(pcnt_unit[unit], &value);
-
+    switch (unit)
+    {
+      case 0:
+      case 1:
+      case 2:
+      case 3:
+        pcnt_unit_get_count(pcnt_unit[unit], &value);
+        break;
+      case 4: value = north_pcnt_hi; break;
+      case 5: value = east_pcnt_hi;  break;
+      case 6: value = south_pcnt_hi; break;
+      case 7: value = west_pcnt_hi;  break;
+    }
+      
     return value;
 }
 
@@ -156,6 +209,11 @@ void pcnt_clear(void)
      pcnt_unit_clear_count(pcnt_unit[i]);
     }
 
+    north_pcnt_hi = 0;
+    east_pcnt_hi  = 0;
+    south_pcnt_hi = 0;
+    west_pcnt_hi  = 0;
+
     return;
 }
       
@@ -175,7 +233,7 @@ void pcnt_clear(void)
  
  void pcnt_test(void)
  {
-    int array[10][4];                       // Test result storage 
+    int array[10][8];                       // Test result storage 
     unsigned int i, j;
 
 /*
@@ -184,12 +242,12 @@ void pcnt_clear(void)
   printf("\r\nPCNT-1  Counters cleared and not running.  Should all be Zero");
   gpio_set_level(STOP_N, 0);
   gpio_set_level(STOP_N, 1);
-  gpio_set_level(CLOCK_START, 0);
   pcnt_clear();
+  gpio_set_level(CLOCK_START, 0);
   printf("\r\nis_running(): %02X", is_running());
   for (i=0; i != 10; i++)
   {
-    for (j=0; j != 4; j++)
+    for (j=0; j != 8; j++)
     {
         array[i][j] = pcnt_read(j);
     }
@@ -197,7 +255,7 @@ void pcnt_clear(void)
   for (i=0; i != 10; i++)
   {
     printf("\r\n");
-    for (j=0; j != 4; j++)
+    for (j=0; j != 8; j++)
     {
         printf("%s: %d  ", which_one[j], array[i][j]);
     }
@@ -219,7 +277,7 @@ void pcnt_clear(void)
     printf("\r\nis_running(): %02X", is_running());
     for (i=0; i != 10; i++)
     {
-      for (j=0; j != 4; j++)
+      for (j=0; j != 8; j++)
       {
         array[i][j] = pcnt_read(j);
       }
@@ -227,7 +285,7 @@ void pcnt_clear(void)
     for (i=0; i != 10; i++)
     {
       printf("\r\n");
-      for (j=0; j != 4; j++)
+      for (j=0; j != 8; j++)
       {
         printf("%s: %d  ", which_one[j], array[i][j]);
       }
@@ -247,7 +305,7 @@ void pcnt_clear(void)
   printf("\r\nis_running(): %02X  ", is_running());
   for (i=0; i != 10; i++)
   {
-    for (j=0; j != 4; j++)
+    for (j=0; j != 8; j++)
     {
       array[i][j] = pcnt_read(j);
     }
@@ -255,7 +313,7 @@ void pcnt_clear(void)
   for (i=0; i != 10; i++)
   {
     printf("\r\n");
-    for (j=0; j != 4; j++)
+    for (j=0; j != 8; j++)
       {
         printf("%s: %d  ", which_one[j], array[i][j]);
       }
@@ -267,4 +325,66 @@ void pcnt_clear(void)
  */
   printf("\r\ndone");
   return;
+}
+
+
+/*************************************************************************
+ * 
+ * @function:     pcnt_high_isr()
+ * 
+ * @description:  Fake high PCNT units
+ * `
+ * @return:       Nothing
+ * 
+ **************************************************************************
+ *
+ * The board was originally made for eight PCNT units, but th S3 only has 
+ * four.  This function (ISR) fakes the 4 top counters by reading the PCNT
+ * register on the rising edge of the RUN_XX_HI control.  THis gives the 
+ * time interval from when the signal crosses VREF_LO to VREF_HI and hence
+ * to the start of the pulse.
+ * 
+ * In this test the RUN_XX_HI flipflop is asserted at the same instant, so 
+ * each ISR should see the same counter value.  In practice the highest priority
+ * interrupt will catch the first, then the second, and so forth.  Thus each
+ * interrupt will be a little bit off from the enxt one, but the time delay
+ * between each will represent the time to receive the interrupt, process it and
+ * (ultimatly) transfer control to the next interrupt.
+ * 
+ * Empirically, this has been found to be 5-6 clock cycles between each
+ * interrupt.  Thus the XXX_HI counters should be decrimented by 5 before 
+ * doing any calculations.
+ * 
+ **************************************************************************/
+#define PCNT_NORTH_HI (int*)(0x60017000 + 0x0030)         // PCNT unit 1 count
+#define PCNT_EAST_HI (int*)(0x60017000 + 0x0030)          // PCNT unit 2 count
+#define PCNT_SOUTH_HI (int*)(0x60017000 + 0x0030)         // PCNT unit 3 count
+#define PCNT_WEST_HI (int*)(0x60017000 + 0x0030)          // PCNT unit 4 count
+
+static bool IRAM_ATTR north_hi_pcnt_isr_callback(void *args)
+{
+  BaseType_t high_task_awoken = pdFALSE;
+  north_pcnt_hi = *PCNT_NORTH_HI;
+  return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
+}
+
+static bool IRAM_ATTR east_hi_pcnt_isr_callback(void *args)
+{
+  BaseType_t high_task_awoken = pdFALSE;
+  east_pcnt_hi = *PCNT_EAST_HI;
+  return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
+}
+
+static bool IRAM_ATTR south_hi_pcnt_isr_callback(void *args)
+{
+  BaseType_t high_task_awoken = pdFALSE;
+  south_pcnt_hi = *PCNT_SOUTH_HI;
+  return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
+}
+
+static bool IRAM_ATTR west_hi_pcnt_isr_callback(void *args)
+{
+  BaseType_t high_task_awoken = pdFALSE;
+  west_pcnt_hi = *PCNT_WEST_HI;
+  return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
 }

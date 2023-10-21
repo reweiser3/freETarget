@@ -18,8 +18,6 @@
 #include "timer.h"
 #include "serial_io.h"
 
-static const char *TAG = "example";
-
 void app_main(void)
 {
 

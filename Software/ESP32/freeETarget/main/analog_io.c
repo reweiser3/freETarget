@@ -277,8 +277,6 @@ static float  rh;               // Humidity from sensor
 
 double temperature_C(void)
 {
-  int temperature;              // Temperature inside of the packet
-  int humidity;                 // Humidity inside of the packet
   unsigned char temp_buffer[10];
   int raw;
 /*
@@ -324,28 +322,6 @@ double humidity_RH(void)
 {
   temperature_C();          // Read in the temperature and humidity
   return rh;
-}
-
-/*----------------------------------------------------------------
- * 
- * @funciton: set_vset_PWM()
- * 
- * @brief: Set the PWM value to the hardware
- * 
- *----------------------------------------------------------------
- *
- * The value is previously set when the VREF value is set by the
- * JSON driver.
- *
- *--------------------------------------------------------------*/
- void set_vset_PWM
-  (
-  unsigned int value           // Value to write to PWM
-  )
-{
-  value &= MAX_PWM;
-  // analogWrite(vset_PWM, value);
-  return;
 }
 
 

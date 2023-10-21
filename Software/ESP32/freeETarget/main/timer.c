@@ -27,7 +27,7 @@
  * Definitions
  */
 #define FREQUENCY 1000ul                        // 1000 Hz
-#define N_TIMERS  12                            // Keep space for 8 timrs
+#define N_TIMERS        8                       // Keep space for 8 timers
 #define PORT_STATE_IDLE 0                       // There are no sensor inputs
 #define PORT_STATE_WAIT 1                       // Some sensor inputs are present, but not all
 #define PORT_STATE_DONE 2                       // All of the inmputs are present
@@ -295,7 +295,7 @@ void freeETarget_synchronous
   while (1)
   {
     cycle_count_500ms = cycle_count % 50;
-    if ( cycle_count_100ms == 0 )
+    if ( cycle_count_500ms == 0 )
     {
       commit_status_LEDs( toggle );
       toggle = !toggle;

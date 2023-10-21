@@ -13,7 +13,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"0.0.4 October 10, 2023\""
+#define SOFTWARE_VERSION "\"0.5.0 October 20, 2023\""
 
 
 #define REV_500    500   // ESP32
@@ -25,10 +25,12 @@
 #endif
 #define CLOCK_TEST   false
 
+
 /*
  * Options
  */
-#define SAMPLE_CALCULATIONS false                 // Trace the COUNTER values
+#define SAMPLE_CALCULATIONS  (1==0)                   // Trace the COUNTER values
+#define COMPENSATE_RISE_TIME (1==1)                   // Use PCNT4-7 to compensate for rise time
 
 /*
  * Oscillator Features
@@ -87,7 +89,7 @@ struct shot_r
   unsigned int shot_number;     // Current shot number
   double       x;               // X location of shot
   double       y;               // Y location of shot
-  unsigned int timer_count[4];  // Array of timer values
+  unsigned int timer_count[8];  // Array of timer values 4 in hardware and 4 in software
   unsigned int face_strike;     // Recording of face strike
   unsigned int sensor_status;   // Triggering register
   unsigned long shot_time;      // Shot time since start of after tabata start
@@ -95,21 +97,6 @@ struct shot_r
 
 typedef struct shot_r shot_record_t;
 extern shot_record_t record[SHOT_STRING];      //Array of shot records
-
-struct GPIO {
-  byte_t port;
-  char* gpio_name;
-  byte_t in_or_out;
-  byte_t value;
-};
-
-typedef struct GPIO GPIO_t;
-
-union pack {                    // Put a floating point number
-  unsigned int int64[2];        // into a 64 bit number
-  double       double64;        // for NVS storage
-};
-
 
 
 /*

@@ -42,15 +42,17 @@
 #include "pcnt.h"
 #include "driver/uart.h"
 
-const char* which_one[4] = {"North", "East", "South", "West"};
+const char* which_one[] = {"North_lo", "East_lo", "South_lo", "West_lo", "North_hi", "East_hi", "South_hi", "West_hi"};
 
 #define TICK(x) (((x) / 0.33) * OSCILLATOR_MHZ)   // Distance in clock ticks
 #define RX(Z,X,Y) (16000 - (sqrt(sq(TICK(x)-s[(Z)].x) + sq(TICK(y)-s[(Z)].y))))
 #define GRID_SIDE 25                              // Should be an odd number
 #define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
 
+/*
 static int   get_int(void);         // Get an integer from the user
 static float get_float(void);       // Get a float from the user
+*/
 
 /*******************************************************************************
  *
@@ -71,9 +73,7 @@ void self_test
   unsigned int test                 // What test to execute
 )
 {
-  int   i, j;
-  float x, volts;
-  char  ch;
+  int   i;
 
 /*
  * Figure out what test to run
@@ -91,7 +91,6 @@ void self_test
       printf("\r\n 4 - Status LED driver");
       printf("\r\n 5 - Temperature and sendor test");
       printf("\r\n 6 - DAC test");
-
       printf("\r\n 7 - Count on the LEDs");
       printf("\r\n");
       break;
@@ -149,48 +148,6 @@ void self_test
     case T_AIN:
       analog_input_test();
       break;
-
-/*
- * Test 8, Timer Control
- */
-    case T_TIMER:
-      printf("\r\nTimer Control ");
-      i=0;
-      while (1)
-      {
-        gpio_set_level(CLOCK_START, i&4);
-        gpio_set_level(STOP_N, i & 1);
-        i++;
-      }
-
-#if(0)
-      volatile unsigned int* gpio_out;
-      gpio_out = 0x60004004;
-      volatile unsigned int* gpio_in;
-      gpio_in = 0x6000403C;
-      register unsigned int old,new, temp, a, b, c, d, z;
-      new = (1<<21);
-      old = (*gpio_in) & 15;       // Read the por
-
-while(1)
-{
-      *gpio_out ^= new;
-      temp = (*gpio_in) & 15;       // Read the por
-      temp ^= old;          // Look for differeces
-      if ( temp != 0 )
-      {
-        if ( temp & 1 ) a = *gpio_out;
-        if ( temp & 2 ) b = *gpio_out;
-        if ( temp & 4 ) c = *gpio_out;
-        if ( temp & 8 ) d = *gpio_out;
-        old ^= temp;
-      }
-
-//        vTaskDelay(ONE_SECOND/100);
-      }
-      printf("done");
-      break;
-#endif
 
 /*
  * Test 9, PCNT test
@@ -456,6 +413,7 @@ bool do_dlt
   return true;
 }
 
+#if(0)
 /*----------------------------------------------------------------
  *
  * @function: get_int
@@ -704,3 +662,4 @@ static int get_text
  */
   return 0;
 }  
+#endif

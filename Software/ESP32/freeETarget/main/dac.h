@@ -16,8 +16,8 @@
  */
 #define DAC_ADDR  0x60    // DAC I2C address
 #define DAC_WRITE 0x58    // Single write
-#define DAC_LOW   0       // Channel 0
-#define DAC_HIGH  1       // Channel 1
+#define DAC_LO    0       // Channel 0
+#define DAC_HI    1       // Channel 1
 
 /*
  *  Functions

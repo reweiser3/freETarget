@@ -25,10 +25,8 @@ bool  do_dlt(unsigned int level);                     // Diagnostics Log and Tra
 #define T_PAPER        2        // Advance paper backer
 #define T_LED          3        // Test the LED PWM
 #define T_STATUS       4        // Send colours across the status LEDs
-#define T_TEMPERATURE  5        // Read temperature
+#define T_AIN          5        // Test Analog Inputs
 #define T_VREF         6        // Cycle the VREF outputs 
-#define T_AIN          7        // Analog Inpt 
-#define T_TIMER        8        // Toggle the timer controls
 #define T_PCNT         9        // Read the PCNT registers 
 #define T_ISR         10        // Test the Timer ISR
 #define T_SENSOR      11        // Read the sensor input
@@ -86,5 +84,5 @@ bool  do_dlt(unsigned int level);                     // Diagnostics Log and Tra
 /*
  *  Variables
  */
-extern const char* which_one[4];
+extern const char* which_one[8];
 #endif

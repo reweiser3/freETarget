@@ -319,8 +319,7 @@ void freeETarget_json
  
 static void handle_json(void)
 {
-  union pack my_float;
-  int   x, y;
+  int   x;
   int   i, j, k;
   char* s;
   int   m;
@@ -349,7 +348,6 @@ static void handle_json(void)
             case IS_VOID:                                       // Void, default to zero
             case IS_FIXED:                                      // Fixed cannot be changed
               x = 0;
-              y = 0;
             break;
                         
             case IS_TEXT:                                       // Convert to text

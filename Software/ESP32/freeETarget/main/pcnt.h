@@ -22,13 +22,15 @@ void pcnt_test(void);                                   // Trigger the counters 
 /*
  * Definitions
  */
-#define NORTH_LO   4                   //input bits
-#define EAST_LOW   1
-#define SOUTH_LOW  2
-#define WEST_LOW   3
-#define NORTH_HIGH 4
-#define EAST_HIGH  5
-#define SOUTH_HIGH 6
-#define WEST_HIGH  7
+#define NORTH_LO    0                   // Time location in timer array
+#define EAST_LO     1
+#define SOUTH_LO    2
+#define WEST_LO     3
+#define NORTH_HI    4
+#define EAST_HI     5
+#define SOUTH_HI    6
+#define WEST_HI     7
+
+#define TIME_ISR   5                    // On average reading the clock occurs 5 clock ticks after the interrupt
 
 #endif

@@ -48,7 +48,6 @@ void read_nonvol(void)
   unsigned int  i;             // Iteration Counter
   long          x;             // 32 bit number
   size_t        length;        // Length of input string
-  union pack    nvm64;         // Save a float as a long
   esp_err_t     err;           // ESP32 error type
 
   if ( DLT(DLT_CRITICAL) )
@@ -184,7 +183,6 @@ void factory_nonvol
   unsigned int x;                         // Temporary Value
   unsigned int i;                         // Iteration Counter
   int          length;
-  union pack nvm64;
   
   DLT(DLT_CRITICAL); printf("factory_nonvol()\r\n");
 

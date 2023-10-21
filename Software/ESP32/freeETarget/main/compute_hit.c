@@ -26,7 +26,6 @@
 /*
  *  Variables
  */
-extern const char* which_one[4];
 extern int json_clock[4];
 
 sensor_t s[4];
@@ -164,7 +163,7 @@ unsigned int compute_hit
   */  
   if ( DLT(DLT_DIAG) )
   { 
-    for (i=N; i <= W; i++)
+    for (i=N; i <= 8; i++)
     {
       printf("%s: %d ", which_one[i], shot->timer_count[i]);
     }
@@ -604,7 +603,7 @@ void send_score
     score = 10.9 - (coeff * radius);
     z = 360 - (((int)angle - 90) % 360);
     clock_face = (double)z / 30.0;
-    sprintf(str, ", \"score\": %d, "\"clock\":\"%d:%d, \"  ", score,(int)clock_face, (int)(60*(clock_face-((int)clock_face))) ;
+    sprintf(str, ", \"score\": %d, "\"clock\":\"%d:%d, \"  ", score,(int)clock_face, (int)(60*(clock_face-((int)clock_face)))) ;
     serial_to_all(str, ALL);
   }
 #endif

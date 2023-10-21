@@ -63,6 +63,7 @@ status_struct_t status[3];
 static unsigned int dip_mask;             // Used if the MFS2 uses the DIP_0 or DIP_3
 static long power_save;
 
+#if(0)
 /*-----------------------------------------------------
  * 
  * @function: read_counter
@@ -84,6 +85,7 @@ unsigned int read_counter
 {
   return 0;
 }
+#endif
 
 /*-----------------------------------------------------
  * 
@@ -414,16 +416,27 @@ void commit_status_LEDs
  * 
  *-----------------------------------------------------*/
 void read_timers
-  (
+(
     unsigned int* timer_ptr
-  )
+)
 {
   unsigned int i;
+  unsigned int delta_t;             // Time difference between VREF_LO and VREF_HI
+  unsigned int adjust_t;            // Time adjustment applied to clock
 
-  for (i=N; i<=W; i++)
+  for (i=0; i<=8; i++)
   {
     *(timer_ptr + i) = pcnt_read(i);
   }
+
+#if ( COMPENSATE_RISE_TIME )
+  for (i=0; i<=4; i++)   // Add the rise time to the signal to get a better estimate
+  {
+    delta_t = *(timer_ptr + i + 4) - TIME_ISR;    // Time from VREF_LO to VREF_HI
+    adjust_t = delta_t * ((json_vref_hi - json_vref_lo) / json_vref_lo);
+    *(timer_ptr + i) += adjust_t;
+  }
+#endif
 
   return;
 }
@@ -1007,7 +1020,7 @@ void aquire(void)
 
   stop_timers();                                    // Stop the counters
   read_timers(&record[this_shot].timer_count[0]);   // Record this count
-  record[this_shot].shot_time = 0;//FULL_SCALE - in_shot_timer; // Capture the time into the shot
+  record[this_shot].shot_time = 0;                  //FULL_SCALE - in_shot_timer; // Capture the time into the shot
   record[this_shot].face_strike = face_strike;      // Record if it's a face strike
   record[this_shot].sensor_status = is_running();   // Record the sensor status
   record[this_shot].shot_number = shot_number++;    // Record the shot number and increment
@@ -1112,9 +1125,6 @@ void rapid_green
  *-----------------------------------------------------*/
 void digital_test(void)
 {
-  double       volts;         // Reference Voltage
-  volts = 0.0;
-
   printf("\r\nDigital test");
 
 /*
