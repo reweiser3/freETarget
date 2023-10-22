@@ -14,11 +14,7 @@
  ***************************************************************************/
 #include "driver/ledc.h"
 #include "esp_err.h"
-#include "led_strip.h"
-#include "led_strip_types.h"
 #include "pwm.h"
-#include "gpio_define.h"
-
 
 #define PWM_TIMER              LEDC_TIMER_0
 #define PWM_MODE               LEDC_LOW_SPEED_MODE

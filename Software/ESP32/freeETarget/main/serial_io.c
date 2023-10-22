@@ -10,17 +10,12 @@
  * 
  *------------------------------------------------------*/
 
-#include "freETarget.h"
-#include "diag_tools.h"
 #include "stdio.h"
-#include "serial_io.h"
-
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 #include "driver/uart.h"
 #include "driver/gpio.h"
-#include "sdkconfig.h"
+#include "freETarget.h"
 #include "diag_tools.h"
+#include "serial_io.h"
 
 /*
  *  Serial IO port configuration

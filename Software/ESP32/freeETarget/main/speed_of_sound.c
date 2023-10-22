@@ -128,7 +128,7 @@ double speed_of_sound
   
   if ( DLT(DLT_DIAG) )
   {
-    printf("Temperature: %4.2f Humidity: %4.2f Speed of Sound: %4.2f", temperature, relative_humidity, speed_MPS);
+    printf("Temperature: %4.2fC Humidity: %4.2f%% Speed of Sound: %4.2fmm/us", temperature, relative_humidity, speed_MPS);
   }
 
 /*

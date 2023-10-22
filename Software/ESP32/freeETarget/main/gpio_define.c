@@ -14,9 +14,8 @@
  * pin
  * 
  ***************************************************************************/
-#include "string.h"
+
 #include "stdbool.h"
-#include "esp_event.h"
 #include "esp_log.h"
 #include "driver/gpio.h"
 #include "driver/ledc.h"
@@ -24,14 +23,14 @@
 #include "gpio_types.h"
 #include "adc_types.h"
 #include "adc_oneshot.h"
-#include "i2c.h"
 #include "led_strip.h"
 #include "led_strip_types.h"
+#include "i2c.h"
 #include "pwm.h"
-#include "gpio_define.h"
 #include "pcnt.h"
 #include "diag_tools.h"
 #include "analog_io.h"
+#include "gpio_define.h"
 
 /*
  *  Digital IO definitions

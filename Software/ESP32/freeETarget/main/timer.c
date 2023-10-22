@@ -14,14 +14,10 @@
  * 
  * ----------------------------------------------------*/
 #include "stdbool.h"
-#include "gpio_types.h"
-#include "gpio.h"
-#include "json.h"
 #include "diag_tools.h"
-#include "stdio.h"
-#include "driver\gpio.h"
+#include "gpio_types.h"
+#include "json.h"
 #include "driver\timer.h"
-
 
 /*
  * Definitions

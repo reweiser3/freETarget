@@ -10,15 +10,12 @@
  *
  * 
  * ----------------------------------------------------*/
-#include <stdio.h>
 #include "freETarget.h"
+#include "diag_tools.h"
 #include "json.h"
-#include "esp_system.h"
 #include "nvs_flash.h"
 #include "nvs.h"
-#include "diag_tools.h"
 #include "serial_io.h"
-#include "timer.h"
 #include "nonvol.h"
 
 /*

@@ -5,25 +5,19 @@
  * Software to run the Air-Rifle / Small Bore Electronic Target
  * 
  *-------------------------------------------------------------*/
-#include "esp_timer.h"
-#include "driver/gpio.h"
 #include "freETarget.h"
+#include "diag_tools.h"
+#include "driver/gpio.h"
 #include "gpio.h"
 #include "compute_hit.h"
 #include "analog_io.h"
 #include "json.h"
 #include "nvs.h"
 #include "nonvol.h"
-#include "mechanical.h"
-#include "diag_tools.h"
-#include "timer.h"
-#include "token.h"
 #include "stdio.h"
-#include "math.h"
-#include "esp_random.h"
 #include "serial_io.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\freertos\FreeRTOS-Kernel\include\freertos\mpu_wrappers.h"
-#include "dac.h"
+
 
 /*
  * Function Prototypes 

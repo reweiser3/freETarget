@@ -16,7 +16,10 @@
     "utility": "cpp",
     "random": "c",
     "system_error": "c",
-    "stdio.h": "c"
+    "stdio.h": "c",
+    "led_strip_types.h": "c",
+    "gpio_types.h": "c",
+    "pulse_cnt.h": "c"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM3",

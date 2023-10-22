@@ -60,10 +60,9 @@
  *******************************************************************/
 
 #include "freETarget.h"
-#include "token.h"
 #include "diag_tools.h"
+#include "token.h"
 #include "json.h"
-#include "stdio.h"
 #include "serial_io.h"
 #include "timer.h"
 

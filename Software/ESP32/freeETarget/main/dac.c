@@ -12,33 +12,15 @@
  *****************************************************************************/
 
 #include "freETarget.h"
-#include "gpio.h"
 #include "diag_tools.h"
-#include "nvs.h"
-#include "nonvol.h"
-#include "nvs_flash.h"
-#include "nvs.h"
+#include "gpio.h"
 #include "analog_io.h"
-#include "token.h"            // Time provided by the token ring
 #include "json.h"
 #include "stdio.h"
-#include "esp_random.h"
-#include "compute_hit.h"
-#include "math.h"
-#include "serial_io.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "gpio.h"
-#include "gpio_define.h"
 #include "driver\gpio.h"
-#include "gpio_types.h"
 #include "adc_types.h"
 #include "adc_oneshot.h"
-
-#include "timer.h"
-#include "esp_timer.h"
 #include "i2c.h"
-#include "dac.h"
 
 /*
  *  Definitions

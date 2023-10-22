@@ -13,19 +13,17 @@
  * https://www.espressif.com/sites/default/files/documentation/esp32-s3_technical_reference_manual_en.pdf#pcnt
  * 
  ***************************************************************************/
-#include <stdio.h>
 #include "stdbool.h"
+#include "diag_tools.h"
 #include "driver/pulse_cnt.h"
 #include "esp_err.h"
 #include "led_strip.h"
 #include "led_strip_types.h"
 #include "driver\ledc.h"
 #include "gpio_define.h"
-#include "pcnt.h"
-#include "diag_tools.h"
 #include "driver\gpio.h"
 #include "driver\timer.h"
-
+#include "pcnt.h"
 /*
  *  Working variables
  */

@@ -6,27 +6,19 @@
  * 
  * ----------------------------------------------------*/
 #include "freETarget.h"
+#include "diag_tools.h"
 #include "json.h"
-#include "gpio_types.h"
-#include "adc_types.h"
-#include "adc_oneshot.h"
 #include "ctype.h"
 #include "stdio.h"
-#include "gpio_define.h"
-#include "diag_tools.h"
 #include "serial_io.h"
 #include "nvs.h"
 #include "nonvol.h"
-#include "gpio.h"
 #include "analog_io.h"
 #include "token.h"
-#include "compute_hit.h"
 #include "stdio.h"
 #include "serial_io.h"
 #include "mechanical.h"
-#include "timer.h"
 #include "esp_timer.h"
-#include "dac.h"
 #include "nvs_flash.h"
 #include "nvs.h"
 
@@ -167,12 +159,6 @@ const json_message_t JSON[] = {
   {"\"SOUTH_Y\":",        &json_south_y,                     0,                IS_INT32,  0,                NONVOL_SOUTH_Y,          0 },    //
   {"\"WEST_X\":",         &json_west_x,                      0,                IS_INT32,  0,                NONVOL_WEST_X,           0 },    //
   {"\"WEST_Y\":",         &json_west_y,                      0,                IS_INT32,  0,                NONVOL_WEST_Y,           0 },    //
-#if (0)
-  {"\"NC\":",             &json_clock[N],                    0,                IS_INT32,  0,                0,                       0 },    // Values forced into timer for
-  {"\"EC\":",             &json_clock[E],                    0,                IS_INT32,  0,                0,                       0 },    // diagnostics
-  {"\"SC\":",             &json_clock[S],                    0,                IS_INT32,  0,                0,                       0 },    //
-  {"\"WC\":",             &json_clock[W],                    0,                IS_INT32,  0,                0,                       0 },    //
-#endif
   {0,                     0,                                 0,                0,         0,                0,                       0 },    //
 
 };
@@ -282,7 +268,6 @@ void freeETarget_json
             show_echo();
             break;
           }                                   // Otherwise fall through
-
 
         case '"':                             // Start or end of text
           keep_space = (keep_space ^ 1) & 1;
