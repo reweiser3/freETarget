@@ -98,8 +98,6 @@ double  json_vref_hi;               // High Voltage DAC setting
 int     json_clock[4];              // Storage for clock test
 #endif
 
-#define JSON_ECHO (1==1)            // TRUE to echo DEBUG messages
-
        void show_echo(void);        // Display the current settings
 static void show_test(int v);       // Execute the self test once
 static void show_names(int v);
@@ -207,9 +205,10 @@ static void diag_delay(int x) { printf("\r\n\"DELAY\":%d", x); vTaskDelay(x*1000
  * 
  *-----------------------------------------------------*/
 static unsigned int in_JSON = 0;
-static unsigned int got_right = 0;
+static unsigned int got_right_bracket = 0;
 static bool not_found;
-static bool keep_space;   // Set to 1 if keeping spaces
+static bool keep_space;             // Set to 1 if keeping spaces
+static bool got_left_bracket;       // Set to 1 if we have a bracket
 
 static int to_int(char h)
 {
@@ -245,9 +244,7 @@ void freeETarget_json
     while ( serial_available(ALL) != 0 )
     {
       ch = serial_getch(ALL);
-#if (JSON_ECHO)
       printf("%c", ch);
-#endif
 
 /*
  * Parse the stream
@@ -257,14 +254,16 @@ void freeETarget_json
         case '}':
           if ( in_JSON != 0 )
           {
-            got_right = in_JSON;
+            got_left_bracket = false;
+            got_right_bracket = in_JSON;
             handle_json();                    // Fall through to reinitialize
           }   
 
         case '{':
           in_JSON = 0;
           input_JSON[0] = 0;
-          got_right = 0;
+          got_right_bracket = 0;
+          got_left_bracket = true;
           keep_space = 0;
           break;
 
@@ -276,7 +275,15 @@ void freeETarget_json
           input_JSON[in_JSON] = 0;            // Null terminate
           break;
 
-        case '*':
+        case '*':                             // Force echo for PC Client
+          if ( got_left_bracket == false )    // Whenever we are not between
+          {                                   // {}
+            POST_version();
+            show_echo();
+            break;
+          }                                   // Otherwise fall through
+
+
         case '"':                             // Start or end of text
           keep_space = (keep_space ^ 1) & 1;
         
@@ -329,7 +336,7 @@ static void handle_json(void)
  */
   nvs_flash_init();
   not_found = true;
-  for ( i=0; i != got_right; i++)                             // Go across the JSON input 
+  for ( i=0; i != got_right_bracket; i++)                       // Go across the JSON input 
   {
     j = 0;                                                      // Index across the JSON token table
     
@@ -448,7 +455,8 @@ static void handle_json(void)
  * All done
  */   
   in_JSON   = 0;                // Start Over
-  got_right = 0;                // Neet to wait for a new Right Bracket
+  got_right_bracket = 0;        // Need to wait for a new Right Bracket
+  got_left_bracket = false;
   input_JSON[in_JSON] = 0;      // Clear the input
   return;
 }

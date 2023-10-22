@@ -13,7 +13,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#define SOFTWARE_VERSION "\"0.5.0 October 20, 2023\""
+#define SOFTWARE_VERSION "\"0.5.1 October 22, 2023\""
 
 
 #define REV_500    500   // ESP32
@@ -66,12 +66,11 @@
 /* 
  * FreeETarget functions
  */
-void rapid_enable(unsigned int enable);               // Rapid fire enable state
-void hello(void);                                     // Say Hello World
 void freeETarget_init(void);                          // Get the target software ready
+void hello(void);                                     // Say Hello World
 void bye(unsigned int);                               // Shut down and say goodbye
-void hello(void);                                     // Wake up and say hello
 void tabata_enable(unsigned int enable);              // Arm the Tabata counters
+void rapid_enable(unsigned int enable);               // Rapid fire enable state
 
 /* 
  * freeRTOS Definitions 
@@ -106,7 +105,7 @@ extern double        s_of_sound;
 extern const char*   names[];
 extern const char    to_hex[];
 extern unsigned int  face_strike;
-extern const char    nesw[];             // Cardinal Points
+extern const char    nesw[];           // Cardinal Points
 extern unsigned int  is_trace;         // Tracing level(s)
 extern unsigned int  this_shot;        // Index into the shot array
 extern unsigned int  shot_number;
