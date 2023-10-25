@@ -19,7 +19,15 @@
     "stdio.h": "c",
     "led_strip_types.h": "c",
     "gpio_types.h": "c",
-    "pulse_cnt.h": "c"
+    "pulse_cnt.h": "c",
+    "atomic": "c",
+    "condition_variable": "c",
+    "future": "c",
+    "esp_random.h": "c",
+    "compute_hit.h": "c",
+    "diag_tools.h": "c",
+    "json.h": "c",
+    "freetarget.h": "c"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM3",

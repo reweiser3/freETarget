@@ -20,8 +20,6 @@ void commit_status_LEDs(unsigned int blink_state);        // Write the LED contr
 unsigned int read_DIP(void);                              // Read the DIP switch register
 unsigned int read_counter(unsigned int direction);
 void stop_timers(void);                                   // Turn off the counter registers
-void trip_timers(void);
-bool read_in(unsigned int port);                        // Read the selected port
 void read_timers(unsigned int* timer_counts);             // Read and return the counter registers
 void drive_paper(void);                                   // Turn on the paper motor
 void aquire(void);                                        // Read the clock registers
@@ -41,6 +39,7 @@ void multifunction_display(void);                         // Display the MFS set
 void status_LED_init(unsigned int gpio_number);           // Initialize the RMT driver 
 void status_LED_test(void);                               // Cycle the status LEDs
 void paper_test(void);                                    // Advance the motor
+void target_test(void);                                   // Monitor the target sensors for a shot
 
 /*
  *  Port Definitions

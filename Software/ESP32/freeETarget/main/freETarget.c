@@ -6,25 +6,26 @@
  * 
  *-------------------------------------------------------------*/
 #include "esp_timer.h"
-
+#include "driver\gpio.h"
+#include "esp_random.h"
+#include "stdio.h"
+#include "math.h"
+#include "nvs.h"
+#include "mpu_wrappers.h"
 #include "freETarget.h"
 #include "gpio.h"
 #include "compute_hit.h"
 #include "analog_io.h"
 #include "json.h"
-#include "nvs.h"
 #include "nonvol.h"
 #include "mechanical.h"
 #include "diag_tools.h"
 #include "timer.h"
 #include "token.h"
-#include "stdio.h"
-#include "math.h"
-#include "esp_random.h"
 #include "serial_io.h"
-#include "mpu_wrappers.h"
 #include "dac.h"
-#include "driver\gpio.h"
+#include "pcnt.h"
+
 
 /*
  *  Function Prototypes
@@ -119,7 +120,7 @@ void freeETarget_init(void)
 /*
  * Initialize variables
  */
-   tabata(true);                          // Reset the Tabata timers
+  tabata(true);                          // Reset the Tabata timers
 
 /*
  * Run the power on self test
@@ -143,15 +144,14 @@ void freeETarget_init(void)
   set_LED_PWM(json_LED_PWM);
   set_status_LED(LED_READY);              // to a client, then the RDY light is steady on
   serial_flush(ALL);                      // Get rid of everything
-
-  
+  this_shot = 0;                          // Clear out any junk
+  last_shot = 0;
   DLT(DLT_CRITICAL);
   printf("Initialization complete");
 
 /*
  * Start the tasks running
  */
-
   return;
 }
 
@@ -1074,3 +1074,66 @@ static void send_keep_alive(void)
   
   return;
 }
+
+
+/*----------------------------------------------------------------
+ * 
+ * @function: polled_target_test
+ * 
+ * @brief:    Abbreviated state machine to test the target aquisition
+ * 
+ * @return:   Nothing
+ * 
+ *----------------------------------------------------------------
+ *
+ * This arms the target and waits for a shot to be fired.  Once 
+ * the shot has been received, it is displayed on the console for
+ * analysis.
+ * 
+ * This function polls the sensors to make sure that the 
+ * 
+ *--------------------------------------------------------------*/
+ void polled_target_test(void)
+ {
+
+  int i;
+  int target_count;                     // How many cycles we have passed
+  int last_run;
+
+  target_count = 1;
+
+  printf("\r\nPolled target shot test");
+  freeETimer_timer_pause();             // Kill the background timer interrupt
+
+  arm_timers();
+  last_run = is_running();
+
+/*
+ * Stay here watching the counters
+ */
+  while (1)
+  {
+    if ( last_run != is_running() )       // Look for a change
+    {
+      printf("\r\nTest: %d running: %02X  ", target_count, is_running());
+      for (i=0; i != 8; i++)
+      {
+        printf("%s:%5d  ", which_one[i], pcnt_read(i));
+      }
+
+      if ( is_running() == 0xff )
+      { 
+        vTaskDelay(ONE_SECOND);   // Wait for the sound to die          
+        arm_timers();
+        target_count++;
+     }
+     last_run = is_running();
+    }
+    vTaskDelay(1);
+  }
+  
+/*
+ * Nothing more to do
+ */
+  return;
+ }

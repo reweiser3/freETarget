@@ -25,12 +25,13 @@ bool  do_dlt(unsigned int level);                     // Diagnostics Log and Tra
 #define T_PAPER        2        // Advance paper backer
 #define T_LED          3        // Test the LED PWM
 #define T_STATUS       4        // Send colours across the status LEDs
-#define T_AIN          5        // Test Analog Inputs
-#define T_VREF         6        // Cycle the VREF outputs 
-#define T_PCNT         9        // Read the PCNT registers 
-#define T_ISR         10        // Test the Timer ISR
-#define T_SENSOR      11        // Read the sensor input
-#define T_AUX_SERIAL  12        // AUX Serial Port loopback
+#define T_TEMPERATURE  5        // Read the temperature and humidity
+#define T_DAC          6        // Ramp the DAC outputs 
+#define T_PCNT         7        // PCNT register test
+#define T_SENSOR       8        // Sensor POST test
+#define T_AUX_SERIAL   9        // AUX Serial Port loopback
+#define T_TARGET      10        // Polled target sensor test
+#define T_TARGET_2    11        // Interrupt target test
 
 /*
  * LED status messages

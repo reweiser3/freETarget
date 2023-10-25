@@ -28,7 +28,7 @@
 #include "gpio_define.h"
 #include "driver\gpio.h"
 
-const char* which_one[] = {"North_lo", "East_lo", "South_lo", "West_lo", "North_hi", "East_hi", "South_hi", "West_hi"};
+const char* which_one[] = {"North_lo", "East_lo ", "South_lo", "West_lo ", "North_hi", "East_hi ", "South_hi", "West_hi "};
 
 #define TICK(x) (((x) / 0.33) * OSCILLATOR_MHZ)   // Distance in clock ticks
 #define RX(Z,X,Y) (16000 - (sqrt(sq(TICK(x)-s[(Z)].x) + sq(TICK(y)-s[(Z)].y))))
@@ -77,7 +77,11 @@ void self_test
       printf("\r\n 4 - Status LED driver");
       printf("\r\n 5 - Temperature and sendor test");
       printf("\r\n 6 - DAC test");
-      printf("\r\n 7 - Count on the LEDs");
+      printf("\r\n 7 - PCNT Test");
+      printf("\r\n 8 - Sensor POST test");
+      printf("\r\n 9 - AUX Port loopback");
+      printf("\r\n10 - Polled Target Test");
+      printf("\r\n11 - Interrupt Target Test");
       printf("\r\n");
       break;
 
@@ -120,42 +124,47 @@ void self_test
       status_LED_test();
       break;
 
-
 /*
- * Test 6, V_REF
+ * Test 5,  Analog In
  */
-    case T_VREF:
-      DAC_test();
-      break;
-
-/*
- * Test 7, Analog In
- */
-    case T_AIN:
+    case T_TEMPERATURE:
       analog_input_test();
       break;
 
 /*
- * Test 9, PCNT test
+ * Test 6, DAC
+ */
+    case T_DAC:
+      DAC_test();
+      break;
+
+/*
+ * Test 7, PCNT test
  */
     case T_PCNT:
       pcnt_test();
       break;
 
 /*
- *  Test 11: Sensor Trigger
+ *  Test 8: Sensor Trigger
  */
     case T_SENSOR:
       POST_counters();
       break;
 
 /*
- *  Test 12: AUX Serial Port
+ *  Test 9: AUX Serial Port
  */
     case T_AUX_SERIAL:
       serial_port_test();
       break;
 
+/*
+ *  Test 10: Polled Target Test
+ */
+    case T_TARGET:
+      polled_target_test();
+      break;      
   }
  /* 
   *  All done, return;

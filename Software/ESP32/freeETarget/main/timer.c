@@ -85,10 +85,11 @@ void freeETarget_timer_init(void)
 {
   timer_init(TIMER_GROUP_0, TIMER_1, &config);
   timer_set_counter_value(TIMER_GROUP_0, TIMER_1, 0);                   // Start the timer at 0
-  timer_set_alarm_value(TIMER_GROUP_0, TIMER_1, ONE_MS);   // Trigger on this value
+  timer_set_alarm_value(TIMER_GROUP_0, TIMER_1, ONE_MS);                // Trigger on this value
   timer_enable_intr(TIMER_GROUP_0, TIMER_1);                            // Interrupt associated with this interrupt
   timer_isr_callback_add(TIMER_GROUP_0, TIMER_1, freeETarget_timer_isr_callback, NULL, 0);
   timer_start(TIMER_GROUP_0, TIMER_1);
+  this_shot = 0;
 
 /*
  *  Timer running. return
@@ -96,6 +97,16 @@ void freeETarget_timer_init(void)
   return;
 }
 
+void freeETimer_timer_pause(void)                                        // Stop the timer
+{
+  timer_pause(TIMER_GROUP_0, TIMER_1);
+  return;
+}
+void freeETimer_timer_start(void)                                        // Start the timer
+{
+  timer_start(TIMER_GROUP_0, TIMER_1);
+  return;
+}
 /*-----------------------------------------------------
  * 
  * @function: freeETarget_timer_isr_callback

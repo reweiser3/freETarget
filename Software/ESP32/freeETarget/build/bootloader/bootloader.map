@@ -3644,12 +3644,12 @@ LOAD c:/users/allan/esp/esp-idf/tools/tools/xtensa-esp32s3-elf/esp-2022r1-11.2.0
                 0x00000000400061c8                rom_bb_bss_cbw40_ana = 0x400061c8
                 0x00000000400061d4                rom_chan_to_freq = 0x400061d4
                 0x00000000400061e0                rom_open_i2c_xpd = 0x400061e0
-                0x00000000400061ec                rom_DAC_rate_set = 0x400061ec
+                0x00000000400061ec                rom_dac_rate_set = 0x400061ec
                 0x00000000400061f8                rom_tsens_read_init = 0x400061f8
                 0x0000000040006204                rom_tsens_code_read = 0x40006204
                 0x0000000040006210                rom_tsens_index_to_dac = 0x40006210
                 0x000000004000621c                rom_tsens_index_to_offset = 0x4000621c
-                0x0000000040006228                rom_tsens_DAC_cal = 0x40006228
+                0x0000000040006228                rom_tsens_dac_cal = 0x40006228
                 0x0000000040006234                rom_code_to_temp = 0x40006234
                 0x0000000040006240                rom_write_pll_cap_mem = 0x40006240
                 0x000000004000624c                rom_pll_correct_dcap = 0x4000624c

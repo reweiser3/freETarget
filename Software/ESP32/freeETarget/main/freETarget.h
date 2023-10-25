@@ -71,6 +71,8 @@ void hello(void);                                     // Say Hello World
 void bye(unsigned int);                               // Shut down and say goodbye
 void tabata_enable(unsigned int enable);              // Arm the Tabata counters
 void rapid_enable(unsigned int enable);               // Rapid fire enable state
+void polled_target_test(void);                        // Test the target aquisition software
+void interrupt_target_test(void);                     // Test the target aquisition software
 
 /* 
  * freeRTOS Definitions 

@@ -59,8 +59,8 @@ static unsigned int dip_mask;             // Used if the MFS2 uses the DIP_0 or 
  * register that is running.
  * 
  *-----------------------------------------------------*/
-static unsigned int clock[] = { RUN_NORTH_HI, RUN_EAST_HI, RUN_SOUTH_HI, RUN_WEST_HI, 
-                                RUN_NORTH_LO, RUN_EAST_LO, RUN_SOUTH_LO, RUN_WEST_LO};
+static unsigned int clock[] = { RUN_NORTH_LO, RUN_EAST_LO, RUN_SOUTH_LO, RUN_WEST_LO, 
+                                RUN_NORTH_HI, RUN_EAST_HI, RUN_SOUTH_HI, RUN_WEST_HI  };
 static unsigned int run_mask[] = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
 
 unsigned int is_running (void)
@@ -107,7 +107,6 @@ unsigned int is_running (void)
  *-----------------------------------------------------*/
 void arm_timers(void)
 {
-  return;
   gpio_set_level(STOP_N, 0);      // Reset the timer
   pcnt_clear();
   gpio_set_level(STOP_N, 1);      // Then enable it
@@ -120,25 +119,11 @@ void arm_timers(void)
  */
 void stop_timers(void)
 {
-  return;
   gpio_set_level(STOP_N, 0);      // Reset the timer
 
   return;
 }
 
-/*
- *  Trip the counters for a self test
- */
-void trip_timers(void)
-{  
-  return;
-  gpio_set_level(STOP_N, 1);            // Let the flipflops go
-  gpio_set_level(STOP_N, 1);            // Let the flipflops go
-  gpio_set_level(CLOCK_START, 1);       // and trigger the output 
-  gpio_set_level(CLOCK_START, 0);
-  gpio_set_level(CLOCK_START, 1);       // and trigger the output 
-  return;
-}
 
 /*-----------------------------------------------------
  * 
