@@ -235,7 +235,6 @@ void self_test
   test3 = false;
   
   set_status_LED("YRR");
-  vTaskDelay(ONE_SECOND);
   for (i=0; i != 1000; i++)           // Clock Running
   {
     if ( gpio_get_level(REF_CLK) != 0 )
@@ -257,7 +256,6 @@ void self_test
   gpio_set_level(STOP_N, 0);
   gpio_set_level(STOP_N, 1);        // Latch empty when stopped
   set_status_LED("-YR");
-  vTaskDelay(ONE_SECOND);
   if ( is_running() == 0  )
   {
     test2 = true;
@@ -272,7 +270,6 @@ void self_test
   }      
 
   set_status_LED("--Y");
-  vTaskDelay(ONE_SECOND);
   gpio_set_level(STOP_N, 0);
   gpio_set_level(STOP_N, 1);
   gpio_set_level(CLOCK_START, 1);

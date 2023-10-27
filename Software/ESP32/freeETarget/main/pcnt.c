@@ -349,9 +349,9 @@ void pcnt_clear(void)
  * 
  **************************************************************************/
 #define PCNT_NORTH_HI (int*)(0x60017000 + 0x0030)         // PCNT unit 1 count
-#define PCNT_EAST_HI (int*)(0x60017000 + 0x0030)          // PCNT unit 2 count
-#define PCNT_SOUTH_HI (int*)(0x60017000 + 0x0030)         // PCNT unit 3 count
-#define PCNT_WEST_HI (int*)(0x60017000 + 0x0030)          // PCNT unit 4 count
+#define PCNT_EAST_HI (int*)(0x60017000 + 0x0034)          // PCNT unit 2 count
+#define PCNT_SOUTH_HI (int*)(0x60017000 + 0x0038)         // PCNT unit 3 count
+#define PCNT_WEST_HI (int*)(0x60017000 + 0x003C)          // PCNT unit 4 count
 
 static bool IRAM_ATTR north_hi_pcnt_isr_callback(void *args)
 {
