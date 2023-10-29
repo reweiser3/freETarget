@@ -72,7 +72,7 @@ unsigned int is_running (void)
 /*
  * Read the running inputs
  */
-  for (i=0; i != sizeof(clock)/sizeof(unsigned int); i++)
+  for (i=0; i != 8; i++)
   {
     if ( gpio_get_level(clock[i]) != 0 )
     {
@@ -99,32 +99,45 @@ unsigned int is_running (void)
  * The counters are armed by
  * 
  *   Stopping the current cycle
- *   Taking the counters out of read
- *   Making sure the oscillator is running
  *   Clearing the counters
  *   Enabling the counters to run again
  * 
  *-----------------------------------------------------*/
 void arm_timers(void)
 {
-  gpio_set_level(STOP_N, 0);      // Reset the timer
+  gpio_set_level(CLOCK_START, 0);
+  gpio_set_level(STOP_N, 0);          // Reset the timer
+  gpio_set_level(OSC_START, OSC_OFF); // Turn off the oscillator
   pcnt_clear();
-  gpio_set_level(STOP_N, 1);      // Then enable it
-  
+  gpio_set_level(OSC_START, OSC_ON);
+  gpio_set_level(STOP_N, 1);          // Then enable it
+  return;
+}
+
+
+/*
+ *  Stop the oscillator and RUN_xx controls
+ */
+void stop_timers(void)
+{
+  gpio_set_level(OSC_START, OSC_OFF);
+  gpio_set_level(STOP_N, 0);      // Reset the timer
+  gpio_set_level(CLOCK_START, 0);
+
   return;
 }
 
 /*
- *  Stop the oscillator and 
+ *  Trigger the timers for a self test
  */
-void stop_timers(void)
+void trigger_timers(void)
 {
-  gpio_set_level(STOP_N, 0);      // Reset the timer
+  gpio_set_level(CLOCK_START, 0);
+  gpio_set_level(CLOCK_START, 1);
+  gpio_set_level(CLOCK_START, 0);
 
   return;
 }
-
-
 /*-----------------------------------------------------
  * 
  * @function: read_DIP

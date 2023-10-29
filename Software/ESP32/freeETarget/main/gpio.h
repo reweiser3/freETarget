@@ -40,6 +40,7 @@ void status_LED_init(unsigned int gpio_number);           // Initialize the RMT 
 void status_LED_test(void);                               // Cycle the status LEDs
 void paper_test(void);                                    // Advance the motor
 void target_test(void);                                   // Monitor the target sensors for a shot
+void trigger_timers(void);                                // Trigger a self test 
 
 /*
  *  Port Definitions
@@ -55,12 +56,15 @@ void target_test(void);                                   // Monitor the target 
 #define RUN_MASK     0x00ff
 #define REF_CLK        GPIO_NUM_8
 
-#define PAPER          GPIO_NUM_12                 // Paper advance drive active low
+#define PAPER          GPIO_NUM_12                  // Paper advance drive active high
 #define PAPER_ON       1
 #define PAPER_OFF      0
 
-#define STOP_N          GPIO_NUM_47      // V      
-#define CLOCK_START     GPIO_NUM_21      // V
+#define STOP_N          GPIO_NUM_47                 // Stop the RUN flipflops       
+#define CLOCK_START     GPIO_NUM_21                 // Trigger a test cycle
+#define OSC_START       GPIO_NUM_48                 // Enable / kill 10MHz Oscillator
+#define OSC_ON          1                           // Enable the oscillator
+#define OSC_OFF         0                           // Tristate the oscillator
 #define LDAC            GPIO_NUM_42
 
 #define DIP_0           9

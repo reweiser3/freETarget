@@ -83,12 +83,13 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args);
 
 void freeETarget_timer_init(void)
 {
+  DLT(DLT_CRITICAL); printf("freeETarget_timer_init()\r\n");
   timer_init(TIMER_GROUP_0, TIMER_1, &config);
   timer_set_counter_value(TIMER_GROUP_0, TIMER_1, 0);                   // Start the timer at 0
   timer_set_alarm_value(TIMER_GROUP_0, TIMER_1, ONE_MS);                // Trigger on this value
   timer_enable_intr(TIMER_GROUP_0, TIMER_1);                            // Interrupt associated with this interrupt
   timer_isr_callback_add(TIMER_GROUP_0, TIMER_1, freeETarget_timer_isr_callback, NULL, 0);
-  timer_start(TIMER_GROUP_0, TIMER_1);
+//  timer_start(TIMER_GROUP_0, TIMER_1);
   this_shot = 0;
 
 /*
@@ -147,7 +148,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
  * Decide what to do if based on what inputs are present
  */
   pin = is_running();                         // Read in the RUN bits
-
+printf(".");
 /*
  * Read the timer hardware based on the ISR state
  */

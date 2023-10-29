@@ -86,9 +86,8 @@ DIO_struct_t dio43 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_va
 DIO_struct_t dio44 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0};  // Mode and Initial Value
 DIO_struct_t dio45 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};  // Mode and Initial Value
 DIO_struct_t dio46 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0};  // Mode and Initial Value
-DIO_struct_t dio47 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 1};  // Mode and Initial Value
-DIO_struct_t dio48 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0};  // Mode and Initial Value
-DIO_struct_t dio49 = { .type = DIGITAL_IO, .mode = GPIO_MODE_INPUT,  .initial_value = 0};  // Mode and Initial Value
+DIO_struct_t dio47 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};  // Mode and Initial Value
+DIO_struct_t dio48 = { .type = DIGITAL_IO, .mode = GPIO_MODE_OUTPUT, .initial_value = 0};  // Mode and Initial Value
 
 /*
  *  Analog IO usage
@@ -167,7 +166,7 @@ gpio_struct_t gpio_table[] = {
 
     {"ATX",          GPIO_NUM_17, NULL},              // ATX
     {"ARX",          GPIO_NUM_18, NULL},              // ARX
-    {"REF_CLK",      GPIO_NUM_8,  NULL},              // Reference CLock Used by pcnt
+    {"REF_CLK",      GPIO_NUM_8,  NULL},              // Re rence CLock Used by pcnt
     {"USB_D-",       GPIO_NUM_19, NULL},              // JTAG USB D-
     {"USB_D+",       GPIO_NUM_20, NULL},              // JTAG USB D+
     {"USB_JTAG",     GPIO_NUM_3,  NULL},              // JTAG Strap to 3V3
@@ -191,9 +190,9 @@ gpio_struct_t gpio_table[] = {
     {"D",            GPIO_NUM_35, (void*)&dio35},    // Auxilary Input D
     {"BOOT",         GPIO_NUM_0,  NULL},             // Hold in BOOT
     {"STATUS",       GPIO_NUM_45, (void*)&led_strip_config},// Status LEDs
-    {"SPARE0",       GPIO_NUM_48, (void*)&dio48},    // SPARE 0
-    {"CLK_START*",   GPIO_NUM_47, (void*)&dio47},    // Spare 1
-    {"STOP*",        GPIO_NUM_21, (void*)&dio21},    // Set VREF 
+    {"OSC_START",    GPIO_NUM_48, (void*)&dio48},    // Start / stop the 10MHz oscillator
+    {"CLK_START*",   GPIO_NUM_47, (void*)&dio47},    // Trigger the clocks for diagnostics
+    {"STOP*",        GPIO_NUM_21, (void*)&dio21},    // Stop the RUN signals 
     {"SDA",          GPIO_NUM_14, (void*)&i2c},      // SDA
     {"SCL",          GPIO_NUM_13, NULL},             // SCL
     {0, 0, 0 } 

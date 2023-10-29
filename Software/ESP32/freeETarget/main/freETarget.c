@@ -1098,40 +1098,43 @@ static void send_keep_alive(void)
 
   int i;
   int target_count;                     // How many cycles we have passed
-  int last_run;
 
   target_count = 1;
 
-  printf("\r\nPolled target shot test");
+  printf("\r\nPolled target shot test\r\n");
   freeETimer_timer_pause();             // Kill the background timer interrupt
-
-  arm_timers();
-  last_run = is_running();
 
 /*
  * Stay here watching the counters
  */
+
   while (1)
   {
-    if ( last_run != is_running() )       // Look for a change
+    arm_timers();
+    printf("\r\nArmed\r\n");
+    for (i=0; i != 8; i++)
     {
-      printf("\r\nTest: %d running: %02X  ", target_count, is_running());
-      for (i=0; i != 8; i++)
-      {
-        printf("%s:%5d  ", which_one[i], pcnt_read(i));
-      }
-
-      if ( is_running() == 0xff )
-      { 
-        vTaskDelay(ONE_SECOND);   // Wait for the sound to die          
-        arm_timers();
-        target_count++;
-     }
-     last_run = is_running();
+      printf("%s:%5d  ", which_one[i], pcnt_read(i));
     }
-    vTaskDelay(1);
+    while(is_running() != 0xff)
+    {
+      continue;
+    }
+    stop_timers();
+    printf("\r\nStopped %d  is_running():%02X\r\n", target_count, is_running());
+    for (i=0; i != 8; i++)
+    {
+      printf("%s:%5d  ", which_one[i], pcnt_read(i));
+    }
+    printf("\r\nAgain %d  is_running():%02X\r\n", target_count, is_running());
+    for (i=0; i != 8; i++)
+    {
+      printf("%s:%5d  ", which_one[i], pcnt_read(i));
+    }
+    target_count++;
+    vTaskDelay(ONE_SECOND);
   }
-  
+
 /*
  * Nothing more to do
  */
