@@ -90,7 +90,7 @@ struct shot_r
   unsigned int shot_number;     // Current shot number
   double       x;               // X location of shot
   double       y;               // Y location of shot
-  unsigned int timer_count[8];  // Array of timer values 4 in hardware and 4 in software
+           int timer_count[8];  // Array of timer values 4 in hardware and 4 in software
   unsigned int face_strike;     // Recording of face strike
   unsigned int sensor_status;   // Triggering register
   unsigned long shot_time;      // Shot time since start of after tabata start

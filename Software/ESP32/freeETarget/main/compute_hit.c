@@ -877,56 +877,5 @@ static void remap_target
   return;
 }
 
-/*----------------------------------------------------------------
- *
- * @function: show_timer
- *
- * @brief: Display a timer message to identify errors
- *
- * @return: None
- *----------------------------------------------------------------
- * 
- * The error is sent as:
- * 
- * {"error": Run Latch, timer information .... }
- *    
- *--------------------------------------------------------------*/
-
-void send_timer
-  (
-  int sensor_status                        // Flip Flop Input
-  )
-{
-  int i;
-  unsigned int timer_count[4];
-  
-  read_timers(&timer_count[0]);
-  
-  printf("{\"timer\": \"");
-  for (i=0; i != 4; i++ )
-  {
-    if ( sensor_status & (1<<i) )
-    {
-      printf("%c ", nesw[i]);
-    }
-    else
-    {
-      printf(".");
-    }
-  }
-
-  printf("\", ");
-  
-  for (i=N; i <= W; i++)
-  {
-    printf("\" %c\":%d, ", nesw[i], timer_count[i]);
-  }
-
-//  printf("\"V_REF\": %4.2f,", TO_VOLTS(analogRead(V_REFERENCE)));
-  printf("}\r\n");      
-
-  return;
-}
-
  
 double sq(double x) { return x*x;}

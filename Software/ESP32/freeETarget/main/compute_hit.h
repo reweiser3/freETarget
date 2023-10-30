@@ -44,7 +44,6 @@ unsigned int  compute_hit(shot_record_t* shot);                         // Find 
 void          send_score(shot_record_t* shot);                          // Send the shot
 void          rotate_hit(unsigned int location, shot_record_t* shot);   // Rotate the shot back into the correct quadrant 
 bool          find_xy_3D(sensor_t* s, double estimate, double z_offset_clock);  // Estimated position including slant range
-void          send_timer(int sensor_status);                            // Show debugging information 
 void          send_miss(shot_record_t* shot);                           // Send a miss message
 double        speed_of_sound(double temperature, double relative_humidity);// Speed of sound in mm/us
 double        sq(double x);                                             // Square function

@@ -20,28 +20,30 @@ void commit_status_LEDs(unsigned int blink_state);        // Write the LED contr
 unsigned int read_DIP(void);                              // Read the DIP switch register
 unsigned int read_counter(unsigned int direction);
 void stop_timers(void);                                   // Turn off the counter registers
-void read_timers(unsigned int* timer_counts);             // Read and return the counter registers
+void read_timers(int* timer_counts);                      // Read and return the counter registers
 void drive_paper(void);                                   // Turn on the paper motor
 void aquire(void);                                        // Read the clock registers
 // void enable_face_interrupt();                             // Turn on the face strike interrupt
 void disable_face_interrupt(void);                        // Turn off the face strike interrupt
 void enable_sensor_interrupt();                           // Turn on the sensor interrupt
 void disable_sensor_interrupt(void);                      // Turn off the sensor strike interrupt
-void multifunction_init(void);                            // Initialize the multifunction switches
-void multifunction_switch(void);                          // Handle the actions of the DIP Switch signal
-void multifuction_display(void);                          // Display the MFS settings
-void multifunction_wait_open(void);                       // Wait for both multifunction switches to be open
+
 void digital_test(void);                                  // Execute the digital test
 void paper_on_off(bool on);                               // Turn the motor on or off
 void rapid_green(unsigned int state);                     // Drive the GREEN light
 void rapid_red(unsigned int state);                       // Drive the RED light
-void multifunction_display(void);                         // Display the MFS settings as text
+
 void status_LED_init(unsigned int gpio_number);           // Initialize the RMT driver 
 void status_LED_test(void);                               // Cycle the status LEDs
 void paper_test(void);                                    // Advance the motor
 void target_test(void);                                   // Monitor the target sensors for a shot
 void trigger_timers(void);                                // Trigger a self test 
 
+void multifunction_init(void);                            // Initialize the multifunction switches
+void multifunction_switch(void);                          // Handle the actions of the DIP Switch signal
+void multifuction_display(void);                          // Display the MFS settings
+void multifunction_wait_open(void);                       // Wait for both multifunction switches to be open
+void multifunction_display(void);                         // Display the MFS settings as text
 /*
  *  Port Definitions
  */
@@ -62,7 +64,7 @@ void trigger_timers(void);                                // Trigger a self test
 
 #define STOP_N          GPIO_NUM_47                 // Stop the RUN flipflops       
 #define CLOCK_START     GPIO_NUM_21                 // Trigger a test cycle
-#define OSC_START       GPIO_NUM_48                 // Enable / kill 10MHz Oscillator
+#define OSC_CONTROL       GPIO_NUM_48                 // Enable / kill 10MHz Oscillator
 #define OSC_ON          1                           // Enable the oscillator
 #define OSC_OFF         0                           // Tristate the oscillator
 #define LDAC            GPIO_NUM_42

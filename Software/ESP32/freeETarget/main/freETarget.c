@@ -1098,6 +1098,7 @@ static void send_keep_alive(void)
 
   int i;
   int target_count;                     // How many cycles we have passed
+  int timer_counts[8];                  // Space for the 8 counters
 
   target_count = 1;
 
@@ -1107,32 +1108,23 @@ static void send_keep_alive(void)
 /*
  * Stay here watching the counters
  */
-
   while (1)
   {
     arm_timers();
     printf("\r\nArmed\r\n");
-    for (i=0; i != 8; i++)
-    {
-      printf("%s:%5d  ", which_one[i], pcnt_read(i));
-    }
     while(is_running() != 0xff)
     {
       continue;
     }
     stop_timers();
-    printf("\r\nStopped %d  is_running():%02X\r\n", target_count, is_running());
+    printf("\r\nStopped %d   ", target_count);
+    read_timers(&timer_counts[0]);
     for (i=0; i != 8; i++)
     {
-      printf("%s:%5d  ", which_one[i], pcnt_read(i));
-    }
-    printf("\r\nAgain %d  is_running():%02X\r\n", target_count, is_running());
-    for (i=0; i != 8; i++)
-    {
-      printf("%s:%5d  ", which_one[i], pcnt_read(i));
+      printf("%s:%5d  ", which_one[i], timer_counts[i]);
     }
     target_count++;
-    vTaskDelay(ONE_SECOND);
+    vTaskDelay(10);
   }
 
 /*

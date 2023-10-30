@@ -131,10 +131,6 @@ void pcnt_init
     gpio_isr_handler_add(RUN_EAST_HI,  east_hi_pcnt_isr_callback, NULL);
     gpio_isr_handler_add(RUN_SOUTH_HI, south_hi_pcnt_isr_callback, NULL);
     gpio_isr_handler_add(RUN_WEST_HI,  west_hi_pcnt_isr_callback, NULL);
-    gpio_intr_enable(RUN_NORTH_HI);                                       // Turn on the interrupts
-    gpio_intr_enable(RUN_EAST_HI);
-    gpio_intr_enable(RUN_SOUTH_HI);
-    gpio_intr_enable(RUN_WEST_HI);
     is_first = false;
   }
     
@@ -347,6 +343,7 @@ static bool IRAM_ATTR north_hi_pcnt_isr_callback(void *args)
 {
   BaseType_t high_task_awoken = pdFALSE;
   north_pcnt_hi = *PCNT_NORTH_HI;
+  gpio_intr_disable(RUN_NORTH_HI);
   return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
 }
 
@@ -354,6 +351,7 @@ static bool IRAM_ATTR east_hi_pcnt_isr_callback(void *args)
 {
   BaseType_t high_task_awoken = pdFALSE;
   east_pcnt_hi = *PCNT_EAST_HI;
+  gpio_intr_disable(RUN_EAST_HI);
   return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
 }
 
@@ -361,6 +359,7 @@ static bool IRAM_ATTR south_hi_pcnt_isr_callback(void *args)
 {
   BaseType_t high_task_awoken = pdFALSE;
   south_pcnt_hi = *PCNT_SOUTH_HI;
+  gpio_intr_disable(RUN_SOUTH_HI);
   return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
 }
 
@@ -368,5 +367,6 @@ static bool IRAM_ATTR west_hi_pcnt_isr_callback(void *args)
 {
   BaseType_t high_task_awoken = pdFALSE;
   west_pcnt_hi = *PCNT_WEST_HI;
+  gpio_intr_disable(RUN_WEST_HI);
   return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
 }
