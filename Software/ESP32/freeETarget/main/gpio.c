@@ -434,59 +434,26 @@ void read_timers
 
 void drive_paper(void)
 {
-  unsigned int s_time, s_count;              // Step time and count
-  volatile unsigned long paper_time;
+  volatile unsigned int paper_time;
 
-/*
- * Set up the count or times based on whether a DC or stepper motor is used
- */
-
-  s_time = json_paper_time;                       // On time.
-  if ( json_step_time != 0 )                      // Non-zero means it's a stepper motor
-  {
-    s_time = json_step_time;                      // the one we use
-  }
-
-  s_count = 1;                                    // Default to one cycle (DC or Stepper Motor)
-  if ( json_step_count != 0 )                     // Non-zero means it's a stepper motor
-  {
-    s_count = json_step_count;                    // the one we use
-  }
-
-  if ( s_time == 0 )                              // Nothing to do if the time is zero.
-  {
-    return;
-  }
-  
   if ( DLT(DLT_CRITICAL) )
   {
-    printf("Advancing paper: %dms", s_time);
+    printf("Advancing paper: %dms", json_paper_time);
   }
 
 /*
  * Drive the motor on and off for the number of cycles
  * at duration
  */
-  timer_new(&paper_time, 0);              // Create the timer
+//  timer_new(&paper_time, json_paper_time);  // Create the timer
+  paper_on_off(true);                       // Motor ON
+//  while ( paper_time != 0 )
+//  {
+//    continue;
+//  }
+  paper_on_off(false);                      // Motor OFF
 
-  while ( s_count )
-  {
-    paper_on_off(true);                   // Motor ON
-    paper_time = s_time; 
-    while (paper_time )
-    {
-      continue;
-    }
-    paper_on_off(false);                  // Motor OFF
-    paper_time = 5;
-    while ( paper_time )
-    {
-      continue;
-    }
-    s_count--;                            // Repeat for the steps
-  }
-
-  timer_delete(&paper_time);              // Finished with the timer
+//  timer_delete(&paper_time);                // Finished with the timer
   
  /*
   * All done, return
@@ -722,7 +689,7 @@ void status_LED_test(void)
  *--------------------------------------------------------------*/
 void paper_test(void)
 {
-  volatile int time_delay;
+  volatile unsigned int time_delay;
   int i;
 
   timer_new(&time_delay, 500); 

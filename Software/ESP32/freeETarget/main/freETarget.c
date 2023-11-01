@@ -168,7 +168,7 @@ void freeETarget_init(void)
 #define SET_MODE      0           // Set the operating mode
 #define ARM        (SET_MODE+1)   // State is ready to ARM
 #define WAIT       (ARM+1)        // ARM the circuit and wait for a shot
-#define REDUCE     (WAIT+1)     // Reduce the data
+#define REDUCE     (WAIT+1)       // Reduce the data
 #define FINISH     (REDUCE+1)     // Wait for the shot to end
 
 unsigned int state = SET_MODE;
@@ -179,7 +179,7 @@ unsigned int  location;               // Sensor location
 
 char* loop_name[] = {"SET_MODE", "ARM", "WAIT", "AQUIRE", "REDUCE", "FINISH" };
 
-void freeETarget_task (void)
+void freeETarget_target_loop(void* arg)
 {
   while(1)
   {
@@ -221,9 +221,6 @@ void freeETarget_task (void)
   
     switch (state)
     {
-/*
- *  Check for special operating modes
- */
     default:
     case SET_MODE:    // Start of the loop
       state = set_mode();
@@ -285,7 +282,7 @@ void freeETarget_task (void)
   if ( json_tabata_enable || json_rapid_enable ) // If the Tabata or rapid fire is enabled, 
   {
     set_LED_PWM_now(0);             // Turn off the LEDs
-    set_status_LED(LED_TABATA_ON);         // Just turn on X
+    set_status_LED(LED_TABATA_ON);  // Just turn on X
     json_rapid_enable = 0;          // Disable the rapid fire
   }                                 // Until the session starts
   else
@@ -416,33 +413,6 @@ unsigned int arm(void)
  *--------------------------------------------------------------*/
 unsigned int wait(void)
 {
-  static int blink_on_off = 0;
-
-/*
- * Monitor the WiFi and blink if WiFi is present but not connected
- * Set RDY to solid red if there is a connection to the PC client
- */
-  if ( (json_token == TOKEN_NONE)         // If the esp01 is not present, or connected
-          || ((json_token != TOKEN_NONE) && (my_ring != TOKEN_UNDEF)) )
-  {
-    set_status_LED(LED_READY);                 // to a client, then the RDY light is steady on
-  }
-  else
-  {
-    if ( blink == 0 )
-    {
-      blink = ONE_SECOND;
-      blink_on_off ^= 1;
-      if ( blink_on_off )       // Otherwise blink the RDY light
-      {
-        set_status_LED(LED_READY);
-      }
-      else
-      {
-        set_status_LED(LED_READY_OFF);
-      }
-    }
-  }
 
 /*
  * Check to see if the time has run out if there is a rapid fire event in progress
@@ -1098,7 +1068,7 @@ static void send_keep_alive(void)
 
   int i;
   int target_count;                     // How many cycles we have passed
-  int timer_counts[8];                  // Space for the 8 counters
+  int timer_count[8];                  // Space for the 8 counters
 
   target_count = 1;
 
@@ -1118,13 +1088,61 @@ static void send_keep_alive(void)
     }
     stop_timers();
     printf("\r\nStopped %d   ", target_count);
-    read_timers(&timer_counts[0]);
+    read_timers(&timer_count[0]);
     for (i=0; i != 8; i++)
     {
-      printf("%s:%5d  ", which_one[i], timer_counts[i]);
+      printf("%s:%5d  ", which_one[i], timer_count[i]);
     }
     target_count++;
     vTaskDelay(10);
+  }
+
+/*
+ * Nothing more to do
+ */
+  return;
+ }
+
+ /*----------------------------------------------------------------
+ * 
+ * @function: interrupt_target_test
+ * 
+ * @brief:    Abbreviated state machine to test the target aquisition
+ * 
+ * @return:   Nothing
+ * 
+ *----------------------------------------------------------------
+ *
+ * This arms the target and waits for a shot to be fired.  Once 
+ * the shot has been received, it is displayed on the console for
+ * analysis.
+ * 
+ * This function polls the sensors to make sure that the 
+ * 
+ *--------------------------------------------------------------*/
+extern int isr_state;
+ void interrupt_target_test(void)
+ {
+
+  int i;
+
+  printf("\r\nInterrupt target shot test: this: %d last %d\r\n", this_shot, last_shot);
+
+/*
+ * Stay here watching the counters
+ */
+  while (1)
+  {
+    while ( this_shot != last_shot )    // While we have a queue o shots
+    {
+      printf("\r\n");
+      for (i=0; i != 8; i++)
+      {
+        printf("%s:%5d  ", which_one[i], record[last_shot].timer_count[i]);
+      }
+      last_shot = (last_shot+1) % SHOT_STRING;
+    }
+    vTaskDelay(1);
   }
 
 /*

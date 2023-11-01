@@ -67,6 +67,7 @@
  * FreeETarget functions
  */
 void freeETarget_init(void);                          // Get the target software ready
+void freeETarget_target_loop(void* arg);              // Target polling loop
 void hello(void);                                     // Say Hello World
 void bye(unsigned int);                               // Shut down and say goodbye
 void tabata_enable(unsigned int enable);              // Arm the Tabata counters
@@ -77,7 +78,7 @@ void interrupt_target_test(void);                     // Test the target aquisit
 /* 
  * freeRTOS Definitions 
  */
-extern const TickType_t json_delay;                   // Poll the serial port at 10Hz
+//extern const TickType_t json_delay;                   // Poll the serial port at 10Hz
 
 
 /*

@@ -34,16 +34,15 @@
 /*
  * Local Variables
  */
-static unsigned long* timers[N_TIMERS];         // Active timer list
-static unsigned int isr_state;                  // What sensor state are we in 
-static unsigned int isr_timer;                  // Interrupt timer 
+static unsigned int* timers[N_TIMERS];          // Active timer list
+       unsigned int isr_state;                  // What sensor state are we in 
+static volatile unsigned int isr_timer;         // Interrupt timer 
 
 /*
  *  Function Prototypes
  */
 static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args);
    
-
 /*-----------------------------------------------------
  * 
  * @function: freeETarget_timer_init
@@ -64,9 +63,9 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args);
  * 
  *-----------------------------------------------------*/
 #include "freETarget.h"
-#include "token.h"
+#include "timer.h"
 #include "mfs.h"
-
+#include "token.h"
 
 #define TIMER_DIVIDER         (16)                    //  Hardware timer clock divider
 #define TIMER_SCALE           (1000/ TIMER_DIVIDER)   // convert counter value to seconds
@@ -89,7 +88,8 @@ void freeETarget_timer_init(void)
   timer_set_alarm_value(TIMER_GROUP_0, TIMER_1, ONE_MS);                // Trigger on this value
   timer_enable_intr(TIMER_GROUP_0, TIMER_1);                            // Interrupt associated with this interrupt
   timer_isr_callback_add(TIMER_GROUP_0, TIMER_1, freeETarget_timer_isr_callback, NULL, 0);
-//  timer_start(TIMER_GROUP_0, TIMER_1);
+  timer_start(TIMER_GROUP_0, TIMER_1);
+  timer_new(&isr_timer, 0);
   this_shot = 0;
 
 /*
@@ -103,11 +103,13 @@ void freeETimer_timer_pause(void)                                        // Stop
   timer_pause(TIMER_GROUP_0, TIMER_1);
   return;
 }
+
 void freeETimer_timer_start(void)                                        // Start the timer
 {
   timer_start(TIMER_GROUP_0, TIMER_1);
   return;
 }
+
 /*-----------------------------------------------------
  * 
  * @function: freeETarget_timer_isr_callback
@@ -131,11 +133,6 @@ void freeETimer_timer_start(void)                                        // Star
  * DONE - We have read the counters but need to
  *        wait for the ringing to stop
  *        
- * There are three motor control states
- * 
- * IDLE    - Do nothing
- * RUNNING - The motor is turned on for a duration 
- * CYCLE   - Count the number of stepper motor cycles
  * 
  *-----------------------------------------------------*/
 static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
@@ -148,7 +145,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
  * Decide what to do if based on what inputs are present
  */
   pin = is_running();                         // Read in the RUN bits
-printf(".");
+
 /*
  * Read the timer hardware based on the ISR state
  */
@@ -232,19 +229,24 @@ printf(".");
  *-----------------------------------------------------*/
 unsigned int timer_new
 (
-  unsigned long* new_timer,         // Pointer to new down counter
-  unsigned long  duration           // Duration of the timer
+  volatile unsigned int* new_timer, // Pointer to new down counter
+  unsigned int           duration   // Duration of the timer
 )
 {
   unsigned int i;
 
+  if ( new_timer == NULL )
+  {
+    return 0;
+  }
+  
   for (i=0;  i != N_TIMERS; i++ )   // Look through the space
   {
     if ( (timers[i] == 0)           // Got an empty timer slot
       || (timers[i] == new_timer) ) // or it already exists
     {
       timers[i] = new_timer;        // Add it in
-      *timers[i] = duration;
+      *new_timer = duration;
       return 1;
     }
   }
@@ -259,7 +261,7 @@ unsigned int timer_new
 
  unsigned int timer_delete
 (
-  unsigned long* old_timer          // Pointer to new down counter
+  volatile unsigned int* old_timer   // Pointer to new down counter
 )
 {
   unsigned int i;

@@ -165,6 +165,13 @@ void self_test
     case T_TARGET:
       polled_target_test();
       break;      
+/*
+ *  Test 11: Polled Target Test
+ */
+    case T_TARGET_2:
+      interrupt_target_test();
+      break; 
+
   }
  /* 
   *  All done, return;
