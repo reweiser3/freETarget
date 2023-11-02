@@ -61,7 +61,7 @@ static void remap_target(double* x, double* y);  // Map a club target if used
  *--------------------------------------------------------------*/
 void init_sensors(void)
 {
-  if ( DLT(DLT_CRITICAL) ) 
+  if ( DLT(DLT_DIAG) ) 
   {
     printf("init_sensors()");
   }
@@ -176,7 +176,6 @@ unsigned int compute_hit
   location = N;
   for (i=E; i <= W; i++)
   {
-printf("i:%d", i);
     if ( shot->timer_count[i] > reference )
     {
       reference = shot->timer_count[i];
@@ -210,13 +209,17 @@ printf("i:%d", i);
     {
      printf("%s: %4.2f ", which_one[i], s[i].count);
     }
+  }
+  if ( DLT(DLT_DIAG) )
+  {
     printf("\r\nMicroseconds ");
     for (i=N; i <= W; i++)
     {
-     printf("%c: %4.2f ", *which_one[i], (double)s[i].count / ((double)OSCILLATOR_MHZ));
+     printf("%s: %4.2f ", which_one[i], (double)s[i].count / ((double)OSCILLATOR_MHZ));
     }
   }
 
+#if(0)
 
 /*
  * Compensate for sound attenuation over a long distance
@@ -231,6 +234,7 @@ printf("i:%d", i);
  */
   for (i=N; i <= W; i++)
   {
+    printf("\r\n%s %4.2f", which_one[i], s[i].count);
     x = (double)s[i].count;             // Time difference in clock ticks
     x = x / OSCILLATOR_MHZ;             // Convert to a time in us
     x = x * x;                          // Dopper's inverse Square
@@ -247,7 +251,7 @@ printf("i:%d", i);
      printf("%s:%4.2f  ", which_one[i], (double)s[i].count / ((double)OSCILLATOR_MHZ));
     }
   }
-  
+#endif
 /*
  * Fill up the structure with the counter geometry
  */
@@ -261,7 +265,8 @@ printf("i:%d", i);
   {
     s[i].a = s[(i+1) % 4].b;
   }
-  
+
+
 /*
  * Find the smallest non-zero value, this is the sensor furthest away from the sensor
  */
@@ -273,11 +278,11 @@ printf("i:%d", i);
       smallest = s[i].count;
     }
   }
-  
+
 /*  
  *  Loop and calculate the unknown radius (estimate)
  */
-  estimate = s[N].c - smallest + 1.0d;
+  estimate = s[N].count - smallest + 1.0d;
  
   if ( DLT(DLT_DIAG) )
   {
@@ -414,7 +419,7 @@ bool find_xy_3D
 /*
  * It looks like we have valid data.  Carry on
  */
-  x = sq(s->a + estimate) - sq(z_offset_clock);
+  x = sq(s->a + estimate); // - sq(z_offset_clock);
   if ( x < 0 )
   {
     sq(s->a + estimate);
@@ -425,7 +430,7 @@ bool find_xy_3D
   }
   ae = sqrt(x);                             // Dimenstion with error included
   
-  x = sq(s->b + estimate) - sq(z_offset_clock);
+  x = sq(s->b + estimate); // - sq(z_offset_clock);
   if ( x < 0 )
   {
     if ( DLT(DLT_DIAG) )
@@ -688,6 +693,7 @@ void send_miss
         token_poll();
       }
       set_status_LED(LED_WIFI_SEND);
+      timer_delete(&wdt);
     }
   }
   
@@ -716,9 +722,6 @@ void send_miss
     sprintf(str, ", \"x\":0, \"y\":0 ");
     serial_to_all(str, ALL);
   }
-
-
-  
 #endif
 
 #if ( S_TIMERS )

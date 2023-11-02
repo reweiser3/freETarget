@@ -388,10 +388,10 @@ void read_timers
   }
 
 #if ( COMPENSATE_RISE_TIME )
-  for (i=0; i<=4; i++)   // Add the rise time to the signal to get a better estimate
+  for (i=N; i > W; i++)   // Add the rise time to the signal to get a better estimate
   {
-    delta_t = *(timer_ptr + i + 4) - TIME_ISR;    // Time from VREF_LO to VREF_HI
-    adjust_t = delta_t * ((json_vref_hi - json_vref_lo) / json_vref_lo);
+    delta_t = *(timer_ptr + i + 4);              // Time from VREF_LO to VREF_HI
+    adjust_t = delta_t * (json_vref_lo / (json_vref_hi - json_vref_lo));
     *(timer_ptr + i) += adjust_t;
   }
 #endif
@@ -436,7 +436,7 @@ void drive_paper(void)
 {
   volatile unsigned int paper_time;
 
-  if ( DLT(DLT_CRITICAL) )
+  if ( DLT(DLT_DIAG) )
   {
     printf("Advancing paper: %dms", json_paper_time);
   }
@@ -447,14 +447,14 @@ void drive_paper(void)
  */
   timer_new(&paper_time, json_paper_time);  // Create the timer
   paper_on_off(true);                       // Motor ON
-//  while ( paper_time != 0 )
-//  {
-//    continue;
-//  }
-//  paper_on_off(false);                      // Motor OFF
+  while ( paper_time != 0 )
+  {
+    continue;
+  }
+  paper_on_off(false);                      // Motor OFF
 
-//  timer_delete(&paper_time);                // Finished with the timer
-  
+  timer_delete(&paper_time);                // Finished with the timer
+
  /*
   * All done, return
   */

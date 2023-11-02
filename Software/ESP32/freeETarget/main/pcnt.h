@@ -31,6 +31,4 @@ void pcnt_test(void);                                   // Trigger the counters 
 #define SOUTH_HI    6
 #define WEST_HI     7
 
-#define TIME_ISR   5                    // On average reading the clock occurs 5 clock ticks after the interrupt
-
 #endif

@@ -691,12 +691,12 @@ static void show_test(int test_number)
 
   trace |= DLT_CRITICAL;        // Critical is always enabled
     
-  if ( trace & DLT_CRITICAL)    {sprintf(s, "\r\rDLT CRITICAL");   serial_to_all(s, ALL);}
-  if ( trace & DLT_APPLICATION) {sprintf(s, "\r\nDLT APPLICATON"); serial_to_all(s, ALL);}
-  if ( trace & DLT_DIAG)        {sprintf(s, "\r\nDLT DIAG");       serial_to_all(s, ALL);}
-  if ( trace & DLT_INFO)        {sprintf(s, "\r\nDLT INFO");       serial_to_all(s, ALL);}
+  if ( trace & DLT_CRITICAL)    {sprintf(s, "\r\r%03d DLT CRITICAL", DLT_CRITICAL);   serial_to_all(s, ALL);}
+  if ( trace & DLT_APPLICATION) {sprintf(s, "\r\n%03d DLT APPLICATON", DLT_APPLICATION); serial_to_all(s, ALL);}
+  if ( trace & DLT_DIAG)        {sprintf(s, "\r\n%03d DLT DIAG", DLT_DIAG);       serial_to_all(s, ALL);}
+  if ( trace & DLT_INFO)        {sprintf(s, "\r\n%03d DLT INFO", DLT_INFO);       serial_to_all(s, ALL);}
   printf("\r\n");
-  
+
   is_trace = trace;
   return;   
  }
