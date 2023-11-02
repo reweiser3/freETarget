@@ -35,9 +35,8 @@ static unsigned int set_mode(void);     // Set the target running mode
 static unsigned int arm(void);          // Arm the circuit for a shot
 static unsigned int wait(void);         // Wait for the shot to arrive
 static unsigned int reduce(void);       // Reduce the shot data
-static unsigned int finish(void);       // Finish uip and start over
-static void send_keep_alive(void);      // Send out at TCPIP message    
-static bool discard_shot(void);       // In TabataThrow away the shot
+static unsigned int finish(void);       // Finish uip and start over  
+static bool discard_shot(void);         // In TabataThrow away the shot
 static void freeETarget_task(void);
 extern void gpio_init(void);
 
@@ -165,15 +164,11 @@ void freeETarget_init(void)
  * 
  *----------------------------------------------------------------
  */
-#define SET_MODE      0           // Set the operating mode
-#define ARM        (SET_MODE+1)   // State is ready to ARM
-#define WAIT       (ARM+1)        // ARM the circuit and wait for a shot
-#define REDUCE     (WAIT+1)       // Reduce the data
-#define FINISH     (REDUCE+1)     // Wait for the shot to end
+#define START      0                  // Set the operating mode
+#define WAIT       (START+1)          // ARM the circuit and wait for a shot
+#define REDUCE     (WAIT+1)           // Reduce the data and send the score
 
-unsigned int state = SET_MODE;
-unsigned int old_state = ~SET_MODE;
-
+unsigned int state = START;
 unsigned int  sensor_status;          // Record which sensors contain valid data
 unsigned int  location;               // Sensor location 
 
@@ -187,60 +182,27 @@ void freeETarget_target_loop(void* arg)
  * First thing, handle polled devices
  */
     tabata(false);                  // Update the Tabata state
- 
-/*
- * Take care of the TCPIP keep alive
- */
-     if ( (json_keep_alive != 0)
-      && (keep_alive == 0) )              // Time in seconds
-    {
-      send_keep_alive();
-      keep_alive = json_keep_alive * ONE_SECOND;
-    }
-
-/*
- * Take care of the low power mode
- */
-    if ( (json_power_save != 0 ) 
-         && (power_save == 0) )                         // Time in minutes
-    {
-      bye(0);                                           // Dim the lights
-      power_save = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L;   // Came back. 
-      state = SET_MODE;                                 // Reset everything just in case
-    }
 
 /*
  * Cycle through the state machine
  */
-    if ( (state != old_state) 
-        && DLT(DLT_APPLICATION) )
-    {
-      printf("Loop State: %s", loop_name[state]);;
-    } 
-    old_state = state;
   
     switch (state)
     {
-    default:
-    case SET_MODE:    // Start of the loop
-      state = set_mode();
-      break;
-
-    case ARM:         // Arm the circuit
-      state = arm();
-      break;
-
-    case WAIT:        // Wait for the shot to appear
-      state = wait();
-      break;
-
-    case REDUCE:     // Reduce the result of one or more shots
-      state = reduce();
-      break;
-
-    case FINISH:     // Finish up the cycle by movint the witness paper
-      state = finish();
-      break;
+      default:
+      case START:    // Start of the loop
+        set_mode();
+        arm();
+        state = WAIT;
+        break;
+    
+      case WAIT:
+        if ( wait() == REDUCE )
+        {
+          reduce();
+          state = START;
+        }
+        break;
     }
   
 /*
@@ -293,7 +255,7 @@ void freeETarget_target_loop(void* arg)
 /*
  * Proceed to the ARM state
  */
-  return ARM;                      // Carry on to the target
+  return WAIT;                      // Carry on to the target
  }
     
 /*----------------------------------------------------------------
@@ -391,7 +353,7 @@ unsigned int arm(void)
 /*
  * Got an error, try to arm again
  */
-  return ARM;
+  return WAIT;
 }
    
 /*----------------------------------------------------------------
@@ -428,7 +390,7 @@ unsigned int wait(void)
       {
         printf("Rapid fire complete");
       }
-      return FINISH;                   // Finish this rapid fire cycle
+      return REDUCE;                   // Finish this rapid fire cycle
     }
     else
     {
@@ -479,7 +441,7 @@ unsigned int reduce(void)
   {
     last_shot = this_shot;
     send_miss(&record[last_shot]);
-    return FINISH;                                              // Throw out any shots while dark
+    return START;                                              // Throw out any shots while dark
   }
   
 /*
@@ -553,32 +515,12 @@ unsigned int reduce(void)
  */
   if ( state_timer == 0 )
   {
-    return FINISH;
+    return START;
   } 
   else
   {
     return WAIT;
   }
-}
-    
-/*----------------------------------------------------------------
- * 
- * @function: finish()
- * 
- * @brief: Finish up the shot cycle 
- * 
- * @return: Retrn to the SET_MODE state
- *
- *----------------------------------------------------------------
- *
- *--------------------------------------------------------------*/
-unsigned int finish(void)
-{
- 
-/*
- * All done, return
- */
-  return SET_MODE;
 }
 
 /*----------------------------------------------------------------
@@ -941,10 +883,12 @@ void rapid_enable
  *----------------------------------------------------------------
  *
  * This function allows the user to remotly shut down the unit
- * when not in use
+ * when not in use.
+ * 
+ * This is called every second from the synchronous scheduler
  * 
  *--------------------------------------------------------------*/
-void bye(unsigned int x)
+void bye(void)
 {
 /*
  * The BYE function does not work if we are a token ring.
@@ -953,37 +897,46 @@ void bye(unsigned int x)
   {
     return;
   }
-  
+
+  if ( json_power_save != 0 ) 
+  {
+    if ( power_save != 0 )                         // Time in minutes
+    {
+      power_save--;
+    }
+    else
+    {
+      power_save = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L;
 /*
  * Say Good Night Gracie!
  */
-  serial_to_all("{\"GOOD_BYE\":0}", ALL);
-  vTaskDelay(ONE_SECOND);
-  tabata_enable(false);             // Turn off any automatic cycles 
-  rapid_enable(false);
-  set_LED_PWM(0);                   // Going to sleep 
-  
+      serial_to_all("{\"GOOD_BYE\":0}", ALL);
+      tabata_enable(false);             // Turn off any automatic cycles 
+      rapid_enable(false);
+      set_LED_PWM(0);                   // Going to sleep 
 /*
  * Loop waiting for something to happen
  */ 
-  serial_flush(ALL);                // Purge the com port
+    serial_flush(ALL);                // Purge the com port
   
-  while( (DIP_SW_A == 0)            // Wait for the switch to be pressed
-        && (DIP_SW_B == 0)          // Or the switch to be pressed
+      while( (DIP_SW_A == 0)            // Wait for the switch to be pressed
+        && (DIP_SW_B == 0)            // Or the switch to be pressed
         && ( serial_available(ALL) == 0)// Or a character to arrive
-        && ( is_running() == 0) )   // Or a shot arrives
-  {
+        && ( is_running() == 0) )     // Or a shot arrives
+      {
+          vTaskDelay(1);              // Give control back to the scheduler
 //    esp01_receive();                // Keep polling the WiFi to see if anything 
-  }                                 // turns up
+      }                               // turns up
   
-  hello();                          // Back in action
+      hello();                          // Back in action
   
-  while ( (DIP_SW_A == 1)           // Wait here for both switches to be released
+      while ( (DIP_SW_A == 1)           // Wait here for both switches to be released
             || ( DIP_SW_B == 1 ) )
-  {
-    continue;
-  }  
-  
+      {
+        vTaskDelay(1);              // Give control back to the scheduler
+      }  
+    }
+  }
 /*
  * Come out of sleep
  */
@@ -1029,19 +982,24 @@ void hello(void)
  * 
  *----------------------------------------------------------------
  *
- * When the keep alive expires, send a new one out and reset.
- * 
- * It is sent out to the USB port as a diagnostic check 
+ * This is called every second to send out the keep alive to the 
+ * TCPIP server
  * 
  *--------------------------------------------------------------*/
-static void send_keep_alive(void)
+void send_keep_alive(void)
 {
   char str[32];
   static int keep_alive_count = 0;
+  static int keep_alive = 0;
 
-  sprintf(str, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);
-  serial_to_all(str, TCPIP);
-  
+  if ( (json_keep_alive != 0)
+      && (keep_alive == 0) )              // Time in seconds
+  {
+    sprintf(str, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);
+    serial_to_all(str, TCPIP);
+    keep_alive = json_keep_alive;
+  }
+
   return;
 }
 

@@ -57,7 +57,12 @@
 #define E       1                                     // Index to East Timer
 #define S       2                                     // Index to South Timer
 #define W       3                                     // Index to West Timer
-#define MISS    4                                     // Timer was a miss
+#define N_lo    4
+#define E_lo    5
+#define S_lo    6
+#define W_lo    7
+
+#define MISS    9                                     // Timer was a miss
 
 #define PI 3.14159269
 #define PI_ON_4 (PI / 4.0d)
@@ -68,8 +73,9 @@
  */
 void freeETarget_init(void);                          // Get the target software ready
 void freeETarget_target_loop(void* arg);              // Target polling loop
+void send_keep_alive(void);                           // Send out the keep alive signal for TCPIP
 void hello(void);                                     // Say Hello World
-void bye(unsigned int);                               // Shut down and say goodbye
+void bye(void);                                       // Shut down and say goodbye
 void tabata_enable(unsigned int enable);              // Arm the Tabata counters
 void rapid_enable(unsigned int enable);               // Rapid fire enable state
 void polled_target_test(void);                        // Test the target aquisition software

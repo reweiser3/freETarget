@@ -27,7 +27,8 @@
     "compute_hit.h": "c",
     "diag_tools.h": "c",
     "json.h": "c",
-    "freetarget.h": "c"
+    "freetarget.h": "c",
+    "numeric": "c"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM8",

@@ -163,7 +163,7 @@ unsigned int compute_hit
   */  
   if ( DLT(DLT_DIAG) )
   { 
-    for (i=N; i <= 8; i++)
+    for (i=N; i <= W_lo; i++)
     {
       printf("%s: %d ", which_one[i], shot->timer_count[i]);
     }
@@ -176,6 +176,7 @@ unsigned int compute_hit
   location = N;
   for (i=E; i <= W; i++)
   {
+printf("i:%d", i);
     if ( shot->timer_count[i] > reference )
     {
       reference = shot->timer_count[i];
@@ -185,7 +186,7 @@ unsigned int compute_hit
   
  if ( DLT(DLT_DIAG) )
  {
-   printf("Reference: %4.2f   location: %c", reference, nesw[location]);
+   printf("Reference: %4.2f   location: %s", reference, which_one[location]);
  }
 
 /*
@@ -193,11 +194,7 @@ unsigned int compute_hit
  */
   for (i=N; i <= W; i++)
   {
-#if ( !CLOCK_TEST )
     s[i].count = reference - shot->timer_count[i];
-#else 
-    s[i].count = json_clock[i];
-#endif
     s[i].is_valid = true;
     if ( shot->timer_count[i] == 0 )
     {
@@ -247,7 +244,7 @@ unsigned int compute_hit
     printf("Compensate Counts       ");
     for (i=N; i <= W; i++)
     {
-     printf("%s:%4.2f", which_one[i], (double)s[i].count / ((double)OSCILLATOR_MHZ));
+     printf("%s:%4.2f  ", which_one[i], (double)s[i].count / ((double)OSCILLATOR_MHZ));
     }
   }
   

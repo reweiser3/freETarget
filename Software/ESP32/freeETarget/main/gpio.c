@@ -445,13 +445,13 @@ void drive_paper(void)
  * Drive the motor on and off for the number of cycles
  * at duration
  */
-//  timer_new(&paper_time, json_paper_time);  // Create the timer
+  timer_new(&paper_time, json_paper_time);  // Create the timer
   paper_on_off(true);                       // Motor ON
 //  while ( paper_time != 0 )
 //  {
 //    continue;
 //  }
-  paper_on_off(false);                      // Motor OFF
+//  paper_on_off(false);                      // Motor OFF
 
 //  timer_delete(&paper_time);                // Finished with the timer
   

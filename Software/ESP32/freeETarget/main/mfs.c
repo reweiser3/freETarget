@@ -291,7 +291,7 @@ static void sw_state
       break;
       
    case ON_OFF:                          // Turn the target off
-      bye(0);                            // Stay in the Bye state until a wake up event comes along
+      bye();                             // Stay in the Bye state until a wake up event comes along
       break;
       
     case LED_ADJUST:

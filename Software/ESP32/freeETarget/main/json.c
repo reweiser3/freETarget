@@ -687,23 +687,16 @@ static void show_test(int test_number)
    int trace                // Trace on or off
    )
  {
-    char s[32];
+  char s[32];
 
-    trace |= DLT_CRITICAL;        // Critical is always enabled
+  trace |= DLT_CRITICAL;        // Critical is always enabled
     
-    if ( trace & DLT_CRITICAL)    {sprintf(s, "\r\rDLT CRITICAL\r\n");   serial_to_all(s, ALL);}
-    if ( trace & DLT_APPLICATION) {sprintf(s, "\r\nDLT APPLICATON\r\n"); serial_to_all(s, ALL);}
-    if ( trace & DLT_DIAG)        {sprintf(s, "\r\nDLT DIAG\r\n");       serial_to_all(s, ALL);}
-    if ( trace & DLT_INFO)        {sprintf(s, "\r\nDLT INFO\r\n");       serial_to_all(s, ALL);}
-    
-    sprintf(s, "\r\n0x01 DLT APPLICATON\r\n"); serial_to_all(s, ALL);
-    sprintf(s, "\r\n0x02 DLT DIAG\r\n");       serial_to_all(s, ALL);
-    sprintf(s, "\r\n0x04 DLT INFO\r\n");       serial_to_all(s, ALL);
-    sprintf(s, "\r\r0x89 DLT CRITICAL\r\n");   serial_to_all(s, ALL);
-
-/*
- * The DIP switch has been remotely set
- */
-   is_trace = trace;
-   return;   
+  if ( trace & DLT_CRITICAL)    {sprintf(s, "\r\rDLT CRITICAL");   serial_to_all(s, ALL);}
+  if ( trace & DLT_APPLICATION) {sprintf(s, "\r\nDLT APPLICATON"); serial_to_all(s, ALL);}
+  if ( trace & DLT_DIAG)        {sprintf(s, "\r\nDLT DIAG");       serial_to_all(s, ALL);}
+  if ( trace & DLT_INFO)        {sprintf(s, "\r\nDLT INFO");       serial_to_all(s, ALL);}
+  printf("\r\n");
+  
+  is_trace = trace;
+  return;   
  }

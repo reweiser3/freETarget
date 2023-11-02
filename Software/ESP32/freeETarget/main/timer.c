@@ -239,7 +239,7 @@ unsigned int timer_new
   {
     return 0;
   }
-  
+
   for (i=0;  i != N_TIMERS; i++ )   // Look through the space
   {
     if ( (timers[i] == 0)           // Got an empty timer slot
@@ -250,7 +250,6 @@ unsigned int timer_new
       return 1;
     }
   }
-
   if ( DLT(DLT_CRITICAL) )
   {
     printf("No space for timer");
@@ -288,36 +287,50 @@ unsigned int timer_new
  * 
  *-----------------------------------------------------
  *
- * This is a simple task scheduler to run tasks at a 
- * controlled rate.
+ * This task runs every 10ms
  * 
  *-----------------------------------------------------*/
+#define TICK    1       // 1 Tick = 10 ms
+#define BAND_100ms      (TICK * 10)
+#define BAND_500ms      (TICK * 50)
+#define BAND_1000ms     (TICK * 100)
 
 void freeETarget_synchronous
 (
     void *pvParameters              // Select IPV4 or 6
 )
 {
-  static int cycle_count;
-  static int cycle_count_500ms;
-  static int toggle;
-
-  cycle_count = 0;
-  cycle_count_500ms =0;
-  toggle = 0;
+  int cycle_count = 0;
+  int toggle =0;
 
   while (1)
   {
-    cycle_count_500ms = cycle_count % 50;
-    if ( cycle_count_500ms == 0 )
+/*
+ *  10 ms band
+ */
+    token_cycle();
+   
+/*
+ *  500 ms band
+ */
+    if ( (cycle_count  %  BAND_500ms) == 0 )
     {
       commit_status_LEDs( toggle );
+      toggle ^= 1;
       multifunction_switch();
-      toggle = !toggle;
     }
-    token_cycle();
+
+/*
+ * 1000 ms band
+ */
+    if ( (cycle_count % BAND_1000ms) == 0 )
+    {
+      bye();                                           // Dim the lights  
+      send_keep_alive();
+    }
+
     cycle_count++;
-    vTaskDelay(1);
+    vTaskDelay(ONE_SECOND/100);                         // Delay 10ms
   }
 
 }
