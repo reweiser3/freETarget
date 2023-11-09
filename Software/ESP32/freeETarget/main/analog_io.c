@@ -330,6 +330,12 @@ double humidity_RH(void)
  *--------------------------------------------------------------*/
 void set_VREF(void)
 {
+  if ( json_vref_lo >= json_vref_hi )
+  {
+    DLT(DLT_CRITICAL);
+    printf("ERROR: json_vref_lo or json_vref_hi are out of order.");
+  }
+
   DAC_write(0, json_vref_lo);
   DAC_write(1, json_vref_hi);
 

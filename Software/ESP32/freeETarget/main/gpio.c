@@ -388,7 +388,7 @@ void read_timers
   }
 
 #if ( COMPENSATE_RISE_TIME )
-  for (i=N; i > W; i++)   // Add the rise time to the signal to get a better estimate
+  for (i=N; i <= W; i++)            // Add the rise time to the signal to get a better estimate
   {
     delta_t = *(timer_ptr + i + 4);              // Time from VREF_LO to VREF_HI
     adjust_t = delta_t * (json_vref_lo / (json_vref_hi - json_vref_lo));
