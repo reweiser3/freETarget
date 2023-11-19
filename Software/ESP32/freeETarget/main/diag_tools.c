@@ -11,6 +11,7 @@
  ******************************************************************************/
 
 #include "stdbool.h"
+#include "driver\gpio.h"
 #include "freETarget.h"
 #include "gpio.h"
 #include "diag_tools.h"
@@ -26,7 +27,7 @@
 #include "pcnt.h"
 #include "analog_io.h"
 #include "gpio_define.h"
-#include "driver\gpio.h"
+#include "WiFi.h"
 
 const char* which_one[] = {"North_lo", "East_lo ", "South_lo", "West_lo ", "North_hi", "East_hi ", "South_hi", "West_hi "};
 
@@ -170,6 +171,20 @@ void self_test
  */
     case T_TARGET_2:
       interrupt_target_test();
+      break; 
+
+/*
+ *  Test 12: Start WiFi AP
+ */
+    case T_WIFI_AP:
+      WiFi_AP_init();
+      break; 
+
+/*
+ *  Test 13: Start WiFi Station
+ */
+    case T_WIFI_STATION:
+      WiFi_station_init();
       break; 
 
   }

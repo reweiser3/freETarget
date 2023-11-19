@@ -12,7 +12,8 @@
  * Global functions
  */
 void WiFi_init(void);                         // Initialize the WiFi
-void WiFi_test(void);                         // Test the WiFi
+void WiFi_AP_init(void);                      // Initialize the WiFi as an Access Point
+void WiFi_station_init(void);                 // Initialize the WiFI as a station
 
 /*
  * #defines

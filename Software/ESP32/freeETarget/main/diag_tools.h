@@ -20,18 +20,20 @@ void    POST_trip_point(void);                          // Display the set point
 void    set_trip_point(int x);                          // Calibrate the trip point
 bool  do_dlt(unsigned int level);                     // Diagnostics Log and Trace
 
-#define T_HELP         0        // Help test
-#define T_DIGITAL      1        // Digital test
-#define T_PAPER        2        // Advance paper backer
-#define T_LED          3        // Test the LED PWM
-#define T_STATUS       4        // Send colours across the status LEDs
-#define T_TEMPERATURE  5        // Read the temperature and humidity
-#define T_DAC          6        // Ramp the DAC outputs 
-#define T_PCNT         7        // PCNT register test
-#define T_SENSOR       8        // Sensor POST test
-#define T_AUX_SERIAL   9        // AUX Serial Port loopback
-#define T_TARGET      10        // Polled target sensor test
-#define T_TARGET_2    11        // Interrupt target test
+#define T_HELP          0        // Help test
+#define T_DIGITAL       1        // Digital test
+#define T_PAPER         2        // Advance paper backer
+#define T_LED           3        // Test the LED PWM
+#define T_STATUS        4        // Send colours across the status LEDs
+#define T_TEMPERATURE   5        // Read the temperature and humidity
+#define T_DAC           6        // Ramp the DAC outputs 
+#define T_PCNT          7        // PCNT register test
+#define T_SENSOR        8        // Sensor POST test
+#define T_AUX_SERIAL    9        // AUX Serial Port loopback
+#define T_TARGET       10        // Polled target sensor test
+#define T_TARGET_2     11        // Interrupt target test
+#define T_WIFI_AP      12        // Test WiFi as an Access Point
+#define T_WIFI_STATION 13        // Test WiFI as a station 
 
 /*
  * LED status messages
