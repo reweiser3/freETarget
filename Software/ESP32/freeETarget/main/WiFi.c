@@ -20,16 +20,15 @@
  * 
  *****************************************************************************/
 #include <string.h>
-#include <sys/param.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/event_groups.h"
 
 #include "esp_system.h"
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
-#include "esp_netif.h"
 
 #include "lwip/err.h"
 #include "lwip/sockets.h"
@@ -46,8 +45,27 @@
 #define KEEPALIVE_INTERVAL          CONFIG_EXAMPLE_KEEPALIVE_INTERVAL
 #define KEEPALIVE_COUNT             CONFIG_EXAMPLE_KEEPALIVE_COUNT
 
-wifi_config_t        WiFi_config;
-wifi_init_config_t   WiFi_init_config;
+/*
+ * Macros
+ */
+#define WIFI_CONNECTED_BIT BIT0           // we are connected to the AP with an IP
+#define WIFI_FAIL_BIT      BIT1           // we failed to connect after the maximum amount of retries */
+#define WIFI_MAX_RETRY     3              // Try 3x
+
+/*
+ * Variables
+ */
+static wifi_config_t        WiFi_config;
+static EventGroupHandle_t s_wifi_event_group;
+static esp_event_handler_instance_t instance_any_id;
+static esp_event_handler_instance_t instance_got_ip;
+static EventBits_t bits;
+static int s_retry_num = 0;
+
+/*
+ * Private Functions
+ */
+static void WiFi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 
 /*****************************************************************************
  *
@@ -108,7 +126,7 @@ void WiFi_AP_init(void)
     
    ESP_ERROR_CHECK(esp_netif_init());
    esp_netif_create_default_wifi_ap();
-   
+   wifi_init_config_t   WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
    esp_wifi_init(&WiFi_init_config);           // Initialize the configuration
    strcpy((char*)&WiFi_config.ap.ssid, names[json_name_id]);
    WiFi_config.ap.password[0]      = 0;
@@ -120,8 +138,8 @@ void WiFi_AP_init(void)
    WiFi_config.ap.beacon_interval  = 1000;       // Beacon interval which should be multiples of 100
    WiFi_config.ap.pairwise_cipher  = 0;
    WiFi_config.ap.ftm_responder    = 0;          // Enable FTM Responder mode
-   WiFi_config.ap.pmf_cfg.capable  = 0;          // Configuration for Protected Management Frame
-   WiFi_config.ap.pmf_cfg.required = 0;          // Configuration for Protected Management Frame
+   WiFi_config.ap.pmf_cfg.capable  = true;       // Configuration for Protected Management Frame
+   WiFi_config.ap.pmf_cfg.required = false;      // Configuration for Protected Management Frame
    esp_wifi_set_mode(WIFI_MODE_AP);
    esp_wifi_set_config(WIFI_MODE_AP, &WiFi_config);
    
@@ -142,18 +160,29 @@ void WiFi_AP_init(void)
  * 
  * The target connects to an SSID and lets clients connect to it.
  * 
+ * See: https://github.com/espressif/esp-idf/blob/v4.3/examples/wifi/getting_started/station/main/station_example_main.c
+ * 
  *******************************************************************************/
 void WiFi_station_init(void)
 {
    DLT(DLT_CRITICAL);
    printf("WiFi_station_init\r\n");
 
-   ESP_ERROR_CHECK(esp_netif_init());
+   s_wifi_event_group = xEventGroupCreate();
+   esp_netif_init();
+
+   esp_event_loop_create_default();
    esp_netif_create_default_wifi_sta();
 
+   wifi_init_config_t   WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
    esp_wifi_init(&WiFi_init_config);           // Initialize the configuration
-   strcpy((char*)&WiFi_config.sta.ssid, json_wifi_ssid);
+
+   ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFi_event_handler, NULL, &instance_any_id));
+   ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &WiFi_event_handler, NULL, &instance_got_ip));
+
+   strcpy((char*)&WiFi_config.sta.ssid, "TargetRange");
    strcpy((char*)&WiFi_config.sta.password, json_wifi_pwd);
+   WiFi_config.sta.password[0] = 0;
    WiFi_config.sta.scan_method = WIFI_FAST_SCAN;
    WiFi_config.sta.bssid_set   = 0;
    WiFi_config.sta.bssid[0]    = 0;                // MAC address of target AP Not Used
@@ -166,6 +195,12 @@ void WiFi_station_init(void)
    esp_wifi_set_config(WIFI_MODE_STA, &WiFi_config);
    esp_wifi_start();                      // Start the WiFi
    esp_wifi_connect();
+
+   bits = xEventGroupWaitBits(s_wifi_event_group,
+            WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
+            pdFALSE,
+            pdFALSE,
+            portMAX_DELAY);
 /*
  *  All done
  */
@@ -173,3 +208,74 @@ void WiFi_station_init(void)
    return;
 }
 
+
+/*****************************************************************************
+ *
+ * @function:WiFi_event_handler
+ *
+ * @brief:   Manage events coming from the FreeRTOS event handler
+ * 
+ * @return:   None
+ *
+ ******************************************************************************
+ *
+ * The initialization determines if the target is a station
+ * or an access point (AP) that provides the SSID to connect to.
+ * 
+ * Once that is done the appropriate configuration is made and the target enabled.
+ * 
+ *******************************************************************************/
+static void WiFi_event_handler
+(
+   void* arg, 
+   esp_event_base_t event_base,
+   int32_t event_id, 
+   void* event_data
+)
+{
+/*
+ * Check for a WiFI or IP connection
+ */
+printf("EventBase %s", event_base);
+   if ( event_base == WIFI_EVENT )
+   {
+      if ( event_id == WIFI_EVENT_STA_START)
+      {
+         esp_wifi_connect();
+      }
+
+      if ( event_id == WIFI_EVENT_STA_DISCONNECTED )
+      {
+         if (s_retry_num < WIFI_MAX_RETRY)
+         {
+            esp_wifi_connect();
+            s_retry_num++;
+            DLT(DLT_INFO); printf("retry to connect to the AP\r\n");
+         }
+         else
+         {
+            xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+         }
+         DLT(DLT_INFO); printf("retry to connect to the AP failed\r\n");
+      }
+   }   
+   
+   if ( event_base == IP_EVENT )
+   {
+      if ( event_id == IP_EVENT_STA_GOT_IP )
+      {
+         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+         if ( DLT(DLT_INFO ) )
+         {
+            printf("got ip: %d.%d.%d.%d", IP2STR(&event->ip_info.ip));
+         }
+         s_retry_num = 0;
+         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+      }
+   }
+
+/*
+ * All done, return
+ */
+   return;
+}
