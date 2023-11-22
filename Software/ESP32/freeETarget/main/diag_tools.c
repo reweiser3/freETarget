@@ -422,7 +422,7 @@ bool do_dlt
     return false;      // Send out if the trace is higher than the level 
   }
 
-  printf("\n\r%10.6fs: ",esp_timer_get_time()/1000000.0 );
+  printf("\n\rI (%d) ", (int)(esp_timer_get_time()/1000.0) );
 
   return true;
 }
