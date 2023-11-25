@@ -362,7 +362,7 @@ void serial_to_all
  * 
  * @function: serial_to_tcpip
  * 
- * @brief:    Get waiting bytes for the tcpip
+ * @brief:    Returns waiting characters from the TCPIP buffer
  * 
  * @return:   Buffer updated
  * 
@@ -372,7 +372,7 @@ void serial_to_all
  * of bytes back to the TCPIP handler for output
  * 
  ******************************************************************************/
-int serial_to_tcpip
+int tcpip_send
 (
   char* buffer,         // Where to return the bytes
   int   length          // Maximum transfer size

@@ -17,6 +17,7 @@
 #include "json.h"
 #include "timer.h"
 #include "serial_io.h"
+#include "wifi.h"
 
 void app_main(void)
 {
@@ -32,6 +33,7 @@ void app_main(void)
 //   xTaskCreate(tcp_server_task,  "tcp_server", 4096, (void*)AF_INET, 5, NULL);
    xTaskCreate(freeETarget_json,        "json_task",                4096, NULL, 5, NULL);
    xTaskCreate(freeETarget_synchronous, "freeETarget_synchronous",  4096, NULL, 4, NULL);
-   xTaskCreate(freeETarget_target_loop,        "freeETarget_target_loop",  4096, NULL, 4, NULL);
+   xTaskCreate(freeETarget_target_loop, "freeETarget_target_loop",  4096, NULL, 4, NULL);
+//   xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",          4096, NULL, 5, NULL);
    freeETarget_timer_init();
 }

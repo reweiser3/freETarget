@@ -181,9 +181,23 @@ void self_test
       break; 
 
 /*
- *  Test 13: Start WiFi Station
+ *  Test 13: Start WiFi station
  */
     case T_WIFI_STATION:
+      WiFi_station_init();
+      break; 
+
+/*
+ *  Test 14: Enable the WiFi Server
+ */
+    case T_WIFI_SERVER:
+      xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",          4096, NULL, 5, NULL);
+      break; 
+
+/*
+ *  Test 15: Send and receive something
+ */
+    case T_WIFI_TXRX:
       WiFi_station_init();
       break; 
 
@@ -358,8 +372,6 @@ void show_sensor_status
 #endif
 
   printf("  Face Strike: %d", face_strike);
-  
-//  printf("  V_Ref:%4.2f",TO_VOLTS(analogRead(V_REFERENCE)));
   
   printf("  Temperature: %4.2f", temperature_C());
   

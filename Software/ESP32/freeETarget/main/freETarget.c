@@ -907,6 +907,7 @@ void bye(void)
     else
     {
       power_save = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L;
+
 /*
  * Say Good Night Gracie!
  */
@@ -967,7 +968,7 @@ void hello(void)
  * Woken up again
  */  
   set_LED_PWM_now(json_LED_PWM);
-  power_save = json_power_save * ONE_SECOND * 60L;   // and reset the power save time
+  power_save = json_power_save * (unsigned long)ONE_SECOND * 60L;   // and reset the power save time
   
   return;
 }

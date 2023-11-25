@@ -34,6 +34,8 @@ bool  do_dlt(unsigned int level);                     // Diagnostics Log and Tra
 #define T_TARGET_2     11        // Interrupt target test
 #define T_WIFI_AP      12        // Test WiFi as an Access Point
 #define T_WIFI_STATION 13        // Test WiFI as a station 
+#define T_WIFI_SERVER  14        // Enable the WiFI Server
+#define T_WIFI_TXRX    15        // Send an receive over the WiFi conduit
 
 /*
  * LED status messages
