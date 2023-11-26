@@ -83,6 +83,10 @@ void self_test
       printf("\r\n 9 - AUX Port loopback");
       printf("\r\n10 - Polled Target Test");
       printf("\r\n11 - Interrupt Target Test");
+      printf("\r\n12 - Test WiFi as an Access Point");
+      printf("\r\n13 - Test WiFI as a station"); 
+      printf("\r\n14 - Enable the WiFi Server");
+      printf("\r\n15 - Loopback the TCPIP data");
       printf("\r\n");
       break;
 
@@ -197,8 +201,8 @@ void self_test
 /*
  *  Test 15: Send and receive something
  */
-    case T_WIFI_TXRX:
-      WiFi_station_init();
+    case T_WIFI_LOOPBACK:
+      WiFi_loopback_test();
       break; 
 
   }

@@ -15,6 +15,7 @@ void WiFi_init(void);                         // Initialize the WiFi
 void WiFi_AP_init(void);                      // Initialize the WiFi as an Access Point
 void WiFi_station_init(void);                 // Initialize the WiFI as a station
 void WiFi_tcp_server_task(void *pvParameters);// TCP Server task
+void WiFi_loopback_test(void);                // Loopback the TCPIP channel
 
 /*
  * #defines

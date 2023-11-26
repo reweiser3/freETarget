@@ -50,13 +50,14 @@ uart_config_t uart_aux_config =
 const int uart_aux_size= (1024 * 2);
 QueueHandle_t uart_aux_queue;
 
-static char tcpip_in[1024];       // TCPIP input buffer
-static int  in_in_ptr  = 0;       // Queue pointers
-static int  in_out_ptr = 0;       
+typedef struct queue_struct  {
+    char queue[1024];                 // Holding queue
+    int  in;                          // Index of input characters
+    int  out;                         // Index of output characters
+} queue_struct_t;
 
-static char tcpip_out[1024];      // TCPOP output buffer
-static int  out_in_ptr  = 0;      // Queue pointers
-static int  out_out_ptr = 0;
+static queue_struct_t in_buffer;      // TCPIP input buffer
+static queue_struct_t out_buffer;     // TCPIP input buffer
 
 /******************************************************************************
  * 
@@ -97,10 +98,10 @@ void serial_io_init(void)
  /* 
   *  Prepare the TCPIP queues
   */
-  in_in_ptr   = 0;      // Queue pointers
-  in_out_ptr  = 0;       
-  out_in_ptr  = 0;      // Queue pointers
-  out_out_ptr = 0;
+  in_buffer.in   = 0;      // Queue pointers
+  in_buffer.out  = 0;       
+  out_buffer.in  = 0;      // Queue pointers
+  out_buffer.out = 0;
 
 /*
  * All done, return
@@ -147,12 +148,12 @@ unsigned int serial_available
 
   if ( tcpip )
   {
-    if (in_in_ptr != in_out_ptr )
+    if (in_buffer.in != in_buffer.out )
     {
-      length = in_in_ptr - in_out_ptr;
+      length = in_buffer.in - in_buffer.out;
       if ( length < 0 )
       {
-        length += sizeof(tcpip_in);
+        length += sizeof(in_buffer.queue);
       }
       n_available += length;
     }
@@ -194,8 +195,8 @@ void serial_flush
 
   if ( tcpip )
   {
-    in_in_ptr  = 0;
-    in_out_ptr = 0;
+    in_buffer.in  = 0;
+    in_buffer.out = 0;
   }
   return;
 }
@@ -249,11 +250,8 @@ char serial_getch
  */
   if ( tcpip )
   {
-    if ( in_in_ptr != in_out_ptr )
-    {
-      ch = tcpip_in[in_out_ptr];
-      in_out_ptr = (in_out_ptr+1) % sizeof(tcpip_in);
-    }
+    ch = in_buffer.queue[in_buffer.out];
+    in_buffer.out = (in_buffer.out+1) % sizeof(in_buffer.queue);
     return ch;
   }
 
@@ -300,8 +298,8 @@ char serial_getch
   
   if ( tcpip )
   {
-    tcpip_out[out_out_ptr] = ch;
-    out_out_ptr = (out_out_ptr + 1) % sizeof(tcpip_out);
+    out_buffer.queue[out_buffer.in] = ch;
+    out_buffer.out = (out_buffer.in + 1) % sizeof(out_buffer.queue);
   }
 
 /*
@@ -346,9 +344,9 @@ void serial_to_all
   {
     while(len)
     {
-      tcpip_out[out_out_ptr] = *str;
+      out_buffer.queue[out_buffer.out] = *str;
       str++;
-      out_out_ptr = (out_out_ptr + 1) % sizeof(tcpip_out);
+      out_buffer.out = (out_buffer.out + 1) % sizeof(out_buffer.queue);
     }
   }
 
@@ -360,7 +358,7 @@ void serial_to_all
 
 /*******************************************************************************
  * 
- * @function: serial_to_tcpip
+ * @function: tcpip_get
  * 
  * @brief:    Returns waiting characters from the TCPIP buffer
  * 
@@ -368,11 +366,50 @@ void serial_to_all
  * 
  *******************************************************************************
  *
- * Called from the TCPIP driver, this function returns the requested number
- * of bytes back to the TCPIP handler for output
+ * Called from the TCPIP driver, this function returns returns characters 
+ * waiting in the TCPIP queue.
  * 
  ******************************************************************************/
-int tcpip_send
+int tcpip_get
+(
+  char* buffer,         // Where to return the bytes
+  int   length          // Maximum transfer size
+)
+{
+  int bytes_read;       // Number of bytes read
+
+  bytes_read = 0;
+  while ( length )
+  {
+    *buffer = out_buffer.queue[out_buffer.out];
+    buffer++;
+    out_buffer.out = (out_buffer.out+1) % sizeof(out_buffer.queue);
+    length--;
+    bytes_read++;
+  }
+
+/*
+ *  All done, return the number of bytes read
+ */
+  return bytes_read;
+}
+
+
+/*******************************************************************************
+ * 
+ * @function: tcpip_put
+ * 
+ * @brief:    Put new characters into the TCPIP output buffer
+ * 
+ * @return:   Buffer updated
+ * 
+ *******************************************************************************
+ *
+ * Characters from the application are transferred to a queue for subsequent 
+ * output to the TCPIP driver
+ * 
+ ******************************************************************************/
+int tcpip_put
 (
   char* buffer,         // Where to return the bytes
   int   length          // Maximum transfer size
@@ -383,8 +420,9 @@ int tcpip_send
   i=0;
   while ( length )
   {
-    *buffer = tcpip_out[out_out_ptr];
-    out_out_ptr = (out_out_ptr+1) % sizeof(tcpip_out);
+    in_buffer.queue[in_buffer.in] = *buffer;
+    buffer++;
+    in_buffer.in = (in_buffer.in+1) % sizeof(in_buffer.queue);
     length--;
     i++;
   }
