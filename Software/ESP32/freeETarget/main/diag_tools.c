@@ -195,13 +195,16 @@ void self_test
  *  Test 14: Enable the WiFi Server
  */
     case T_WIFI_SERVER:
-      xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",          4096, NULL, 5, NULL);
+      xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",      4096, NULL, 5, NULL);
       break; 
 
 /*
  *  Test 15: Send and receive something
  */
     case T_WIFI_LOOPBACK:
+      WiFi_station_init();
+      xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",           4096, NULL, 5, NULL);
+      xTaskCreate(tcpip_accept_poll,       "tcpip_accept_poll",    4096, NULL, 4, NULL);
       WiFi_loopback_test();
       break; 
 

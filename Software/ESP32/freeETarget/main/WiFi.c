@@ -17,8 +17,9 @@
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/api-reference/network/esp_wifi.html
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/network/esp_netif.html
  * https://medium.com/@fatehsali517/how-to-connect-esp32-to-wifi-using-esp-idf-iot-development-framework-d798dc89f0d6
- * 
- *****************************************************************************/
+ * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/lwip.html
+ *
+ * *****************************************************************************/
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -316,11 +317,13 @@ void WiFi_event_handler
  */
     if (event_id == WIFI_EVENT_AP_STACONNECTED)
     {
+      printf("AP Connected");
       wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
     } 
    
    if (event_id == WIFI_EVENT_AP_STADISCONNECTED)
    {
+        printf("STATION disconnected");
       wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
    }
 
@@ -370,72 +373,11 @@ void WiFi_tcp_server_task(void *pvParameters)
    printf("WiFi_tcp_server_task()\r\n");
 
 /*
- * Start the server
- */
-   for (i=0; i != MAX_SOCKETS; i++)
-   {
-      socket_list[i] = -1;
-   }
-
-   struct sockaddr_in *dest_addr_ip4 = (struct sockaddr_in *)&dest_addr;
-   dest_addr_ip4->sin_addr.s_addr = htonl(INADDR_ANY);
-   dest_addr_ip4->sin_family = AF_INET;
-   dest_addr_ip4->sin_port = htons(PORT);
-   ip_protocol = IPPROTO_IP;
-
-   listen_sock = socket(AF_INET, SOCK_STREAM, ip_protocol);
-   if (listen_sock < 0) 
-   {
-      DLT(DLT_CRITICAL);
-      printf("Unable to create socket: errno %d\r\n", errno);
-      vTaskDelete(NULL);
-      return;
-   }
-
-   option = 1;
-   setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
-   bind(listen_sock, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
-   listen(listen_sock, 1);
-
-/*
- * Wait here for sockets to be connected
- */
-   while (1)
-   {
-        sock = accept(listen_sock, (struct sockaddr *)&source_addr, &addr_len);
-        if (sock > 0)
-        {
-            for (i= 0; i != MAX_SOCKETS; i++ )
-            {
-                if  (socket_list[i] == -1 )
-                {
-                    socket_list[i] = sock;
-                    send(sock, greeting, sizeof(greeting), 0);
-                    break;
-                }
-            }
-
-/*
- * Set tcp keepalive option
- */
-            setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &keepAlive, sizeof(int));
-            setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE, &keepIdle, sizeof(int));
-            setsockopt(sock, IPPROTO_TCP, TCP_KEEPINTVL, &keepInterval, sizeof(int));
-            setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT, &keepCount, sizeof(int));
-
-            if ( DLT(DLT_CRITICAL) )
-            {         
-                inet_ntoa_r(((struct sockaddr_in *)&source_addr)->sin_addr, addr_str, sizeof(addr_str) - 1);
-                printf("Socket accepted ip address: %s\r\n", addr_str);
-            }
-        }
-
-/*
  *  Move data in and out of the TCP queues
  */
+    while (1)
+    {
         tcpip_server_io();
-
-
 /*
  *  Time out till the next time
  */
@@ -463,35 +405,23 @@ static void tcpip_server_io(void)
     char rx_buffer[128];
     int  to_write;
     int  i;
+    int  buffer_offset;
 
-/*
- *  In from TCPIP
- */
-    for (i=0; i != MAX_SOCKETS; i++)
-    {
-        if (socket_list[i] > 0 )
-        {
-            length = recv(socket_list[i], rx_buffer, sizeof(rx_buffer) - 1, 0);
-            while ( length > 0 )
-            {
-                length -= tcpip_get(rx_buffer, length);
-            }
-        }
-    }
 /*
  * Out to TCPIP
  */      
-    to_write = tcpip_put(rx_buffer,  sizeof(rx_buffer));
+    to_write = tcpip_queue_2_socket(rx_buffer,  sizeof(rx_buffer));
     if ( to_write > 0 )
     {
         for (i=0; i != MAX_SOCKETS; i++)
         {
             if (socket_list[i] > 0 )
             {      
-                length = to_write;
-                while ( length != 0)
+                buffer_offset = 0;
+                while (  buffer_offset < to_write)
                 {
-                    length -= send(socket_list[i], rx_buffer + (length - to_write), to_write, 0);
+                    length = send(socket_list[i], rx_buffer + buffer_offset, to_write-buffer_offset, 0);
+                    buffer_offset += length;
                 }
             }
         }
@@ -503,6 +433,188 @@ static void tcpip_server_io(void)
     return;
 }
 
+/*****************************************************************************
+ *
+ * @function: tcpip_socket_poll()
+ *
+ * @brief:    Tasks to poll the sockets
+ * 
+ * @return:   None
+ *
+ ******************************************************************************
+ *
+ * The recv function is a blocking call that waits for something to 
+ * appear in the TCPIP channel.  
+ * 
+ * These are tasks that pend waiting for something to appear and then
+ * put it into the queue.
+ *
+ *******************************************************************************/
+void tcpip_socket_poll_0(void* parameters)
+{
+    int length;
+    char rx_buffer[256];
+
+    while (1)
+    {
+        if (socket_list[0] > 0 )
+        {
+            length = recv(socket_list[0], rx_buffer, sizeof(rx_buffer), 0 );
+            rx_buffer[length] = 0;
+            while ( length > 0 )
+            {
+                length -= tcpip_socket_2_queue(rx_buffer, length);
+            }
+        }
+        vTaskDelay(100);
+    }
+}
+
+void tcpip_socket_poll_1(void* parameters)
+{
+    int length;
+    char rx_buffer[256];
+
+    while (1)
+    {
+        if (socket_list[1] > 0 )
+        {
+            length = recv(socket_list[1], rx_buffer, sizeof(rx_buffer), 0 );
+            rx_buffer[length] = 0;
+            while ( length > 0 )
+            {
+                length -= tcpip_socket_2_queue(rx_buffer, length);
+            }
+        }
+        vTaskDelay(100);
+    }
+}
+
+void tcpip_socket_poll_2(void* parameters)
+{
+    int length;
+    char rx_buffer[256];
+
+    while (1)
+    {
+        if (socket_list[2] > 0 )
+        {
+            length = recv(socket_list[2], rx_buffer, sizeof(rx_buffer), 0 );
+            rx_buffer[length] = 0;
+            while ( length > 0 )
+            {
+                length -= tcpip_socket_2_queue(rx_buffer, length);
+            }
+        }
+        vTaskDelay(100);
+    }
+}
+
+void tcpip_socket_poll_3(void* parameters)
+{
+    int length;
+    char rx_buffer[256];
+
+    while (1)
+    {
+        if (socket_list[3] > 0 )
+        {
+            length = recv(socket_list[3], rx_buffer, sizeof(rx_buffer), 0 );
+            rx_buffer[length] = 0;
+            while ( length > 0 )
+            {
+                length -= tcpip_socket_2_queue(rx_buffer, length);
+            }
+        }
+        vTaskDelay(100);
+    }
+}
+
+void tcpip_accept_poll(void* parameters)
+{
+   char addr_str[128];
+   int ip_protocol = 0;
+   int keepAlive = 1;
+   int keepIdle = KEEPALIVE_IDLE;
+   int keepInterval = KEEPALIVE_INTERVAL;
+   int keepCount = KEEPALIVE_COUNT;
+   struct sockaddr_storage dest_addr;
+   int listen_sock;
+   int option = 1;
+   struct sockaddr_storage source_addr; // Large enough for both IPv4 or IPv6
+   socklen_t addr_len = sizeof(source_addr);
+   int sock;
+   int i;
+
+   if ( DLT(DLT_CRITICAL) )
+   {
+        printf("tcp_accept_poll\r\n");
+   }
+
+/*
+ * Start the server
+ */
+   for (i=0; i != MAX_SOCKETS; i++)
+   {
+      socket_list[i] = -1;
+   }
+
+   struct sockaddr_in *dest_addr_ip4 = (struct sockaddr_in *)&dest_addr;
+   dest_addr_ip4->sin_addr.s_addr = htonl(INADDR_ANY);
+   dest_addr_ip4->sin_family = AF_INET;
+   dest_addr_ip4->sin_port = htons(PORT);
+   ip_protocol = IPPROTO_IP;
+
+   listen_sock = socket(AF_INET, SOCK_STREAM, ip_protocol);
+   if (listen_sock < 0) 
+   {
+      DLT(DLT_CRITICAL);
+      printf("Unable to create socket: errno %d\r\n", errno);
+      vTaskDelete(NULL);
+      return;
+   }
+
+   option = 1;
+   setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+   bind(listen_sock, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
+   listen(listen_sock, 1);
+
+    while (1)
+    {
+        sock = accept(listen_sock, (struct sockaddr *)&source_addr, &addr_len);
+        if (sock > 0)
+        {
+            for (i= 0; i != MAX_SOCKETS; i++ )
+            {
+                if  (socket_list[i] == -1 )
+                {
+                    socket_list[i] = sock;
+                    send(sock, greeting, sizeof(greeting), 0);
+                    break;
+                }
+            }
+
+/*
+ * Set tcp keepalive option
+ */
+            setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &keepAlive, sizeof(int));
+            setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE, &keepIdle, sizeof(int));
+            setsockopt(sock, IPPROTO_TCP, TCP_KEEPINTVL, &keepInterval, sizeof(int));
+            setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT, &keepCount, sizeof(int));
+
+            if ( DLT(DLT_CRITICAL) )
+            {         
+                inet_ntoa_r(((struct sockaddr_in *)&source_addr)->sin_addr, addr_str, sizeof(addr_str) - 1);
+                printf("Socket accepted ip address: %s\r\n", addr_str);
+            }
+        }
+    }
+
+/*
+ *  Never get here
+ */
+    return;
+}
 /*****************************************************************************
  *
  * @function: WiFi_loopback_test
@@ -530,22 +642,25 @@ void WiFi_loopback_test(void)
 void WiFi_loopback_task(void* parameters)
 {
     int length;
-    char buffer[256];
+    char buffer[1024];
     int  i;
 
     while (1)
     {
-        length = tcpip_get(buffer, sizeof(buffer));
+#if(0)
+        length = tcpip_queue_2_app(buffer, sizeof(buffer));
         if ( length != 0 )
         {
             for (i=0; i != length; i++)
             {
                 buffer[i]++;                        // Add 1 to the input
             }
-            tcpip_put(buffer, length);
+            tcpip_app_2_queue(buffer, length);
         }
-      vTaskDelay(ONE_SECOND/4);
-   }
+#endif
+    tcpip_app_2_queue("Hello", 5);
+    vTaskDelay(ONE_SECOND);
+    }
 /*
  *  Never get here
  */

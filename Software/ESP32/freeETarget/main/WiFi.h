@@ -17,6 +17,14 @@ void WiFi_station_init(void);                 // Initialize the WiFI as a statio
 void WiFi_tcp_server_task(void *pvParameters);// TCP Server task
 void WiFi_loopback_test(void);                // Loopback the TCPIP channel
 
+void tcpip_socket_poll_0(void* parameters);   // Listen to TCPIP recv calls 
+void tcpip_socket_poll_1(void* parameters);   // Listen to TCPIP recv calls 
+void tcpip_socket_poll_2(void* parameters);   // Listen to TCPIP recv calls 
+void tcpip_socket_poll_3(void* parameters);   // Listen to TCPIP recv calls 
+
+void tcpip_accept_poll(void* parameters);     // Wait for a socket connection
+
+
 /*
  * #defines
  */

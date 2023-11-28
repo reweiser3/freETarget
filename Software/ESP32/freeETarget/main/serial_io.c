@@ -248,11 +248,13 @@ char serial_getch
 /*
  *  Bring in the TCPIP bytes
  */
+return 0;
   if ( tcpip )
   {
-    ch = in_buffer.queue[in_buffer.out];
-    in_buffer.out = (in_buffer.out+1) % sizeof(in_buffer.queue);
-    return ch;
+    if ( tcpip_queue_2_app(&ch, 1) > 0 )
+    {
+      return ch;
+    }
   }
 
 /*
@@ -298,8 +300,7 @@ char serial_getch
   
   if ( tcpip )
   {
-    out_buffer.queue[out_buffer.in] = ch;
-    out_buffer.out = (out_buffer.in + 1) % sizeof(out_buffer.queue);
+    tcpip_app_2_queue(&ch, 1);
   }
 
 /*
@@ -342,12 +343,7 @@ void serial_to_all
   
   if ( tcpip )
   {
-    while(len)
-    {
-      out_buffer.queue[out_buffer.out] = *str;
-      str++;
-      out_buffer.out = (out_buffer.out + 1) % sizeof(out_buffer.queue);
-    }
+    tcpip_app_2_queue(str, len);
   }
 
 /*
@@ -358,76 +354,174 @@ void serial_to_all
 
 /*******************************************************************************
  * 
- * @function: tcpip_get
+ * @function: tcpip_app_2_queue
  * 
- * @brief:    Returns waiting characters from the TCPIP buffer
+ * @brief:    Put something into the output queue for later transmission
  * 
  * @return:   Buffer updated
  * 
  *******************************************************************************
  *
- * Called from the TCPIP driver, this function returns returns characters 
- * waiting in the TCPIP queue.
+ * This function is called by the application to save data into the
+ * TCPIP queue for later output onto the TCPIP channel
  * 
  ******************************************************************************/
-int tcpip_get
+int tcpip_app_2_queue
 (
   char* buffer,         // Where to return the bytes
   int   length          // Maximum transfer size
 )
 {
-  int bytes_read;       // Number of bytes read
+  int bytes_moved;      // Number of bytes written
 
-  bytes_read = 0;
-  while ( length )
+  bytes_moved = 0;
+  while ( length != 0 )
   {
-    *buffer = out_buffer.queue[out_buffer.out];
+    printf("!");
+    out_buffer.queue[out_buffer.in] = *buffer;
     buffer++;
-    out_buffer.out = (out_buffer.out+1) % sizeof(out_buffer.queue);
     length--;
-    bytes_read++;
+    bytes_moved++;
+    out_buffer.in = (out_buffer.in+1) % sizeof(out_buffer.queue);
   }
 
 /*
- *  All done, return the number of bytes read
+ *  All done, return the number of bytes written to the queue
  */
-  return bytes_read;
+  return bytes_moved;
+}
+
+/*******************************************************************************
+ * 
+ * @function: tcpip_queue_2_socket
+ * 
+ * @brief:    Take waiting bytes out of the queue and into the socket
+ * 
+ * @return:   Buffer updated
+ * 
+ *******************************************************************************
+ *
+ * This function is the companion to tcpip_app_t_queue that finished sending
+ * the data out to the socket
+ * 
+ ******************************************************************************/
+int tcpip_queue_2_socket
+(
+  char* buffer,         // Place to put data
+  int   length          // Number of bytes to read
+)
+{
+  int bytes_moved;       // Number of bytes read from queue
+ 
+  if ( out_buffer.out == out_buffer.in )
+  {
+    return 0;            // Nothing to say
+  }
+
+  bytes_moved = 0;
+ 
+  while ( length != 0 )
+  {
+    *buffer = out_buffer.queue[out_buffer.out];
+    buffer++;
+    length--;
+    bytes_moved++;
+    out_buffer.out = (out_buffer.out+1) % sizeof(out_buffer.queue);
+    if ( out_buffer.out == out_buffer.in )
+    {
+      break;          // RUn out of things to read
+    }
+  }
+
+/*
+ *  All done, return the number of bytes written to the queue
+ */
+  return bytes_moved;
 }
 
 
 /*******************************************************************************
  * 
- * @function: tcpip_put
+ * @function: tcpip_queue_2_app
  * 
- * @brief:    Put new characters into the TCPIP output buffer
+ * @brief:    Read data out of the queue and return it to the application
  * 
  * @return:   Buffer updated
  * 
  *******************************************************************************
  *
- * Characters from the application are transferred to a queue for subsequent 
- * output to the TCPIP driver
+ * Characters from the TCPIP input queue are returned to the application
  * 
  ******************************************************************************/
-int tcpip_put
+int tcpip_queue_2_app
 (
   char* buffer,         // Where to return the bytes
   int   length          // Maximum transfer size
 )
 {
-  int i;
+  int bytes_moved;
 
-  i=0;
+  bytes_moved = 0;
+  if ( in_buffer.out == in_buffer.in )
+  {
+    return 0;              // Nothing waiting for us
+  }
+
+  while ( length )
+  {
+    *buffer = in_buffer.queue[in_buffer.out];
+    buffer++;
+    length--;
+    bytes_moved++;
+    in_buffer.out = (in_buffer.out+1) % sizeof(in_buffer.queue);
+    if ( in_buffer.out == in_buffer.in )
+    {
+      break;              // Reached the end
+    }
+  }
+
+  return bytes_moved;
+
+}
+
+/*******************************************************************************
+ * 
+ * @function: tcpip_socket_2_queue
+ * 
+ * @brief:    Put fresh TCPIP data into the queue for later
+ * 
+ * @return:   Buffer updated
+ * 
+ *******************************************************************************
+ *
+ * Characters from the TCPIP input queue are returned to the application
+ * 
+ ******************************************************************************/
+int tcpip_socket_2_queue
+(
+  char* buffer,         // Where to return the bytes
+  int   length          // Maximum transfer size
+)
+{
+  int bytes_moved;
+
+  bytes_moved = 0;
   while ( length )
   {
     in_buffer.queue[in_buffer.in] = *buffer;
     buffer++;
-    in_buffer.in = (in_buffer.in+1) % sizeof(in_buffer.queue);
     length--;
-    i++;
+    bytes_moved++;
+    in_buffer.in = (in_buffer.in+1) % sizeof(in_buffer.queue);
+    if ( in_buffer.out == in_buffer.in )
+    {
+      DLT(DLT_CRITICAL);
+      printf("TCPIP input queue overrun\r\n");              // Reached the end
+      break;
+    }
   }
 
-  return i;
+  return bytes_moved;
 
 }
 /*******************************************************************************
