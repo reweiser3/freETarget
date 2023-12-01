@@ -901,50 +901,49 @@ void bye(void)
   {
     return;
   }
-
-  if ( json_power_save != 0 ) 
+  if ( json_power_save == 0 )        // Power down has not been enabled
   {
-    if ( power_save != 0 )                         // Time in minutes
-    {
-      power_save--;
-    }
-    else
-    {
-      power_save = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L;
+    return;
+  }
+
+  if ( power_save != 0 )             // Power down has not run out
+  {
+    return;
+  }
 
 /*
  * Say Good Night Gracie!
  */
-      serial_to_all("{\"GOOD_BYE\":0}", ALL);
-      tabata_enable(false);             // Turn off any automatic cycles 
-      rapid_enable(false);
-      set_LED_PWM(0);                   // Going to sleep 
+  serial_to_all("{\"GOOD_BYE\":0}", ALL);
+  tabata_enable(false);             // Turn off any automatic cycles 
+  rapid_enable(false);
+  set_LED_PWM(0);                   // Going to sleep 
+
 /*
  * Loop waiting for something to happen
  */ 
-    serial_flush(ALL);                // Purge the com port
+  serial_flush(ALL);                // Purge the com port
   
-      while( (DIP_SW_A == 0)            // Wait for the switch to be pressed
-        && (DIP_SW_B == 0)            // Or the switch to be pressed
-        && ( serial_available(ALL) == 0)// Or a character to arrive
-        && ( is_running() == 0) )     // Or a shot arrives
-      {
-          vTaskDelay(1);              // Give control back to the scheduler
-//    esp01_receive();                // Keep polling the WiFi to see if anything 
-      }                               // turns up
+  while( (DIP_SW_A == 0)            // Wait for the switch to be pressed
+    && (DIP_SW_B == 0)            // Or the switch to be pressed
+    && ( serial_available(ALL) == 0)// Or a character to arrive
+    && ( is_running() == 0) )     // Or a shot arrives
+  {
+    vTaskDelay(1);              // Give control back to the scheduler
+  }                               // turns up
   
-      hello();                          // Back in action
+  hello();                          // Back in action
   
-      while ( (DIP_SW_A == 1)           // Wait here for both switches to be released
-            || ( DIP_SW_B == 1 ) )
-      {
-        vTaskDelay(1);              // Give control back to the scheduler
-      }  
-    }
+  while ( (DIP_SW_A == 1)           // Wait here for both switches to be released
+      || ( DIP_SW_B == 1 ) )
+  {
+    vTaskDelay(1);              // Give control back to the scheduler
   }
+
 /*
- * Come out of sleep
- */
+ * Reset the timer for next time
+ */  
+  power_save = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L;
   return;
 }
 

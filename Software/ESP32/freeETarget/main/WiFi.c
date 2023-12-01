@@ -134,45 +134,44 @@ void WiFi_init(void)
 void WiFi_AP_init(void)
 {
 
-   DLT(DLT_CRITICAL);
-   printf("WiFi_AP_init\r\n");
+    DLT(DLT_CRITICAL);
+    printf("WiFi_AP_init\r\n");
     
-   ESP_ERROR_CHECK(esp_netif_init());
-   ESP_ERROR_CHECK(esp_event_loop_create_default());
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     esp_netif_t* wifiAP = esp_netif_create_default_wifi_ap();
-    esp_netif_ip_info_t ip_info;
     esp_netif_ip_info_t ipInfo;
-    IP4_ADDR(&ipInfo.ip, 192,168,10,1);
-	IP4_ADDR(&ipInfo.gw, 192,168,10,1);
+    IP4_ADDR(&ipInfo.ip, 192,168,10,9);
+	IP4_ADDR(&ipInfo.gw, 192,168,10,9);
 	IP4_ADDR(&ipInfo.netmask, 255,255,255,0);
 	esp_netif_dhcps_stop(wifiAP);
 	esp_netif_set_ip_info(wifiAP, &ipInfo);
 	esp_netif_dhcps_start(wifiAP);
 
-   wifi_init_config_t WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
-   ESP_ERROR_CHECK(esp_wifi_init(&WiFi_init_config));
+    wifi_init_config_t WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&WiFi_init_config));
 
-   ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
                                                         ESP_EVENT_ANY_ID,
                                                         &WiFi_event_handler,
                                                         NULL,
                                                         NULL));
 
-   strcpy((char*)&WiFi_config.ap.ssid, "FET-");
-   strcat((char*)&WiFi_config.ap.ssid, names[json_name_id]);
-   WiFi_config.ap.ssid_len = strlen(json_wifi_ssid);
-   WiFi_config.ap.channel  = json_wifi_channel;
-   strcpy((char*)&WiFi_config.ap.password, json_wifi_pwd);
-   WiFi_config.ap.max_connection = 4;
-   if ( json_wifi_pwd[0] == 0 )
-   {
-      WiFi_config.ap.authmode = WIFI_AUTH_OPEN;
-   }
-   else
-   {
-      WiFi_config.ap.authmode = WIFI_AUTH_WPA2_PSK;
-   }
+    strcpy((char*)&WiFi_config.ap.ssid, "FET-");
+    strcat((char*)&WiFi_config.ap.ssid, names[json_name_id]);
+    WiFi_config.ap.ssid_len = strlen(json_wifi_ssid);
+    WiFi_config.ap.channel  = json_wifi_channel;
+    strcpy((char*)&WiFi_config.ap.password, json_wifi_pwd);
+    WiFi_config.ap.max_connection = 4;
+    if ( json_wifi_pwd[0] == 0 )
+    {
+        WiFi_config.ap.authmode = WIFI_AUTH_OPEN;
+    }
+    else
+    {
+        WiFi_config.ap.authmode = WIFI_AUTH_WPA2_PSK;
+    }
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &WiFi_config));
@@ -219,7 +218,7 @@ void WiFi_station_init(void)
    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFi_event_handler, NULL, &instance_any_id));
    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &WiFi_event_handler, NULL, &instance_got_ip));
 
-   strcpy((char*)&WiFi_config.sta.ssid, "TargetRange");
+   strcpy((char*)&WiFi_config.sta.ssid, json_wifi_ssid);
    strcpy((char*)&WiFi_config.sta.password, json_wifi_pwd);
    WiFi_config.sta.password[0] = 0;
    WiFi_config.sta.threshold.authmode = WIFI_AUTH_OPEN;
