@@ -201,13 +201,22 @@ void self_test
 /*
  *  Test 15: Send and receive something
  */
-    case T_WIFI_LOOPBACK:
+    case T_WIFI_STATION_LOOPBACK:
       WiFi_station_init();
-      xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",           4096, NULL, 5, NULL);
+      xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",      4096, NULL, 5, NULL);
       xTaskCreate(tcpip_accept_poll,       "tcpip_accept_poll",    4096, NULL, 4, NULL);
       WiFi_loopback_test();
       break; 
 
+/*
+ *  Test 16: Send and receive something
+ */
+    case T_WIFI_AP_LOOPBACK:
+      WiFi_AP_init();
+      xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",      4096, NULL, 5, NULL);
+      xTaskCreate(tcpip_accept_poll,       "tcpip_accept_poll",    4096, NULL, 4, NULL);
+      WiFi_loopback_test();
+      break; 
   }
  /* 
   *  All done, return;

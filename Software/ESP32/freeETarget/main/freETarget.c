@@ -178,6 +178,10 @@ void freeETarget_target_loop(void* arg)
 {
   while(1)
   {
+    vTaskDelay(100);
+  }
+  while(1)
+  {
 /*
  * First thing, handle polled devices
  */
