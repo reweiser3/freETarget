@@ -64,13 +64,15 @@ static EventGroupHandle_t s_wifi_event_group;
 static esp_event_handler_instance_t instance_any_id;
 static esp_event_handler_instance_t instance_got_ip;
 static int s_retry_num = 0;
-static int socket_list[MAX_SOCKETS];                // Space to remember four sockets
+static int socket_list[MAX_SOCKETS];       // Space to remember four sockets
+static esp_ip4_addr_t my_ip_address;       // IP address assigned by router
 
 /*
  * Private Functions
  */
 void WiFi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
-static void tcpip_server_io(void);          // Manage TCPIP traffic
+static void tcpip_server_io(void);        // Manage TCPIP traffic
+
 
 /*****************************************************************************
  *
@@ -90,9 +92,11 @@ static void tcpip_server_io(void);          // Manage TCPIP traffic
  *******************************************************************************/
 void WiFi_init(void)
 {
-   ESP_ERROR_CHECK(esp_netif_init());
-   ESP_ERROR_CHECK(esp_event_loop_create_default());
-   
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+    my_ip_address.addr = 0;
+
 /* 
  * Initialize the WiFI
  */
@@ -105,9 +109,6 @@ void WiFi_init(void)
       WiFi_station_init();
    }
 
-/*
- * Initialize the server
- */
 
 
 /*
@@ -133,33 +134,39 @@ void WiFi_init(void)
  *******************************************************************************/
 void WiFi_AP_init(void)
 {
+    esp_netif_ip_info_t ipInfo;
+    esp_netif_t* wifiAP;
+    wifi_init_config_t WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
     DLT(DLT_CRITICAL);
     printf("WiFi_AP_init\r\n");
     
+/*
+ * Create the network interface
+ */
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    esp_netif_t* wifiAP = esp_netif_create_default_wifi_ap();
-    esp_netif_ip_info_t ipInfo;
-    IP4_ADDR(&ipInfo.ip, 192,168,10,9);
-	IP4_ADDR(&ipInfo.gw, 192,168,10,9);
-	IP4_ADDR(&ipInfo.netmask, 255,255,255,0);
-	esp_netif_dhcps_stop(wifiAP);
-	esp_netif_set_ip_info(wifiAP, &ipInfo);
-	esp_netif_dhcps_start(wifiAP);
+/*
+ * Setup the WiFi IP address before staring
+ */   
+    wifiAP = esp_netif_create_default_wifi_ap();
+    IP4_ADDR(&ipInfo.ip, 192,168,10,9);                 // Setup the base IP address
+	IP4_ADDR(&ipInfo.gw, 192,168,10,9);                 // Setup the gateway (not used but needed)
+	IP4_ADDR(&ipInfo.netmask, 255,255,255,0);           // Setup the subnet mask
+	esp_netif_dhcps_stop(wifiAP);                       // Remove the old value
+	esp_netif_set_ip_info(wifiAP, &ipInfo);             // Put in the one
+	esp_netif_dhcps_start(wifiAP);                      // and start the DHCP
 
-    wifi_init_config_t WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&WiFi_init_config));
+/*
+ *  Initialize the WiFi Access Point
+ */
+    esp_wifi_init(&WiFi_init_config);                   
 
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
-                                                        ESP_EVENT_ANY_ID,
-                                                        &WiFi_event_handler,
-                                                        NULL,
-                                                        NULL));
+    esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFi_event_handler, NULL, NULL);
 
     strcpy((char*)&WiFi_config.ap.ssid, "FET-");
-    strcat((char*)&WiFi_config.ap.ssid, names[json_name_id]);
+    strcat((char*)&WiFi_config.ap.ssid, names[json_name_id]);   // SSID Name ->FET-name
     WiFi_config.ap.ssid_len = strlen(json_wifi_ssid);
     WiFi_config.ap.channel  = json_wifi_channel;
     strcpy((char*)&WiFi_config.ap.password, json_wifi_pwd);
@@ -173,9 +180,9 @@ void WiFi_AP_init(void)
         WiFi_config.ap.authmode = WIFI_AUTH_WPA2_PSK;
     }
 
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &WiFi_config));
-    ESP_ERROR_CHECK(esp_wifi_start());
+    esp_wifi_set_mode(WIFI_MODE_AP);
+    esp_wifi_set_config(WIFI_IF_AP, &WiFi_config);
+    esp_wifi_start();
 
 /*
  * Ready to go
@@ -203,25 +210,31 @@ void WiFi_AP_init(void)
  *******************************************************************************/
 void WiFi_station_init(void)
 {
+   wifi_init_config_t   WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
+
    DLT(DLT_CRITICAL);
    printf("WiFi_station_init\r\n");
 
    s_wifi_event_group = xEventGroupCreate();
-   ESP_ERROR_CHECK(esp_netif_init());
+   esp_netif_init();
 
-   ESP_ERROR_CHECK(esp_event_loop_create_default());
+   esp_event_loop_create_default();
    esp_netif_create_default_wifi_sta();
 
-   wifi_init_config_t   WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
-   ESP_ERROR_CHECK(esp_wifi_init(&WiFi_init_config));           // Initialize the configuration
-
-   ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFi_event_handler, NULL, &instance_any_id));
-   ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &WiFi_event_handler, NULL, &instance_got_ip));
+   esp_wifi_init(&WiFi_init_config);           // Initialize the configuration
+   esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFi_event_handler, NULL, &instance_any_id);
+   esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &WiFi_event_handler, NULL, &instance_got_ip);
 
    strcpy((char*)&WiFi_config.sta.ssid, json_wifi_ssid);
    strcpy((char*)&WiFi_config.sta.password, json_wifi_pwd);
-   WiFi_config.sta.password[0] = 0;
-   WiFi_config.sta.threshold.authmode = WIFI_AUTH_OPEN;
+   if ( json_wifi_pwd[0] == 0)
+   {
+       WiFi_config.sta.threshold.authmode = WIFI_AUTH_OPEN;
+   }
+   else
+   {
+       WiFi_config.sta.threshold.authmode = WIFI_AUTH_WEP;
+   }
    WiFi_config.sta.pmf_cfg.capable = true;
    WiFi_config.sta.pmf_cfg.required = false;
    esp_wifi_set_mode(WIFI_MODE_STA);
@@ -237,8 +250,9 @@ void WiFi_station_init(void)
             pdFALSE,
             portMAX_DELAY);
 
-   /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
-     * happened. */
+/*
+ *  The target has connected to an access point
+ */
     if ( DLT(DLT_INFO) )
     {
         if (bits & WIFI_CONNECTED_BIT)
@@ -286,6 +300,7 @@ void WiFi_event_handler
    void* event_data
 )
 {
+    ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
 /*
  * I am a station
  */
@@ -312,14 +327,17 @@ void WiFi_event_handler
    
    if ( event_base == IP_EVENT )
    {
-      if ( event_id == IP_EVENT_STA_GOT_IP )
-      {
-         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-         s_retry_num = 0;
-         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
-      }
-   }
-
+        if ( event_id == IP_EVENT_STA_GOT_IP )
+        {
+            my_ip_address = event->ip_info.ip;
+            if ( DLT(DLT_INFO) )
+            {
+                printf(" Received IP:" IPSTR, IP2STR(&event->ip_info.ip));
+            }
+            s_retry_num = 0;
+            xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+        }
+    }
 /*
  * I am an access point
  */
@@ -672,4 +690,22 @@ void WiFi_loopback_task(void* parameters)
 /*
  *  Never get here
  */
+}
+/*****************************************************************************
+ *
+ * @function: WiFi_my_IP_address()
+ *
+ * @brief:    Return the IP address as a string
+ * 
+ * @return:   None
+ *
+ ****************************************************************************/
+#define TO_IP(x) ((int)x >> 24) & 0xff, ((int)x >> 16) & 0xff, ((int)x >> 8) & 0xff, (int)x & 0xff
+void WiFi_my_ip_address
+(
+    char* s             // Where to return the string
+)
+{
+    sprintf(s, "%d.%d.%d.%d", TO_IP(my_ip_address.addr));
+    return;
 }

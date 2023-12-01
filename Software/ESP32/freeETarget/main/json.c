@@ -21,6 +21,7 @@
 #include "esp_timer.h"
 #include "nvs_flash.h"
 #include "nvs.h"
+#include "wifi.h"
 
 /*
  *  Function Prototypes
@@ -580,7 +581,7 @@ void show_echo(void)
 
   if ( json_token == TOKEN_NONE )
   {
- //     esp01_myIP(str_c);
+      WiFi_my_ip_address(&str_c);
       sprintf(s, "\"WiFi_IP_ADDRESS\": \"%s:1090\", \n\r", str_c);                        // Print out the IP address
       serial_to_all(s, ALL);
   
