@@ -56,6 +56,7 @@ esp_err_t i2c_init
     return i2c_driver_install(i2c_master_port, i2c_configuration.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
 }
 
+
 /*********************************************************************
  * 
  * @function: i2c_read

@@ -5,18 +5,18 @@
  * Determine the score
  *
  *****************************************************************************/
-
-#include "freETarget.h"
-
-#include "json.h"
-#include "compute_hit.h"
-#include "math.h"
-#include "diag_tools.h"
-#include "token.h"
 #include "math.h"
 #include "analog_io.h"
 #include "stdio.h" 
+#include "math.h"
+#include "stdbool.h"
 #include "serial_io.h"
+
+#include "freETarget.h"
+#include "json.h"
+#include "compute_hit.h"
+#include "diag_tools.h"
+#include "token.h"
 #include "timer.h"
 
 #define THRESHOLD (0.001)
@@ -27,10 +27,9 @@
  *  Variables
  */
 extern int json_clock[4];
-
 sensor_t s[4];
-
 unsigned int  pellet_calibre;     // Time offset to compensate for pellet diameter
+static volatile unsigned long wdt; // Warchdog  timer
 
 static void remap_target(double* x, double* y);  // Map a club target if used
 
@@ -119,13 +118,12 @@ unsigned int compute_hit
   double        reference;         // Time of reference counter
   int           location;          // Sensor chosen for reference location
   int           i, count;
-  double        x;                 // Floating point value
   double        estimate;          // Estimated position
   double        last_estimate, error; // Location error
   double        x_avg, y_avg;      // Running average location
   double        smallest;          // Smallest non-zero value measured
   double        z_offset_clock;    // Time offset between paper and sensor plane
-  unsigned long wdt;               // Watchdog timer
+
   x_avg = 0;
   y_avg = 0;
   
@@ -534,7 +532,6 @@ void send_score
   double radius;
   double angle;
   char   str[256];                // String holding buffers
-  unsigned long   wdt;            // Watch dog Timer
   
   if ( DLT(DLT_DIAG) )
   {
@@ -671,7 +668,6 @@ void send_miss
   )
 {
   char str[256];                          // String holding buffer
-  unsigned long wdt;                      // Starting timer
   
   if ( json_send_miss != 0)               // If send_miss not enabled
   {

@@ -10,9 +10,11 @@
  * 
  *------------------------------------------------------*/
 
+#include "stdbool.h"
 #include "stdio.h"
 #include "driver/uart.h"
 #include "driver/gpio.h"
+
 #include "freETarget.h"
 #include "diag_tools.h"
 #include "serial_io.h"
@@ -20,7 +22,6 @@
 /*
  *  Serial IO port configuration
  */
-
 const int uart_console = UART_NUM_0;
 uart_config_t uart_console_config =
 {

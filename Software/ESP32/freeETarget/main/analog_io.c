@@ -6,10 +6,7 @@
  * 
  *****************************************************************************/
 
-#include "freETarget.h"
-#include "diag_tools.h"
-#include "stdio.h"
-#include "json.h"
+#include "stdbool.h"
 #include "gpio.h"
 #include "analog_io.h"
 #include "driver/gpio.h"
@@ -22,6 +19,12 @@
 #include "i2c.h"
 #include "driver/adc.h"
 #include "dac.h"
+#include "freETarget.h"
+#include "diag_tools.h"
+#include "stdio.h"
+#include "json.h"
+
+
 
 void set_vset_PWM(unsigned int pwm);
                     

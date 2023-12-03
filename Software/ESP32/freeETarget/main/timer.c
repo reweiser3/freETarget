@@ -34,9 +34,9 @@
 /*
  * Local Variables
  */
-static unsigned int* timers[N_TIMERS];          // Active timer list
+static volatile unsigned long* timers[N_TIMERS];          // Active timer list
        unsigned int isr_state;                  // What sensor state are we in 
-static volatile unsigned int isr_timer;         // Interrupt timer 
+static volatile unsigned long isr_timer;        // Interrupt timer 
 
 /*
  *  Function Prototypes
@@ -227,10 +227,10 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
  * will overflow the available space every time they are
  * instantiated.
  *-----------------------------------------------------*/
-unsigned int timer_new
+unsigned long timer_new
 (
-  volatile unsigned int* new_timer, // Pointer to new down counter
-  unsigned int           duration   // Duration of the timer
+  volatile unsigned long* new_timer, // Pointer to new down counter
+           unsigned long  duration   // Duration of the timer
 )
 {
   unsigned int i;
@@ -258,9 +258,9 @@ unsigned int timer_new
   return 0;
 }
 
- unsigned int timer_delete
+unsigned long timer_delete
 (
-  volatile unsigned int* old_timer   // Pointer to new down counter
+  volatile unsigned long* old_timer   // Pointer to new down counter
 )
 {
   unsigned int i;

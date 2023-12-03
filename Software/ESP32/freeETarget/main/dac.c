@@ -10,17 +10,18 @@
  * https://ww1.microchip.com/downloads/aemDocuments/documents/OTH/ProductDocuments/DataSheets/22187E.pdf
  * 
  *****************************************************************************/
+#include "stdio.h"
+#include "driver\gpio.h"
+#include "adc_types.h"
+#include "adc_oneshot.h"
+#include "i2c.h"
 
 #include "freETarget.h"
 #include "diag_tools.h"
 #include "gpio.h"
 #include "analog_io.h"
 #include "json.h"
-#include "stdio.h"
-#include "driver\gpio.h"
-#include "adc_types.h"
-#include "adc_oneshot.h"
-#include "i2c.h"
+
 
 /*
  *  Definitions

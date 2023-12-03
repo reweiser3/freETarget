@@ -10,11 +10,12 @@
  *
  * 
  * ----------------------------------------------------*/
+#include "nvs_flash.h"
+#include "nvs.h"
+
 #include "freETarget.h"
 #include "diag_tools.h"
 #include "json.h"
-#include "nvs_flash.h"
-#include "nvs.h"
 #include "serial_io.h"
 #include "nonvol.h"
 

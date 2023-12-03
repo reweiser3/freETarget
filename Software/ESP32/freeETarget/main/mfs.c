@@ -5,9 +5,10 @@
  * Software to run the Air-Rifle / Small Bore Electronic Target
  * 
  *-------------------------------------------------------------*/
+#include "driver/gpio.h"
+
 #include "freETarget.h"
 #include "diag_tools.h"
-#include "driver/gpio.h"
 #include "gpio.h"
 #include "compute_hit.h"
 #include "analog_io.h"

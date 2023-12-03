@@ -381,19 +381,7 @@ static char greeting[] = "{\"CONNECTED\"}";
 
 void WiFi_tcp_server_task(void *pvParameters)
 {
-   char addr_str[128];
-   int ip_protocol = 0;
-   int keepAlive = 1;
-   int keepIdle = KEEPALIVE_IDLE;
-   int keepInterval = KEEPALIVE_INTERVAL;
-   int keepCount = KEEPALIVE_COUNT;
-   struct sockaddr_storage dest_addr;
-   int listen_sock;
-   int option = 1;
    struct sockaddr_storage source_addr; // Large enough for both IPv4 or IPv6
-   socklen_t addr_len = sizeof(source_addr);
-   int sock;
-   int i;
 
    DLT(DLT_CRITICAL);
    printf("WiFi_tcp_server_task()\r\n");
@@ -671,9 +659,10 @@ void WiFi_loopback_task(void* parameters)
     char buffer[1024];
     int  i;
 
+    tcpip_app_2_queue("Hello", 5);
+
     while (1)
     {
-#if(0)
         length = tcpip_queue_2_app(buffer, sizeof(buffer));
         if ( length != 0 )
         {
@@ -683,8 +672,6 @@ void WiFi_loopback_task(void* parameters)
             }
             tcpip_app_2_queue(buffer, length);
         }
-#endif
-    tcpip_app_2_queue("Hello", 5);
     vTaskDelay(ONE_SECOND);
     }
 /*

@@ -5,22 +5,24 @@
  * General purpose GPIO driver
  * 
  * ----------------------------------------------------*/
+#include <string.h>
+#include "esp_log.h"
+#include "driver/rmt_tx.h"
+#include "gpio_types.h"
+#include "driver\gpio.h"
+#include "esp_timer.h"
+#include "led_strip_types.h"
+
 #include "freETarget.h"
 #include "diag_tools.h"
 #include "gpio.h"
 #include "timer.h"
 #include "json.h"
 #include "serial_io.h"
-#include "gpio_types.h"
-#include "driver\gpio.h"
 #include "timer.h"
-#include "esp_timer.h"
-#include "led_strip_types.h"
 #include "pcnt.h"
 #include "gpio_define.h"
-#include <string.h>
-#include "esp_log.h"
-#include "driver/rmt_tx.h"
+
 #include "../managed_components/espressif__led_strip/src/led_strip_rmt_encoder.h"
 
 /*
@@ -434,7 +436,7 @@ void read_timers
 
 void drive_paper(void)
 {
-  volatile unsigned int paper_time;
+  volatile unsigned long paper_time;
 
   if ( DLT(DLT_DIAG) )
   {

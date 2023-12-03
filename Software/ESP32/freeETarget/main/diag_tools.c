@@ -11,15 +11,16 @@
  ******************************************************************************/
 
 #include "stdbool.h"
+#include "stdio.h"
+#include "serial_io.h"
+#include "gpio_types.h"
 #include "driver\gpio.h"
+
 #include "freETarget.h"
 #include "gpio.h"
 #include "diag_tools.h"
 #include "analog_io.h"
 #include "json.h"
-#include "stdio.h"
-#include "serial_io.h"
-#include "gpio_types.h"
 #include "timer.h"
 #include "esp_timer.h"
 #include "dac.h"

@@ -25,7 +25,6 @@
 
 static int pwm_ready = 0;       // Set to 1 when the hardware is programmed
 
-
 ledc_channel_config_t ledc_channel[4];
 
 

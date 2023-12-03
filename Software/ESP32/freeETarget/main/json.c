@@ -5,29 +5,28 @@
  * JSON driver
  * 
  * ----------------------------------------------------*/
+#include "esp_timer.h"
+#include "nvs_flash.h"
+#include "nvs.h"
+#include "nonvol.h"
+
 #include "freETarget.h"
 #include "diag_tools.h"
 #include "json.h"
 #include "ctype.h"
 #include "stdio.h"
 #include "serial_io.h"
-#include "nvs.h"
-#include "nonvol.h"
 #include "analog_io.h"
 #include "token.h"
 #include "stdio.h"
 #include "serial_io.h"
 #include "mechanical.h"
-#include "esp_timer.h"
-#include "nvs_flash.h"
-#include "nvs.h"
 #include "wifi.h"
 
 /*
  *  Function Prototypes
  */
 static void handle_json(void);    // Breakdown the JSON and execute it
-
 
 /*
  *  Variables

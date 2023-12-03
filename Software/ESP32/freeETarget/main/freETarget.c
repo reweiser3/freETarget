@@ -12,6 +12,7 @@
 #include "math.h"
 #include "nvs.h"
 #include "mpu_wrappers.h"
+
 #include "freETarget.h"
 #include "gpio.h"
 #include "compute_hit.h"
@@ -26,7 +27,6 @@
 #include "dac.h"
 #include "pcnt.h"
 
-
 /*
  *  Function Prototypes
  */
@@ -35,9 +35,7 @@ static unsigned int set_mode(void);     // Set the target running mode
 static unsigned int arm(void);          // Arm the circuit for a shot
 static unsigned int wait(void);         // Wait for the shot to arrive
 static unsigned int reduce(void);       // Reduce the shot data
-static unsigned int finish(void);       // Finish uip and start over  
 static bool discard_shot(void);         // In TabataThrow away the shot
-static void freeETarget_task(void);
 extern void gpio_init(void);
 
 /*
@@ -281,7 +279,6 @@ void freeETarget_target_loop(void* arg)
  * the Tabata or Rapid fire feature is enabled
  *
  *--------------------------------------------------------------*/
-static unsigned long blink = 0;
 unsigned int arm(void)
 {
   face_strike = 0;                  // Reset the face strike count
@@ -901,6 +898,7 @@ void bye(void)
   {
     return;
   }
+  
   if ( json_power_save == 0 )        // Power down has not been enabled
   {
     return;

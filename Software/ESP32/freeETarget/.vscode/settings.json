@@ -29,7 +29,8 @@
     "json.h": "c",
     "freetarget.h": "c",
     "numeric": "c",
-    "string_view": "c"
+    "string_view": "c",
+    "token.h": "c"
   },
   "idf.flashType": "UART",
   "idf.portWin": "COM4",
