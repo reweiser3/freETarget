@@ -93,7 +93,7 @@ static void tcpip_server_io(void);        // Manage TCPIP traffic
 void WiFi_init(void)
 {
     DLT(DLT_CRITICAL);
-    printf("WiFi_init()\r\n");
+    printf("WiFi_init()");
 
 /* 
  * Initialize the WiFI
@@ -135,7 +135,7 @@ void WiFi_AP_init(void)
     wifi_init_config_t WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
     DLT(DLT_CRITICAL);
-    printf("WiFi_AP_init\r\n");
+    printf("WiFi_AP_init()");
     
 /*
  * Create the network interface
@@ -209,7 +209,7 @@ void WiFi_station_init(void)
    wifi_init_config_t   WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
    DLT(DLT_CRITICAL);
-   printf("WiFi_station_init\r\n");
+   printf("WiFi_station_init()");
 
    s_wifi_event_group = xEventGroupCreate();
    esp_netif_init();
@@ -345,7 +345,7 @@ void WiFi_event_handler
    
    if (event_id == WIFI_EVENT_AP_STADISCONNECTED)
    {
-        printf("STATION disconnected");
+      printf("STATION disconnected");
       wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
    }
 
@@ -380,7 +380,7 @@ void WiFi_tcp_server_task(void *pvParameters)
    struct sockaddr_storage source_addr; // Large enough for both IPv4 or IPv6
 
    DLT(DLT_CRITICAL);
-   printf("WiFi_tcp_server_task()\r\n");
+   printf("WiFi_tcp_server_task()");
 
 /*
  *  Move data in and out of the TCP queues
@@ -465,6 +465,9 @@ void tcpip_socket_poll_0(void* parameters)
     int length;
     char rx_buffer[256];
 
+    DLT(DLT_CRITICAL);
+    printf("tcp_socket_poll_0()\r\n");
+
     while (1)
     {
         if (socket_list[0] > 0 )
@@ -484,6 +487,9 @@ void tcpip_socket_poll_1(void* parameters)
 {
     int length;
     char rx_buffer[256];
+
+    DLT(DLT_CRITICAL);
+    printf("tcp_socket_poll_1()\r\n");
 
     while (1)
     {
@@ -505,6 +511,9 @@ void tcpip_socket_poll_2(void* parameters)
     int length;
     char rx_buffer[256];
 
+    DLT(DLT_CRITICAL);
+    printf("tcp_socket_poll_2()\r\n");
+
     while (1)
     {
         if (socket_list[2] > 0 )
@@ -524,6 +533,9 @@ void tcpip_socket_poll_3(void* parameters)
 {
     int length;
     char rx_buffer[256];
+
+    DLT(DLT_CRITICAL);
+    printf("tcp_socket_poll_3()\r\n");
 
     while (1)
     {
@@ -556,11 +568,9 @@ void tcpip_accept_poll(void* parameters)
    int sock;
    int i;
 
-   if ( DLT(DLT_CRITICAL) )
-   {
-        printf("tcp_accept_poll\r\n");
-   }
-
+   DLT(DLT_CRITICAL);
+   printf("tcp_accept_poll()");
+   
 /*
  * Start the server
  */

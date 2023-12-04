@@ -121,7 +121,7 @@ void freeETarget_init(void)
   if ( POST_counters() == false )         // If the timers fail
   {
     DLT(DLT_CRITICAL);
-    printf("POST_counters failed\r\n");   // Failed the test
+    printf("POST_counters failed");   // Failed the test
     vTaskDelay(2*ONE_SECOND);
   }
   
