@@ -80,6 +80,7 @@ bool  do_dlt(unsigned int level);                     // Diagnostics Log and Tra
 /*
  * Tracing 
  */
+#define DZZ(level, z) if ( do_dlt(level)){ z}
 #define DLT(level)      ( do_dlt(level) )
 #define DLT_NONE          0                       // No DLT messages displayed
 #define DLT_CRITICAL      0x80                    // Display messages that will compromise the target

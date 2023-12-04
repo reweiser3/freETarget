@@ -30,16 +30,16 @@ void app_main(void)
 /*
  * Everything is ready, start the threads
  */
-//   xTaskCreate(tcp_server_task,  "tcp_server", 4096, (void*)AF_INET, 5, NULL);
-   xTaskCreate(freeETarget_json,        "json_task",                4096, NULL, 5, NULL);
-   xTaskCreate(freeETarget_synchronous, "freeETarget_synchronous",  4096, NULL, 4, NULL);
-   xTaskCreate(freeETarget_target_loop, "freeETarget_target_loop",  4096, NULL, 4, NULL);
-//   xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",          4096, NULL, 5, NULL);
-   xTaskCreate(tcpip_socket_poll_0, "tcpip_socket_poll_0",  4096, NULL, 4, NULL);
-   xTaskCreate(tcpip_socket_poll_1, "tcpip_socket_poll_1",  4096, NULL, 4, NULL);
-   xTaskCreate(tcpip_socket_poll_2, "tcpip_socket_poll_2",  4096, NULL, 4, NULL);
-   xTaskCreate(tcpip_socket_poll_3, "tcpip_socket_poll_3",  4096, NULL, 4, NULL);
-//   xTaskCreate(tcpip_accept_poll,   "tcpip_accept_poll",    4096, NULL, 4, NULL);
-
+   xTaskCreate(freeETarget_json,        "json_task",                 4096, NULL, 5, NULL);
+   xTaskCreate(freeETarget_synchronous, "freeETarget_synchronous",   4096, NULL, 4, NULL);
+   xTaskCreate(freeETarget_target_loop, "freeETarget_target_loop",   4096, NULL, 4, NULL);
+   xTaskCreate(tcpip_socket_poll_0,     "tcpip_socket_poll_0",       1024, NULL, 4, NULL);
+   xTaskCreate(tcpip_socket_poll_1,     "tcpip_socket_poll_1",       1024, NULL, 4, NULL);
+   xTaskCreate(tcpip_socket_poll_2,     "tcpip_socket_poll_2",       1024, NULL, 4, NULL);
+   xTaskCreate(tcpip_socket_poll_3,     "tcpip_socket_poll_3",       1024, NULL, 4, NULL);
+   xTaskCreate(tabata_task,              "tabata",                   1024, NULL, 4, NULL);
+   xTaskCreate(rapid_fire_task,          "rapid_fire",               1024, NULL, 4, NULL);
+//   xTaskCreate(WiFi_tcp_server_task,     "WiFi_tcp_server",          4096, NULL, 5, NULL);
+//   xTaskCreate(tcpip_accept_poll,        "tcpip_accept_poll",        4096, NULL, 4, NULL);
    freeETarget_timer_init();
 }

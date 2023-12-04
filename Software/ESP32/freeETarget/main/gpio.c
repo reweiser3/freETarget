@@ -691,7 +691,7 @@ void status_LED_test(void)
  *--------------------------------------------------------------*/
 void paper_test(void)
 {
-  volatile unsigned int time_delay;
+  volatile unsigned long time_delay;
   int i;
 
   timer_new(&time_delay, 500); 

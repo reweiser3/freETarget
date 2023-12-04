@@ -92,10 +92,8 @@ static void tcpip_server_io(void);        // Manage TCPIP traffic
  *******************************************************************************/
 void WiFi_init(void)
 {
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-
-    my_ip_address.addr = 0;
+    DLT(DLT_CRITICAL);
+    printf("WiFi_init()\r\n");
 
 /* 
  * Initialize the WiFI
@@ -108,8 +106,6 @@ void WiFi_init(void)
    {
       WiFi_station_init();
    }
-
-
 
 /*
  *  All done

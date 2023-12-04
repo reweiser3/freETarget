@@ -127,7 +127,7 @@ const json_message_t JSON[] = {
   {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT32,  0,                NONVOL_PAPER_TIME,     500 },    // Set the paper advance time
   {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
   {"\"RAPID_COUNT\":",    &json_rapid_count,                 0,                IS_INT32,  0,                0,                       0 },    // Number of shots expected in series
-  {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT32,  &rapid_enable,    0,                       0 },    // Enable the rapid fire fieature
+  {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT32,  0,                0,                       0 },    // Enable the rapid fire fieature
   {"\"RAPID_TIME\":",     &json_rapid_time,                  0,                IS_INT32,  0,                0,                       0 },    // Set the duration of the rapid fire event and start
   {"\"RAPID_WAIT\":",     &json_rapid_wait,                  0,                IS_INT32,  0,                0,                       0 },    // Delay applied between enable and ready
   {"\"SEND_MISS\":",      &json_send_miss,                   0,                IS_INT32,  0,                NONVOL_SEND_MISS,        0 },    // Enable / Disable sending miss messages
