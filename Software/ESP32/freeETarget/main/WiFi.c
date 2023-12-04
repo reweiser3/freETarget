@@ -65,7 +65,7 @@ static esp_event_handler_instance_t instance_any_id;
 static esp_event_handler_instance_t instance_got_ip;
 static int s_retry_num = 0;
 static int socket_list[MAX_SOCKETS];       // Space to remember four sockets
-static esp_ip4_addr_t my_ip_address;       // IP address assigned by router
+static esp_netif_ip_info_t ipInfo;         // IP Address of the access point
 
 /*
  * Private Functions
@@ -93,7 +93,7 @@ static void tcpip_server_io(void);        // Manage TCPIP traffic
 void WiFi_init(void)
 {
     DLT(DLT_CRITICAL);
-    printf("WiFi_init()");
+    printf("WiFi_init()\r\n");
 
 /* 
  * Initialize the WiFI
@@ -130,7 +130,6 @@ void WiFi_init(void)
  *******************************************************************************/
 void WiFi_AP_init(void)
 {
-    esp_netif_ip_info_t ipInfo;
     esp_netif_t* wifiAP;
     wifi_init_config_t WiFi_init_config = WIFI_INIT_CONFIG_DEFAULT();
 
@@ -325,7 +324,7 @@ void WiFi_event_handler
    {
         if ( event_id == IP_EVENT_STA_GOT_IP )
         {
-            my_ip_address = event->ip_info.ip;
+            ipInfo.ip = event->ip_info.ip;
             if ( DLT(DLT_INFO) )
             {
                 printf(" Received IP:" IPSTR, IP2STR(&event->ip_info.ip));
@@ -693,12 +692,12 @@ void WiFi_loopback_task(void* parameters)
  * @return:   None
  *
  ****************************************************************************/
-#define TO_IP(x) ((int)x >> 24) & 0xff, ((int)x >> 16) & 0xff, ((int)x >> 8) & 0xff, (int)x & 0xff
+#define TO_IP(x) ((int)x) & 0xff, ((int)x >> 8) & 0xff, ((int)x >> 16) & 0xff, ((int)x >> 24) & 0xff
 void WiFi_my_ip_address
 (
     char* s             // Where to return the string
 )
 {
-    sprintf(s, "%d.%d.%d.%d", TO_IP(my_ip_address.addr));
+    sprintf(s, "%d.%d.%d.%d", TO_IP(ipInfo.ip.addr));
     return;
 }
