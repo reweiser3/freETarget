@@ -26,10 +26,8 @@
 #include "../managed_components/espressif__led_strip/src/led_strip_rmt_encoder.h"
 
 /*
- * @function prototypes
+ * function prototypes
  */
-static void sw_state(unsigned int action);// Do something with the switches
-static void send_fake_score(void);        // Send a fake score to the PC
 
 /* 
  *  Typedefs
@@ -45,7 +43,6 @@ typedef struct status_struct {
  * Variables
  */
 status_struct_t status[3];
-static unsigned int dip_mask;             // Used if the MFS2 uses the DIP_0 or DIP_3
 
 /*-----------------------------------------------------
  * 

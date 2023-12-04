@@ -538,7 +538,7 @@ unsigned int reduce(void)
 
  void tabata_enable
   (
-    unsigned int enable     // Rapid fire enable state
+    int enable     // Rapid fire enable state
   )
  {
 /*

@@ -157,9 +157,9 @@ float v12_supply(void)
 static unsigned int old_LED_percent = 0;
 
 void set_LED_PWM_now
-  (
-  unsigned int new_LED_percent                            // Desired LED level (0-100%)
-  )
+(
+   int new_LED_percent                            // Desired LED level (0-100%)
+)
 {
   if ( new_LED_percent == old_LED_percent )
   {
@@ -277,12 +277,12 @@ double temperature_C(void)
  */
   temp_buffer[0] = 0x24;        // Trigger read on demand
   temp_buffer[1] = 0x00;
-  i2c_write( TEMP_IC, &temp_buffer, 2 );
+  i2c_write( TEMP_IC, temp_buffer, 2 );
   temp_buffer[0] = 0xAB;
   temp_buffer[1] = 0xCD;
   temp_buffer[2] = 0xDE;
   temp_buffer[3] = 0xF0;
-  i2c_read( TEMP_IC,  &temp_buffer, 6);
+  i2c_read( TEMP_IC,  temp_buffer, 6);
 
 /*
  *  Return the temperature in C

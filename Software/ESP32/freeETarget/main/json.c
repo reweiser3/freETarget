@@ -178,7 +178,7 @@ static void diag_delay(int x) { printf("\r\n\"DELAY\":%d", x); vTaskDelay(x*1000
  *
  * The format of the JSON stings used here is
  * 
- * { "LABLE":value }
+ * {"LABLE":value }
  * 
  * {"ECHO":23"}
  * {"ECHO":12, "DIP":8}
@@ -580,10 +580,9 @@ void show_echo(void)
 
   if ( json_token == TOKEN_NONE )
   {
-      WiFi_my_ip_address(&str_c);
+      WiFi_my_ip_address(str_c);
       sprintf(s, "\"WiFi_IP_ADDRESS\": \"%s:1090\", \n\r", str_c);                        // Print out the IP address
       serial_to_all(s, ALL);
-  
   }
   else
   {

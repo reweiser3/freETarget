@@ -339,13 +339,11 @@ void WiFi_event_handler
     if (event_id == WIFI_EVENT_AP_STACONNECTED)
     {
       printf("AP Connected");
-      wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
     } 
    
    if (event_id == WIFI_EVENT_AP_STADISCONNECTED)
    {
       printf("STATION disconnected");
-      wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
    }
 
 /*
@@ -376,8 +374,6 @@ static char greeting[] = "{\"CONNECTED\"}";
 
 void WiFi_tcp_server_task(void *pvParameters)
 {
-   struct sockaddr_storage source_addr; // Large enough for both IPv4 or IPv6
-
    DLT(DLT_CRITICAL);
    printf("WiFi_tcp_server_task()");
 
