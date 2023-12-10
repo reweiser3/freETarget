@@ -39,13 +39,6 @@ static bool discard_shot(void);         // In TabataThrow away the shot
 extern void gpio_init(void);
 
 /*
- *  FreeRTOS Settings
- */
-const TickType_t json_delay        = (ONE_SECOND/10);   // Poll the serial port at 10Hz
-const TickType_t timer_delay       = (ONE_SECOND/1000); // Poll the timer every ms
-const TickType_t freeETarget_delay = (ONE_SECOND/1000); // Run FreeTimer every ms
-
-/*
  *  Variables
  */
 shot_record_t record[SHOT_STRING];      //Array of shot records
@@ -57,10 +50,8 @@ unsigned int  shot = 0;                 // Shot counter
 unsigned int  face_strike = 0;          // Miss Face Strike interrupt count
 unsigned int  is_trace = 0;             // Turn off tracing
 unsigned long rapid_on = 0;             // Duration of rapid fire event
-unsigned int  rapid_state = 0;          // What rapid fire state are we in  
 
 unsigned int  rapid_count = 0;          // Number of shots to be expected in Rapid Fire
-unsigned int  tabata_state;             // Tabata state
 unsigned int  shot_number;              // Shot Identifier
 volatile unsigned long  in_shot_timer;  // Time inside of the shot window
 
@@ -152,22 +143,18 @@ void freeETarget_init(void)
  * 
  *----------------------------------------------------------------
  */
-#define START      0                  // Set the operating mode
-#define WAIT       (START+1)          // ARM the circuit and wait for a shot
-#define REDUCE     (WAIT+1)           // Reduce the data and send the score
+enum 
+{
+  START = 0,              // Set the operating mode
+  WAIT,                   // ARM the circuit and wait for a shot
+  REDUCE                  // Reduce the data and send the score
+} state;
 
-unsigned int state = START;
 unsigned int  sensor_status;          // Record which sensors contain valid data
 unsigned int  location;               // Sensor location 
 
-char* loop_name[] = {"SET_MODE", "ARM", "WAIT", "AQUIRE", "REDUCE", "FINISH" };
-
 void freeETarget_target_loop(void* arg)
 {
-  while(1)
-  {
-    vTaskDelay(100);
-  }
   while(1)
   {
 /*
@@ -267,10 +254,6 @@ void freeETarget_target_loop(void* arg)
 unsigned int arm(void)
 {
   face_strike = 0;                  // Reset the face strike count
-  if ( json_send_miss )
-  {
-//    enable_face_interrupt();        // Turn on the face strike interrupt
-  }
 
   stop_timers();
   arm_timers();                     // Arm the counters
@@ -527,19 +510,22 @@ unsigned int reduce(void)
  * {"TABATA_WARN_ON": 1, "TABATA_WARN_OFF":5, "TABATA_ON":7, "TABATA_REST":30, "TABATA_ENABLE":1}
  * {"TABATA_WARN_ON": 2, "TABATA_WARN_OFF":2, "TABATA_ON":7, "TABATA_REST":45, "TABATA_ENABLE":1}
  * {"TABATA_ENABLE":0}
+ * 
  *--------------------------------------------------------------*/
+enum
+{
+  TABATA_OFF = 0,                     // No tabata cycles at all
+  TABATA_REST,                        // Tabata is doing nothing (typically 60 seconds)
+  TABATA_WARNING,                     // Time the warning LED is on (typically 2 seconds)
+  TABATA_DARK,                        // Time the warning LED is off before the shot (typically 2 seconds)
+  TABATA_ON                           // Time the TABATA lED is on (typically 5 seconds)
+} tabata_state;
 
-#define TABATA_OFF          0         // No tabata cycles at all
-#define TABATA_REST         1         // Tabata is doing nothing (typically 60 seconds)
-#define TABATA_WARNING      2         // Time the warning LED is on (typically 2 seconds)
-#define TABATA_DARK         3         // Time the warning LED is off before the shot (typically 2 seconds)
-#define TABATA_ON           4         // Time the TABATA lED is on (typically 5 seconds)
-
- void tabata_enable
-  (
-    int enable     // Rapid fire enable state
-  )
- {
+void tabata_enable
+(
+  int enable     // Rapid fire enable state
+)
+{
 /*
  * If enabled, set up the timers
  */
@@ -739,11 +725,13 @@ static bool discard_shot(void)
  * {"RAPID_TIME":10, "RAPID_COUNT":10, "RAPID_AUTO":1,  "RAPID_ENABLE":1}
  * 
  *--------------------------------------------------------------*/
- #define RANDOM_INTERVAL 100    // 100 signals random time, %10 is the duration
+#define RANDOM_INTERVAL 100    // 100 signals random time, %10 is the duration
 
-#define RAPID_OFF           0         // No rapid fire cycles at all
-#define RAPID_WAIT          1         // Rapid fire is doing nothing (typically 60 seconds)
-#define RAPID_ON            4         // Time the RAPID lED is on (typically 5 seconds)
+enum {
+  RAPID_OFF = 0,               // No rapid fire cycles at all
+  RAPID_WAIT,                  // Rapid fire is doing nothing (typically 60 seconds)
+  RAPID_ON                     // Time the RAPID lED is on (typically 5 seconds)
+} rapid_state;
 
 void rapid_fire_task(void)
 {
@@ -775,7 +763,7 @@ void rapid_fire_task(void)
       case (RAPID_WAIT):                   // Keep the LEDs on for the tabata time
         if ( rapid_timer == 0 )            // Don't do anything unless the time expires
         {
-          timer_new(&rapid_timer, 0);
+          timer_new(&rapid_timer, json_rapid_on);
           sprintf(s, "{\"RAPID_ON\":%d}\r\n", (json_rapid_time));
           serial_to_all(s, ALL);
           set_LED_PWM_now(0);             // Turn off the LEDs
@@ -784,9 +772,8 @@ void rapid_fire_task(void)
         break;
 
       case (RAPID_ON):                    // Keep the LEDs on for the tabata time
-        if ( rapid_timer == 0 )          // Don't do anything unless the time expires
+        if ( rapid_timer == 0 )           // Don't do anything unless the time expires
         {
-          timer_new(&rapid_timer, 0);
           sprintf(s, "{\"RAPID_OFF\":0}\r\n");
           serial_to_all(s, ALL);
           set_LED_PWM_now(0);             // Turn off the LEDs
@@ -818,9 +805,11 @@ void rapid_fire_task(void)
  * This is called every second from the synchronous scheduler
  * 
  *--------------------------------------------------------------*/
-#define BYE_BYE       0   // Wait for the timer to run out
-#define BYE_HOLD      1   // Wait for the MFS to be pressed
-#define BYE_START     2   // Go back into service
+enum bye_state {
+  BYE_BYE = 0,      // Wait for the timer to run out
+  BYE_HOLD,         // Wait for the MFS to be pressed
+  BYE_START         // Go back into service
+};
 
 void bye(void)
 {

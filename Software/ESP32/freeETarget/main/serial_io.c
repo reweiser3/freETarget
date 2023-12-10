@@ -249,7 +249,6 @@ char serial_getch
 /*
  *  Bring in the TCPIP bytes
  */
-return 0;
   if ( tcpip )
   {
     if ( tcpip_queue_2_app(&ch, 1) > 0 )
@@ -263,6 +262,7 @@ return 0;
  */
   return 0;
 }
+
 /*******************************************************************************
  * 
  * @function: serial_putch
@@ -337,6 +337,7 @@ void serial_to_all
   {
     printf("%s", str);
   }
+  
   if ( aux )
   {
     uart_write_bytes(uart_aux, (const char *) str, len);

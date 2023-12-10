@@ -17,8 +17,6 @@
 #include "json.h"
 #include "nonvol.h"
 #include "serial_io.h"
-#include "C:\Users\allan\esp\esp-idf\esp-idf\components\freertos\FreeRTOS-Kernel\include\freertos\mpu_wrappers.h"
-
 
 /*
  * Function Prototypes 
@@ -340,8 +338,6 @@ static void sw_state
     default:
       break;
   }
-
-
 
 /*
  * All done, return
