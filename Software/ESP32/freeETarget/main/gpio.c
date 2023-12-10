@@ -431,9 +431,10 @@ void read_timers
  * 
  *-----------------------------------------------------*/
 
+volatile unsigned long paper_time;
+
 void drive_paper(void)
 {
-  volatile unsigned long paper_time;
 
   if ( DLT(DLT_DIAG) )
   {
@@ -448,11 +449,9 @@ void drive_paper(void)
   paper_on_off(true);                       // Motor ON
   while ( paper_time != 0 )
   {
-    continue;
+    vTaskDelay(1);
   }
   paper_on_off(false);                      // Motor OFF
-
-  timer_delete(&paper_time);                // Finished with the timer
 
  /*
   * All done, return

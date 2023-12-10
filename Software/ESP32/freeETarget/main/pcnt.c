@@ -16,14 +16,15 @@
 #include "stdbool.h"
 #include "diag_tools.h"
 #include "driver/pulse_cnt.h"
-#include "esp_err.h"
+#include "driver/gpio.h"
+#include "driver/timer.h"
+#include "driver/ledc.h"
 #include "led_strip.h"
 #include "led_strip_types.h"
-#include "driver\ledc.h"
+
 #include "gpio_define.h"
-#include "driver\gpio.h"
-#include "driver\timer.h"
 #include "pcnt.h"
+
 /*
  *  Working variables
  */

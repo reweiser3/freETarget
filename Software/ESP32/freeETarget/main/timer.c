@@ -14,16 +14,17 @@
  * 
  * ----------------------------------------------------*/
 #include "stdbool.h"
+#include "driver\timer.h"
+#include "freETarget.h"
 #include "diag_tools.h"
 #include "gpio_types.h"
 #include "json.h"
-#include "driver\timer.h"
 
 /*
  * Definitions
  */
 #define FREQUENCY 1000ul                        // 1000 Hz
-#define N_TIMERS        8                       // Keep space for 8 timers
+#define N_TIMERS       32                       // Keep space for 32 timers
 #define PORT_STATE_IDLE 0                       // There are no sensor inputs
 #define PORT_STATE_WAIT 1                       // Some sensor inputs are present, but not all
 #define PORT_STATE_DONE 2                       // All of the inmputs are present
@@ -298,7 +299,7 @@ unsigned long timer_delete
 
 void freeETarget_synchronous
 (
-    void *pvParameters              // Select IPV4 or 6
+  void *pvParameters
 )
 {
   int cycle_count = 0;
@@ -319,6 +320,8 @@ void freeETarget_synchronous
       commit_status_LEDs( toggle );
       toggle ^= 1;
       multifunction_switch();
+      tabata_task();
+      rapid_fire_task();
     }
 
 /*

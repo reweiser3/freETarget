@@ -26,13 +26,11 @@
 /*
  *  Variables
  */
-extern int json_clock[4];
 sensor_t s[4];
 unsigned int  pellet_calibre;     // Time offset to compensate for pellet diameter
 static volatile unsigned long wdt; // Warchdog  timer
 
 static void remap_target(double* x, double* y);  // Map a club target if used
-
 
 /*----------------------------------------------------------------
  *
@@ -552,7 +550,6 @@ void send_score
       { 
         token_poll();
       }
-      timer_delete(&wdt);                       // Don't need it any more
     }
     set_status_LED(LED_WIFI_SEND);
   }
@@ -689,7 +686,6 @@ void send_miss
         token_poll();
       }
       set_status_LED(LED_WIFI_SEND);
-      timer_delete(&wdt);
     }
   }
   

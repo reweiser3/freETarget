@@ -86,10 +86,6 @@ int     json_token;                 // Token ring state
 double  json_vref_lo;               // Low Voltage DAC setting
 double  json_vref_hi;               // High Voltage DAC setting
 
-#if ( CLOCK_TEST )
-int     json_clock[4];              // Storage for clock test
-#endif
-
        void show_echo(void);        // Display the current settings
 static void show_test(int v);       // Execute the self test once
 static void show_names(int v);
@@ -595,8 +591,7 @@ void show_echo(void)
   sprintf(s, "\"VERSION\": %s, \n\r", SOFTWARE_VERSION);                                  // Current software version
   serial_to_all(s, ALL);  
 
-  j = 0;
-  // nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
+  nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
   sprintf(s, "\"PS_VERSION\": %d, \n\r", j);                                             // Current persistent storage version
   serial_to_all(s, ALL); 
   
@@ -690,11 +685,11 @@ static void show_test(int test_number)
 
   trace |= DLT_CRITICAL;        // Critical is always enabled
     
-  if ( trace & DLT_CRITICAL)    {sprintf(s, "\r\r%03d DLT CRITICAL", DLT_CRITICAL);   serial_to_all(s, ALL);}
+  if ( trace & DLT_CRITICAL)    {sprintf(s, "\r\r%03d DLT CRITICAL", DLT_CRITICAL);      serial_to_all(s, ALL);}
   if ( trace & DLT_APPLICATION) {sprintf(s, "\r\n%03d DLT APPLICATON", DLT_APPLICATION); serial_to_all(s, ALL);}
-  if ( trace & DLT_DIAG)        {sprintf(s, "\r\n%03d DLT DIAG", DLT_DIAG);       serial_to_all(s, ALL);}
-  if ( trace & DLT_INFO)        {sprintf(s, "\r\n%03d DLT INFO", DLT_INFO);       serial_to_all(s, ALL);}
-  printf("\r\n");
+  if ( trace & DLT_DIAG)        {sprintf(s, "\r\n%03d DLT DIAG", DLT_DIAG);              serial_to_all(s, ALL);}
+  if ( trace & DLT_INFO)        {sprintf(s, "\r\n%03d DLT INFO", DLT_INFO);              serial_to_all(s, ALL);}
+  sprintf(s, "\r\n");                                                                    serial_to_all(s, ALL);
 
   is_trace = trace;
   return;   

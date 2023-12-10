@@ -8,7 +8,6 @@
  *
  * See https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/nvs_flash.html
  *
- * 
  * ----------------------------------------------------*/
 #include "nvs_flash.h"
 #include "nvs.h"

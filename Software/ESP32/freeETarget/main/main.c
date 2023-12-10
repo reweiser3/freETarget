@@ -9,10 +9,7 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "driver/gpio.h"
-#include "esp_log.h"
-#include "led_strip.h"
-#include "sdkconfig.h"
+
 #include "freETarget.h"
 #include "json.h"
 #include "timer.h"
@@ -37,9 +34,7 @@ void app_main(void)
    xTaskCreate(tcpip_socket_poll_1,     "tcpip_socket_poll_1",       4096, NULL, 4, NULL);
    xTaskCreate(tcpip_socket_poll_2,     "tcpip_socket_poll_2",       4096, NULL, 4, NULL);
    xTaskCreate(tcpip_socket_poll_3,     "tcpip_socket_poll_3",       4096, NULL, 4, NULL);
-   xTaskCreate(tabata_task,              "tabata",                   4096, NULL, 4, NULL);
-   xTaskCreate(rapid_fire_task,          "rapid_fire",               4096, NULL, 4, NULL);
-   xTaskCreate(WiFi_tcp_server_task,     "WiFi_tcp_server",          4096, NULL, 5, NULL);
-   xTaskCreate(tcpip_accept_poll,        "tcpip_accept_poll",        4096, NULL, 4, NULL);
+   xTaskCreate(WiFi_tcp_server_task,    "WiFi_tcp_server",           4096, NULL, 5, NULL);
+   xTaskCreate(tcpip_accept_poll,       "tcpip_accept_poll",         4096, NULL, 4, NULL);
    freeETarget_timer_init();
 }

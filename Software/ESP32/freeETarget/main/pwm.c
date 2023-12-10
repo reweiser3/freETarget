@@ -13,7 +13,6 @@
  * 
  ***************************************************************************/
 #include "driver/ledc.h"
-#include "esp_err.h"
 #include "pwm.h"
 
 #define PWM_TIMER              LEDC_TIMER_0

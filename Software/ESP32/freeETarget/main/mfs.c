@@ -6,6 +6,8 @@
  * 
  *-------------------------------------------------------------*/
 #include "driver/gpio.h"
+#include "stdio.h"
+#include "nvs.h"
 
 #include "freETarget.h"
 #include "diag_tools.h"
@@ -13,9 +15,7 @@
 #include "compute_hit.h"
 #include "analog_io.h"
 #include "json.h"
-#include "nvs.h"
 #include "nonvol.h"
-#include "stdio.h"
 #include "serial_io.h"
 #include "C:\Users\allan\esp\esp-idf\esp-idf\components\freertos\FreeRTOS-Kernel\include\freertos\mpu_wrappers.h"
 

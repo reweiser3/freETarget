@@ -79,8 +79,8 @@ void bye(void);                                         // Shut down and say goo
 void tabata_enable(int enable);                         // Arm the Tabata counters
 void polled_target_test(void);                          // Test the target aquisition software
 void interrupt_target_test(void);                       // Test the target aquisition software
-void tabata_task(void* parameters);                     // Run the TABATA timersArm the Tabata counter
-void rapid_fire_task(void* parameters);                 // Run the Rapid Fire state machine
+void tabata_task(void);                                 // Run the TABATA timersArm the Tabata counter
+void rapid_fire_task(void);                             // Run the Rapid Fire state machine
 
 /* 
  * freeRTOS Definitions 

@@ -37,11 +37,6 @@ const char* which_one[] = {"North_lo", "East_lo ", "South_lo", "West_lo ", "Nort
 #define GRID_SIDE 25                              // Should be an odd number
 #define TEST_SAMPLES ((GRID_SIDE)*(GRID_SIDE))
 
-/*
-static int   get_int(void);         // Get an integer from the user
-static float get_float(void);       // Get a float from the user
-*/
-
 /*******************************************************************************
  *
  * @function: void self_test
@@ -219,6 +214,7 @@ void self_test
       WiFi_loopback_test();
       break; 
   }
+
  /* 
   *  All done, return;
   */
@@ -361,7 +357,6 @@ void self_test
  * The clock values are also printed
  *   
  *--------------------------------------------------------------*/
-
 void show_sensor_status
   (
   unsigned int   sensor_status
@@ -376,17 +371,6 @@ void show_sensor_status
     if ( sensor_status & (1<<i) )   printf("%c", nesw[i]);
     else                            printf(".");
   }
-#if (0)
-  if ( shot != 0 )
-  {
-    printf(" Timers:");
-
-    for (i=N; i<=W; i++)
-    {
-      printf(" %c:%d", nesw[i], shot->timer_count[i]); 
-    }
-  }
-#endif
 
   printf("  Face Strike: %d", face_strike);
   
@@ -412,8 +396,7 @@ void show_sensor_status
     printf("B2");
   }
 
-  if ( ((sensor_status & 0x0f) == 0x0f)
-    && (face_strike != 0) )
+  if (( sensor_status & 0x0f) == 0x0f)
   {
     printf(" PASS");
     vTaskDelay(ONE_SECOND);                // Wait for click to go away
@@ -422,9 +405,9 @@ void show_sensor_status
 /*
  * All done, return
  */
-
   return;
 }
+
 /*----------------------------------------------------------------
  *
  * @function: do_dlt
@@ -456,253 +439,3 @@ bool do_dlt
   return true;
 }
 
-#if(0)
-/*----------------------------------------------------------------
- *
- * @function: get_int
- *
- * @brief:    Get an Int from the user
- *
- * @return:   Signed integer from the user
- * 
- *----------------------------------------------------------------
- * 
- * Poll the serial ports and parse the input to extract the number
- * Illegal characters are ignored
- *   
- *--------------------------------------------------------------*/
-static int get_int(void)
-{
-  int  return_value;              // Number returned to user
-  char ch;                        // Working character
-  int  is_negative;               // Remember if we saw a -
-
-  return_value = 0;
-  is_negative  = 0;
-
-/*
- * See if anything is waiting and if so, add it in
- */
-  while (1)
-  {
-    if ( serial_available(ALL) == 0 )
-    {
-      continue;
-    } 
-
-    ch = serial_getch(ALL);
-/*
- * Parse the stream
- */
-    switch (ch)
-    {        
-      case '\n':                            // New line, 
-      case '\r':
-        if ( is_negative )
-        {
-          return_value = -return_value;
-        }
-        return return_value;                // return
-
-      case 0x08:                            // Backspace
-        return_value /= 10;                 // Discard the last entry
-        break;
-
-        
-      case '-':
-        is_negative = true;
-        break;
-
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-        ch -= '0';
-        return_value = (return_value * 10) + ch;
-        break;
-    }
-  }
-
-/*
- * All done
- */
-  return 0;
-}  
-
-/*----------------------------------------------------------------
- *
- * @function: get_float
- *
- * @brief:    Get a float from the user
- *
- * @return:   Signed float from the user
- * 
- *----------------------------------------------------------------
- * 
- * Poll the serial ports and parse the input to extract the number
- * Illegal characters are ignored
- *   
- *--------------------------------------------------------------*/
-static float get_float(void)
-{
-  float  return_value;            // Number returned to user
-  int  mantissa;                  // Fractional portion
-  char ch;                        // Working character
-  int  is_negative;               // Remember if we saw a -
-  int  is_float;                  // TRUE if we have a float
-
-  return_value = 0;
-  is_negative  = 0;
-  mantissa     = 1;
-  is_float     = 0;
-
-/*
- * See if anything is waiting and if so, add it in
- */
-  while (1)
-  {
-    if ( serial_available(ALL) == 0 )
-    {
-      continue;
-    } 
-
-    ch = serial_getch(ALL);
-/*
- * Parse the stream
- */
-    switch (ch)
-    {        
-      case '\n':                            // New line, 
-      case '\r':
-        return_value /= (float)mantissa;
-        if ( is_negative )
-        {
-          return_value = -return_value;
-        }
-        return return_value;                // return
-
-      case 0x08:                            // Backspace
-        return_value /= 10;                 // Discard the last entry
-        if ( is_float && (mantissa != 1 ) )
-        {
-          mantissa /= 10;
-        }
-        break;
-
-      case '-':
-        is_negative = true;
-        break;
-  
-      case '.':
-        is_float = true;
-        mantissa = 1;
-        break;
-
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9':
-        ch -= '0';
-        return_value = (return_value * 10.0) + (float)ch;
-        if ( is_float )
-        {
-          mantissa *= 10;
-        }
-        break;
-    }
-  }
-
-/*
- * All done
- */
-  return 0;
-}  
-/*----------------------------------------------------------------
- *
- * @function: get_text
- *
- * @brief:    Get an strng from the user
- *
- * @return:   Number of characters read
- * 
- *----------------------------------------------------------------
- * 
- * Poll the serial ports and parse the input to extract the text
- *   
- *--------------------------------------------------------------*/
-static int get_text
-(
-  char* dest,
-  int   size
-)
-{
-  int  in_count;                  // Character count returned to user
-  char ch;                        // Working character
-
-  if ( (dest == NULL) || (size == 0) )
-  {
-    return 0;                     // Return if the numbers are bad
-  }
-
-  in_count = 0;
-  *dest = 0;                      // Null terminate
-
-/*
- * See if anything is waiting and if so, add it in
- */
-  while (1)
-  {
-    if ( serial_available(ALL) == 0 )
-    {
-      continue;
-    } 
-
-    ch = serial_getch(ALL);
-/*
- * Parse the stream
- */
-    switch (ch)
-    {        
-      case '\n':                            // New line, 
-      case '\r':
-        return in_count;
-
-      case 0x08:                            // Backspace
-        if ( in_count != 0 )
-        {
-          dest--;                           // Go back one
-          *dest = 0;                        // and null terminate
-          in_count--;
-        }
-        break;
-
-      default:
-        *dest = ch;
-        dest++;
-        in_count++;
-        if ( in_count == size )
-        {
-          return in_count;
-        }
-        break;
-    }
-  }
-
-/*
- * All done
- */
-  return 0;
-}  
-#endif

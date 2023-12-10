@@ -106,7 +106,6 @@ void freeETarget_init(void)
  *  Set up the port pins
  */
   timer_new(&keep_alive,    (unsigned long)json_keep_alive * ONE_SECOND); // Keep alive timer
-  timer_new(&tabata_timer,   0);                                           // Free running state timer
   timer_new(&in_shot_timer, FULL_SCALE);                                  // Time inside of the shot window
   timer_new(&power_save,    (unsigned long)(json_power_save) * (long)ONE_SECOND * 60L);// Power save timer
 
@@ -599,103 +598,96 @@ unsigned int reduce(void)
  * {"TABATA_WARN_ON": 2, "TABATA_WARN_OFF":2, "TABATA_ON":7, "TABATA_REST":45, "TABATA_ENABLE":1}
  * 
  *-------------------------------------------------------------*/
-void tabata_task
-(
-  void* parameters            // TRUE if starting timer
-)
+void tabata_task(void)
 {
   char s[32];
 
-  while(1)
-  {
 /*
  * Reset the variables based on the arguements
  */
-    if ( json_tabata_enable == 0 )        // Reset the timer
+  if ( json_tabata_enable == 0 )        // Reset the timer
+  {
+    timer_new(&tabata_timer, 0);      
+    tabata_state = 0;
+  }
+  else
+  {
+    switch (tabata_state)
     {
-      timer_new(&tabata_timer, 0);      
-      tabata_state = 0;
-    }
-    else
-    {
-      switch (tabata_state)
-      {
-        case (TABATA_OFF):                  // The tabata is not enabled
-          if ( json_tabata_enable != 0 )    // Just switched to enable. 
-          {
-            timer_new(&tabata_timer, json_tabata_on * ONE_SECOND);
-            set_LED_PWM_now(0);             // Turn off the lights
-            sprintf(s, "{\"TABATA_STARTING\":%d}\r\n", (30));
-            serial_to_all(s, ALL);
-            tabata_state = TABATA_REST;
-          } 
-          break;
+      case (TABATA_OFF):                  // The tabata is not enabled
+        if ( json_tabata_enable != 0 )    // Just switched to enable. 
+        {
+          timer_new(&tabata_timer, json_tabata_on * ONE_SECOND);
+          set_LED_PWM_now(0);             // Turn off the lights
+          sprintf(s, "{\"TABATA_STARTING\":%d}\r\n", (30));
+          serial_to_all(s, ALL);
+          tabata_state = TABATA_REST;
+        } 
+        break;
         
-        case (TABATA_REST):                // OFF, wait for the time to expire
-          if (tabata_timer == 0)             // Don't do anything unless the time expires
-          {
-            timer_new(&tabata_timer, json_tabata_warn_on * ONE_SECOND);
-            set_LED_PWM_now(json_LED_PWM);  //     Turn on the lights
-            sprintf(s, "{\"TABATA_WARN\":%d}\r\n", json_tabata_warn_on);
-            serial_to_all(s, ALL);
-            tabata_state = TABATA_WARNING;
-          }
-          break;
+      case (TABATA_REST):                // OFF, wait for the time to expire
+        if (tabata_timer == 0)             // Don't do anything unless the time expires
+        {
+          timer_new(&tabata_timer, json_tabata_warn_on * ONE_SECOND);
+          set_LED_PWM_now(json_LED_PWM);  //     Turn on the lights
+          sprintf(s, "{\"TABATA_WARN\":%d}\r\n", json_tabata_warn_on);
+          serial_to_all(s, ALL);
+          tabata_state = TABATA_WARNING;
+        }
+        break;
         
-        case (TABATA_WARNING):                 // Warning time in seconds
-          if ( (tabata_timer % 50) == 0 )
+      case (TABATA_WARNING):                 // Warning time in seconds
+        if ( (tabata_timer % 50) == 0 )
+        {
+          if ( ((tabata_timer / 50) & 1) == 0 )
           {
-            if ( ((tabata_timer / 50) & 1) == 0 )
-            {
-              set_LED_PWM_now(0);
-            }
-            else
-            {
-            set_LED_PWM_now(json_LED_PWM);
-            }
+            set_LED_PWM_now(0);
           }
-          if (tabata_timer == 0)         // Don't do anything unless the time expires
+          else
           {
-            timer_new(&tabata_timer, json_tabata_warn_off * ONE_SECOND);
-            set_LED_PWM_now(0);             // Turn off the lights
-            sprintf(s, "{\"TABATA_DARK\":%d}\r\n", json_tabata_warn_off);
-            serial_to_all(s, ALL);
-            tabata_state = TABATA_DARK;
+          set_LED_PWM_now(json_LED_PWM);
           }
-          break;
+        }
+        if (tabata_timer == 0)         // Don't do anything unless the time expires
+        {
+          timer_new(&tabata_timer, json_tabata_warn_off * ONE_SECOND);
+          set_LED_PWM_now(0);             // Turn off the lights
+          sprintf(s, "{\"TABATA_DARK\":%d}\r\n", json_tabata_warn_off);
+          serial_to_all(s, ALL); 
+          tabata_state = TABATA_DARK;
+        }
+        break;
       
       case (TABATA_DARK):                   // Dark time in seconds
-          if (tabata_timer == 0 )            // Don't do anything unless the time expires
-          {
-            in_shot_timer = FULL_SCALE;     // Set the timer on
-            timer_new(&tabata_timer, json_tabata_on * ONE_SECOND);
-            set_LED_PWM_now(json_LED_PWM);           // Turn on the lights
-            sprintf(s, "{\"TABATA_ON\":%d}\r\n", json_tabata_on);
-            serial_to_all(s, ALL);
-            tabata_state = TABATA_ON;
-          }
-          break;
+        if (tabata_timer == 0 )            // Don't do anything unless the time expires
+        {
+          in_shot_timer = FULL_SCALE;     // Set the timer on
+          timer_new(&tabata_timer, json_tabata_on * ONE_SECOND);
+          set_LED_PWM_now(json_LED_PWM);           // Turn on the lights
+          sprintf(s, "{\"TABATA_ON\":%d}\r\n", json_tabata_on);
+          serial_to_all(s, ALL);
+          tabata_state = TABATA_ON;
+        }
+        break;
       
       case (TABATA_ON):                     // Keep the LEDs on for the tabata time
-          if ( tabata_timer == 0 )           // Don't do anything unless the time expires
-          {
-            timer_new(&tabata_timer, (long)(json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off) * ONE_SECOND);
-            sprintf(s, "{\"TABATA_OFF\":%d}\r\n", (json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off));
-            serial_to_all(s, ALL);
-            set_LED_PWM_now(0);             // Turn off the LEDs
-            tabata_state = TABATA_REST;
-          }
-          break;
-      }
+        if ( tabata_timer == 0 )           // Don't do anything unless the time expires
+        {
+          timer_new(&tabata_timer, (long)(json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off) * ONE_SECOND);
+          sprintf(s, "{\"TABATA_OFF\":%d}\r\n", (json_tabata_rest - json_tabata_warn_on - json_tabata_warn_off));
+          serial_to_all(s, ALL);
+          set_LED_PWM_now(0);             // Turn off the LEDs
+          tabata_state = TABATA_REST;
+        }
+        break;
     }
-    vTaskDelay(ONE_SECOND/2);
   }
 
  /* 
   * All done.  Return the current time if in the TABATA_ON state
   */
     return;
- }
+}
 
 /*----------------------------------------------------------------
  * 
@@ -753,70 +745,63 @@ static bool discard_shot(void)
 #define RAPID_WAIT          1         // Rapid fire is doing nothing (typically 60 seconds)
 #define RAPID_ON            4         // Time the RAPID lED is on (typically 5 seconds)
 
-void rapid_fire_task
-(
-    void* parameters
-)
+void rapid_fire_task(void)
 {
   char s[32];
 
-  while(1)
-  {
 /*
  * Reset the variables based on the arguements
  */
-    if ( json_rapid_enable == 0 )        // Reset the timer
+  if ( json_rapid_enable == 0 )        // Reset the timer
+  {
+    timer_new(&rapid_timer, 0);      
+    rapid_state = RAPID_OFF;
+  }
+  else
+  {
+    switch (rapid_state)
     {
-      timer_delete(&tabata_timer);
-      timer_new(&rapid_timer, 0);      
-      rapid_state = RAPID_OFF;
-    }
-    else
-    {
-      switch (rapid_state)
-      {
-        case (RAPID_OFF):                   // The tabata is not enabled
-          if ( json_rapid_enable != 0 )     // Just switched to enable. 
-          {
-            timer_new(&rapid_timer, json_rapid_wait * ONE_SECOND);
-            set_LED_PWM_now(0);             // Turn off the lights
-            sprintf(s, "{\"RAPID_ON\":%d}\r\n", (30));
-            serial_to_all(s, ALL);
-            tabata_state = RAPID_WAIT;
-          } 
-          break;
+      case (RAPID_OFF):                   // The tabata is not enabled
+        if ( json_rapid_enable != 0 )     // Just switched to enable. 
+        {
+          timer_new(&rapid_timer, json_rapid_wait * ONE_SECOND);
+          set_LED_PWM_now(0);             // Turn off the lights
+          sprintf(s, "{\"RAPID_ON\":%d}\r\n", (30));
+          serial_to_all(s, ALL);
+          tabata_state = RAPID_WAIT;
+        } 
+        break;
         
-        case (RAPID_WAIT):                   // Keep the LEDs on for the tabata time
-          if ( rapid_timer == 0 )            // Don't do anything unless the time expires
-          {
-            timer_new(&rapid_timer, 0);
-            sprintf(s, "{\"RAPID_ON\":%d}\r\n", (json_rapid_time));
-            serial_to_all(s, ALL);
-            set_LED_PWM_now(0);             // Turn off the LEDs
-            tabata_state = RAPID_ON;
-          }
-          break;
+      case (RAPID_WAIT):                   // Keep the LEDs on for the tabata time
+        if ( rapid_timer == 0 )            // Don't do anything unless the time expires
+        {
+          timer_new(&rapid_timer, 0);
+          sprintf(s, "{\"RAPID_ON\":%d}\r\n", (json_rapid_time));
+          serial_to_all(s, ALL);
+          set_LED_PWM_now(0);             // Turn off the LEDs
+          tabata_state = RAPID_ON;
+        }
+        break;
 
-        case (RAPID_ON):                    // Keep the LEDs on for the tabata time
-          if ( rapid_timer == 0 )          // Don't do anything unless the time expires
-          {
-            timer_new(&rapid_timer, 0);
-            sprintf(s, "{\"RAPID_OFF\":0}\r\n");
-            serial_to_all(s, ALL);
-            set_LED_PWM_now(0);             // Turn off the LEDs
-            tabata_state = RAPID_OFF;
-          }
-          break;
-      }
+      case (RAPID_ON):                    // Keep the LEDs on for the tabata time
+        if ( rapid_timer == 0 )          // Don't do anything unless the time expires
+        {
+          timer_new(&rapid_timer, 0);
+          sprintf(s, "{\"RAPID_OFF\":0}\r\n");
+          serial_to_all(s, ALL);
+          set_LED_PWM_now(0);             // Turn off the LEDs
+          tabata_state = RAPID_OFF;
+        }
+        break;
     }
-    vTaskDelay(ONE_SECOND/2);
   }
 
  /* 
-  * All done.  Return the current time if in the TABATA_ON state
+  * All done.  
   */
     return;
  }
+
  /*----------------------------------------------------------------
  * 
  * @function: bye
@@ -833,59 +818,59 @@ void rapid_fire_task
  * This is called every second from the synchronous scheduler
  * 
  *--------------------------------------------------------------*/
+#define BYE_BYE       0   // Wait for the timer to run out
+#define BYE_HOLD      1   // Wait for the MFS to be pressed
+#define BYE_START     2   // Go back into service
+
 void bye(void)
 {
+  static int bye_state = BYE_BYE;
+
 /*
  * The BYE function does not work if we are a token ring.
  */
-  if ( json_token != TOKEN_NONE )
+  if ( (json_token != TOKEN_NONE)     // Skip if token ring enabled
+    || (json_power_save == 0)         // Power down has not been enabled
+    || (power_save != 0) )            // Power down has not run out
   {
-    return;
-  }
-  
-  if ( json_power_save == 0 )        // Power down has not been enabled
-  {
-    return;
-  }
-
-  if ( power_save != 0 )             // Power down has not run out
-  {
+    bye_state = BYE_BYE;
     return;
   }
 
-/*
- * Say Good Night Gracie!
- */
-  serial_to_all("{\"GOOD_BYE\":0}", ALL);
-  json_tabata_enable = false;     // Turn off any automatic cycles 
-  json_rapid_enable = false;
-  set_LED_PWM(0);                 // Going to sleep 
+  switch (bye_state)
+  {
+    case BYE_BYE:                     // Say Good Night Gracie!
+      serial_to_all("{\"GOOD_BYE\":0}", ALL);
+      json_tabata_enable = false;     // Turn off any automatic cycles 
+      json_rapid_enable = false;
+      set_LED_PWM(0);                 // Going to sleep 
+      serial_flush(ALL);              // Purge the com port
+      bye_state = BYE_HOLD;
+      break;
 
-/*
- * Loop waiting for something to happen
- */ 
-  serial_flush(ALL);              // Purge the com port
-  
-  while( (DIP_SW_A == 0)          // Wait for the switch to be pressed
-    && (DIP_SW_B == 0)            // Or the switch to be pressed
-    && ( serial_available(ALL) == 0)// Or a character to arrive
-    && ( is_running() == 0) )     // Or a shot arrives
-  {
-    vTaskDelay(1);              // Give control back to the scheduler
-  }                               // turns up
-  
-  hello();                          // Back in action
-  
-  while ( (DIP_SW_A == 1)           // Wait here for both switches to be released
-      || ( DIP_SW_B == 1 ) )
-  {
-    vTaskDelay(1);              // Give control back to the scheduler
+    case BYE_HOLD:                    // Loop waiting for something to happen
+      if ( (DIP_SW_A != 0)            // Wait for the switch to be pressed
+        || (DIP_SW_B != 0)            // Or the switch to be pressed
+        || ( serial_available(ALL) != 0)// Or a character to arrive
+        || ( is_running() != 0) )     // Or a shot arrives
+      {
+        bye_state = BYE_START;        // wait for the swich to be released
+      }                               // turns up
+      break;
+
+    case BYE_START:
+      if (  (DIP_SW_A == 0)           // Wait here for both switches to be released
+        && ( DIP_SW_B == 0 ) )
+      {
+        hello();
+        bye_state = BYE_BYE;
+      }
+      break;
   }
 
 /*
- * Reset the timer for next time
+ * Loop for the next time
  */  
-  power_save = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L;
   return;
 }
 

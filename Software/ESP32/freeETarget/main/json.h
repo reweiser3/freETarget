@@ -103,8 +103,5 @@ extern int    json_token;         // Token ring setting
 extern int    json_multifunction2;// Multifunction Switch 2
 extern double json_vref_lo;       // Sensor Voltage Reference Low (V)
 extern double json_vref_hi;       // Sensor Voltage Reference High (V)
-#if (CLOCK_TEST)
-extern int    json_clock[4];      // Test clock
-#endif
 
 #endif
