@@ -379,7 +379,6 @@ int tcpip_app_2_queue
   bytes_moved = 0;
   while ( length != 0 )
   {
-    printf("!");
     out_buffer.queue[out_buffer.in] = *buffer;
     buffer++;
     length--;

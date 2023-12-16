@@ -805,7 +805,7 @@ void rapid_fire_task(void)
  * This is called every second from the synchronous scheduler
  * 
  *--------------------------------------------------------------*/
-enum bye_state {
+static enum bye_state {
   BYE_BYE = 0,      // Wait for the timer to run out
   BYE_HOLD,         // Wait for the MFS to be pressed
   BYE_START         // Go back into service

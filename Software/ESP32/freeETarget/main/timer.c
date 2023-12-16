@@ -122,6 +122,9 @@ void freeETimer_timer_start(void)                                        // Star
  * 
  *-----------------------------------------------------
  *
+ * This task is called every 1 ms from the timer
+ * interrupt
+ * 
  * Timer 1 samples the inputs and when all of the 
  * sendor inputs are present, the counters are
  * read and made available to the software
@@ -189,23 +192,86 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
   }
 
 /*
- * Refresh the timers
- */
-  for (i=0; i != N_TIMERS; i++)
-  {
-    if ( (timers[i] != 0)
-        && ( *timers[i] != 0 ) )
-    {
-       (*timers[i])--;
-    }
-  }
-
-/*
  * Return from interrupts
  */
   return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISR
 }
 
+/*-----------------------------------------------------
+ * 
+ * @function: freeETarget_synchronous
+ * 
+ * @brief:    Synchronous task scheduler
+ *  
+ * @return:   None
+ * 
+ *-----------------------------------------------------
+ *
+ * This task runs every 10ms.  
+ * 
+ * Synchronous tasks are called on a time band
+ * 
+ * 
+ *-----------------------------------------------------*/
+#define TICK    1       // 1 Tick = 10 ms
+#define BAND_10ms       (TICK * 1)
+#define BAND_100ms      (TICK * 10)
+#define BAND_500ms      (TICK * 50)
+#define BAND_1000ms     (TICK * 100)
+
+void freeETarget_synchronous
+(
+  void *pvParameters
+)
+{
+  unsigned int cycle_count = 0;
+  unsigned int toggle =0;
+  unsigned int i;
+
+  while (1)
+  {
+/*
+ *  10 ms band
+ */
+    token_cycle();
+    for (i=0; i != N_TIMERS; i++)  // Refresh the timers
+    {
+      if ( (timers[i] != 0)
+        && ( *timers[i] != 0 ) )
+      {
+        (*timers[i])--;
+      }
+    }
+
+/*
+ *  500 ms band
+ */
+    if ( (cycle_count  %  BAND_500ms) == 0 )
+    {
+      commit_status_LEDs( toggle );
+      toggle ^= 1;
+      multifunction_switch();
+      tabata_task();
+      rapid_fire_task();
+    }
+
+/*
+ * 1000 ms band
+ */
+    if ( (cycle_count % BAND_1000ms) == 0 )
+    {
+      bye();                                           // Dim the lights  
+      send_keep_alive();
+    }
+
+/*
+ * All done, prepare for the next cycle
+ */
+    cycle_count++;
+    vTaskDelay(BAND_10ms);                           // Delay 10ms
+  }
+
+}
 /*-----------------------------------------------------
  * 
  * @function: timer_new()
@@ -217,17 +283,21 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
  * 
  *-----------------------------------------------------
  *
- * The timer interrupt has the ability to manage a 
- * count down timer
  * 
  * These functions add or remove a timer from the active
  * timer list
  * 
  * IMPORTANT
  * 
- * The timers should be static variables, otherwise they
+ * The timers shall be static variables, otherwise they
  * will overflow the available space every time they are
  * instantiated.
+ * 
+ * Calling timer_new with the same timer address will 
+ * overwrite the previous timer value with the new one.
+ * timer_new can be called any number of times with the
+ * same timer addess without creating a problem
+ * 
  *-----------------------------------------------------*/
 unsigned long timer_new
 (
@@ -254,7 +324,7 @@ unsigned long timer_new
   }
   if ( DLT(DLT_CRITICAL) )
   {
-    printf("No space for timer");
+    printf("No space for new timer");
   }
   
   return 0;
@@ -278,63 +348,4 @@ unsigned long timer_delete
 
   return 0;
   
-}
-/*-----------------------------------------------------
- * 
- * @function: freeETarget_synchronous
- * 
- * @brief:    Synchronous task scheduler
- *  
- * @return:   None
- * 
- *-----------------------------------------------------
- *
- * This task runs every 10ms
- * 
- *-----------------------------------------------------*/
-#define TICK    1       // 1 Tick = 10 ms
-#define BAND_100ms      (TICK * 10)
-#define BAND_500ms      (TICK * 50)
-#define BAND_1000ms     (TICK * 100)
-
-void freeETarget_synchronous
-(
-  void *pvParameters
-)
-{
-  int cycle_count = 0;
-  int toggle =0;
-
-  while (1)
-  {
-/*
- *  10 ms band
- */
-    token_cycle();
-   
-/*
- *  500 ms band
- */
-    if ( (cycle_count  %  BAND_500ms) == 0 )
-    {
-      commit_status_LEDs( toggle );
-      toggle ^= 1;
-      multifunction_switch();
-      tabata_task();
-      rapid_fire_task();
-    }
-
-/*
- * 1000 ms band
- */
-    if ( (cycle_count % BAND_1000ms) == 0 )
-    {
-      bye();                                           // Dim the lights  
-      send_keep_alive();
-    }
-
-    cycle_count++;
-    vTaskDelay(ONE_SECOND/100);                         // Delay 10ms
-  }
-
 }
