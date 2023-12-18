@@ -30,6 +30,6 @@ void serial_port_test(void);                                      // Loopback th
 #define CONSOLE true,  false, false
 #define AUX     false, true,  false
 #define TCPIP   false, false, true
-#define ALL     true,  true,  true
+#define ALL     true,  false,  false
 
 #endif

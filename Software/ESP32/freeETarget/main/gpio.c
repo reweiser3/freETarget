@@ -549,7 +549,6 @@ void aquire(void)
 /*
  * Pull in the data amd save it in the record array
  */
-
   stop_timers();                                    // Stop the counters
   read_timers(&record[this_shot].timer_count[0]);   // Record this count
   record[this_shot].shot_time = 0;                  //FULL_SCALE - in_shot_timer; // Capture the time into the shot

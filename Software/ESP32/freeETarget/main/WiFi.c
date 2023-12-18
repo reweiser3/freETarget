@@ -461,7 +461,7 @@ void tcpip_socket_poll_0(void* parameters)
     char rx_buffer[256];
 
     DLT(DLT_CRITICAL);
-    printf("tcp_socket_poll_0()\r\n");
+    printf("tcp_socket_poll_0()");
 
     while (1)
     {
@@ -484,7 +484,7 @@ void tcpip_socket_poll_1(void* parameters)
     char rx_buffer[256];
 
     DLT(DLT_CRITICAL);
-    printf("tcp_socket_poll_1()\r\n");
+    printf("tcp_socket_poll_1()");
 
     while (1)
     {
@@ -507,7 +507,7 @@ void tcpip_socket_poll_2(void* parameters)
     char rx_buffer[256];
 
     DLT(DLT_CRITICAL);
-    printf("tcp_socket_poll_2()\r\n");
+    printf("tcp_socket_poll_2()");
 
     while (1)
     {
@@ -530,7 +530,7 @@ void tcpip_socket_poll_3(void* parameters)
     char rx_buffer[256];
 
     DLT(DLT_CRITICAL);
-    printf("tcp_socket_poll_3()\r\n");
+    printf("tcp_socket_poll_3()");
 
     while (1)
     {
@@ -564,7 +564,7 @@ void tcpip_accept_poll(void* parameters)
    int i;
 
    DLT(DLT_CRITICAL);
-   printf("tcp_accept_poll()");
+   printf("tcp_accept_poll()\r\n");
    
 /*
  * Start the server

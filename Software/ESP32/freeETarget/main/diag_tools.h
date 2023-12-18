@@ -18,7 +18,7 @@ void    POST_version(void);                             // Show the version stri
 bool    POST_counters(void);                            // Verify the counter operation
 void    POST_trip_point(void);                          // Display the set point
 void    set_trip_point(int x);                          // Calibrate the trip point
-bool  do_dlt(unsigned int level);                     // Diagnostics Log and Trace
+bool    do_dlt(unsigned int level);                     // Diagnostics Log and Trace
 
 #define T_HELP           0        // Help test
 #define T_DIGITAL        1        // Digital test

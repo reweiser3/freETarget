@@ -96,7 +96,7 @@ void freeETarget_init(void)
 /*
  *  Set up the port pins
  */
-  timer_new(&keep_alive,    (unsigned long)json_keep_alive * ONE_SECOND); // Keep alive timer
+  timer_new(&keep_alive,    (unsigned long)json_keep_alive * ONE_SECOND * 60l); // Keep alive timer
   timer_new(&in_shot_timer, FULL_SCALE);                                  // Time inside of the shot window
   timer_new(&power_save,    (unsigned long)(json_power_save) * (long)ONE_SECOND * 60L);// Power save timer
 
@@ -125,7 +125,7 @@ void freeETarget_init(void)
   this_shot = 0;                          // Clear out any junk
   last_shot = 0;
   DLT(DLT_CRITICAL);
-  printf("Initialization complete");
+  printf("Initialization complete\r\n");
 
 /*
  * Start the tasks running
@@ -917,7 +917,7 @@ void send_keep_alive(void)
   {
     sprintf(str, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);
     serial_to_all(str, TCPIP);
-    keep_alive = json_keep_alive;
+    timer_new(&keep_alive, (unsigned long)json_keep_alive * (unsigned long)ONE_SECOND * 60l);
   }
 
   return;

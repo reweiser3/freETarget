@@ -35,9 +35,9 @@
 /*
  * Local Variables
  */
-static volatile unsigned long* timers[N_TIMERS];          // Active timer list
-       unsigned int isr_state;                  // What sensor state are we in 
-static volatile unsigned long isr_timer;        // Interrupt timer 
+static volatile unsigned long* timers[N_TIMERS];  // Active timer list
+       unsigned int isr_state;                    // What sensor state are we in 
+static volatile unsigned long isr_timer;          // Interrupt timer 
 
 /*
  *  Function Prototypes
@@ -84,7 +84,7 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args);
 void freeETarget_timer_init(void)
 {
   DLT(DLT_CRITICAL); 
-  printf("freeETarget_timer_init()\r\n");
+  printf("freeETarget_timer_init()");
   timer_init(TIMER_GROUP_0, TIMER_1, &config);
   timer_set_counter_value(TIMER_GROUP_0, TIMER_1, 0);                   // Start the timer at 0
   timer_set_alarm_value(TIMER_GROUP_0, TIMER_1, ONE_MS);                // Trigger on this value
@@ -144,7 +144,6 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
 {
   BaseType_t high_task_awoken = pdFALSE;
   unsigned int pin;                             // Value read from the port
-  static unsigned int  i;                       // Iteration counter
 
 /*
  * Decide what to do if based on what inputs are present
@@ -233,7 +232,7 @@ void freeETarget_synchronous
 /*
  *  10 ms band
  */
-    token_cycle();
+//    token_cycle();
     for (i=0; i != N_TIMERS; i++)  // Refresh the timers
     {
       if ( (timers[i] != 0)
@@ -248,11 +247,11 @@ void freeETarget_synchronous
  */
     if ( (cycle_count  %  BAND_500ms) == 0 )
     {
-      commit_status_LEDs( toggle );
-      toggle ^= 1;
-      multifunction_switch();
-      tabata_task();
-      rapid_fire_task();
+//      commit_status_LEDs( toggle );
+//      toggle ^= 1;
+  //    multifunction_switch();
+    //  tabata_task();
+      ///rapid_fire_task();
     }
 
 /*
@@ -260,8 +259,8 @@ void freeETarget_synchronous
  */
     if ( (cycle_count % BAND_1000ms) == 0 )
     {
-      bye();                                           // Dim the lights  
-      send_keep_alive();
+//      bye();                                           // Dim the lights  
+  //    send_keep_alive();
     }
 
 /*
