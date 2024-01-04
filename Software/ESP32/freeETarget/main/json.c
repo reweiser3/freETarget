@@ -141,7 +141,7 @@ const json_message_t JSON[] = {
   {"\"TOKEN\":",          &json_token,                       0,                IS_INT32,  0,                NONVOL_TOKEN,            0 },    // Token ring state
   {"\"TRACE\":",          0,                                 0,                IS_INT32,  &set_trace,       0,                       0 },    // Enter / exit diagnostic trace
   {"\"VERSION\":",        0,                                 0,                IS_INT32,  &POST_version,    0,                       0 },    // Return the version string
-  {"\"VREF_LO\":",        0,                                 &json_vref_lo,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_LO,       1000 },    // Low trip point value (Volts)
+  {"\"VREF_LO\":",        0,                                 &json_vref_lo,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_LO,       1250 },    // Low trip point value (Volts)
   {"\"VREF_HI\":",        0,                                 &json_vref_hi,    IS_FLOAT,  &set_VREF,        NONVOL_VREF_HI,       2000 },    // High trip point value (Volts)
   {"\"WIFI_CHANNEL\":",   &json_wifi_channel,                0,                IS_INT32,  0,                NONVOL_WIFI_CHANNEL,     6 },    // Set the wifi channel
   {"\"WIFI_PWD\":",       (int*)&json_wifi_pwd,              0,                IS_SECRET, 0,                NONVOL_WIFI_PWD,         0 },    // Password of SSID to attach to 
@@ -208,7 +208,7 @@ static int to_int(char h)
 
 void freeETarget_json
 (
-    void *pvParameters              // Select IPV4 or 6
+    void *pvParameters
 )
 {
   char          ch;
@@ -305,6 +305,7 @@ void freeETarget_json
 static void handle_json(void)
 {
   int   x;
+  float f;
   int   i, j, k;
   char* s;
   int   m;
@@ -387,18 +388,18 @@ static void handle_json(void)
               break;
   
             case IS_FLOAT:                                      // Convert a floating point number
-              x = atoi(&input_JSON[i+k]) * 1000;                // Integer
-              if ( JSON[j].value != 0 )
+              f = atof(&input_JSON[i+k]);                       // Float
+              x = f * 1000;                                     // Integer
+              if ( JSON[j].d_value != 0 )
               {
-                *JSON[j].value = x;                             // Save the value
+                *JSON[j].d_value = f;                             // Working Value
               }
               if ( JSON[j].non_vol != 0 )
               {
-                nvs_set_i32(my_handle, JSON[j].non_vol, x);    // Store into NON-VOL
+                nvs_set_i32(my_handle, JSON[j].non_vol, x);    // Store into NON-VOL as an integer * 1000
               }
               break;
           }
-
 
           if ( JSON[j].f != 0 )                               // Call the handler if it is available
           {

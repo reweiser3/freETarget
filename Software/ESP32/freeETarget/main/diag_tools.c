@@ -275,7 +275,7 @@ bool POST_counters(void)
   DLT(DLT_CRITICAL);  
   printf("POST_counters()");
 
-  set_status_LED("RRR");
+  set_status_LED("   ");                  // Turn them all off
   
 /*
  *  Test 1, Make sure we can turn off the reference clock
@@ -285,7 +285,7 @@ bool POST_counters(void)
   DLT(DLT_CRITICAL); 
   printf("Turn Clock OFF");
   gpio_set_level(OSC_CONTROL, OSC_OFF);   // Turn off the oscillator
-  set_status_LED("Y--");
+  set_status_LED("W--");
   toggle = gpio_get_level(REF_CLK);
   for  (i=0; i != 1000; i++)               // Try 1000 times
   {
@@ -303,6 +303,10 @@ bool POST_counters(void)
     DLT(DLT_CRITICAL); 
     printf("Reference clock cannot be stopped");
     vTaskDelay(5*ONE_SECOND);
+  }
+  else
+  {
+    set_status_LED("Y--");
   }
   vTaskDelay(ONE_SECOND);
 
@@ -331,6 +335,10 @@ bool POST_counters(void)
     DLT(DLT_CRITICAL); printf("Reference clock cannot be started");
     vTaskDelay(5*ONE_SECOND);
   }
+  else
+  {
+    set_status_LED("G--");
+  }
   vTaskDelay(ONE_SECOND);
 
 /*
@@ -351,7 +359,17 @@ bool POST_counters(void)
   {
       set_status_LED("-R-");
       DLT(DLT_CRITICAL);
-      printf("Stuck bit in run latch: %02X", (~is_running()) & 0x00ff);
+      printf("Stuck bit in run latch: ");
+      count = is_running();
+      for (i=0; i != 8; i++)
+      {
+        if ( count & 0x80 )
+        {
+          printf("%s  ", which_one[i]);
+        }
+
+        count <<= 1;
+      }
       vTaskDelay(5*ONE_SECOND);
   }      
   vTaskDelay(ONE_SECOND);

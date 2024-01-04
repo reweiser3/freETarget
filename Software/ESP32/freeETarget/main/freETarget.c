@@ -94,7 +94,7 @@ void freeETarget_init(void)
   WiFi_init();
 
 /*
- *  Set up the port pins
+ *  Set up the long running timers
  */
   timer_new(&keep_alive,    (unsigned long)json_keep_alive * ONE_SECOND * 60l); // Keep alive timer
   timer_new(&in_shot_timer, FULL_SCALE);                                  // Time inside of the shot window

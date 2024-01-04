@@ -21,7 +21,7 @@
 #include "gpio.h"
 #include "analog_io.h"
 #include "json.h"
-
+#include "serial_io.h"
 
 /*
  *  Definitions
@@ -42,35 +42,38 @@
  *   This function sets the DACs to the desired value
  *  
  *--------------------------------------------------------------*/
-#define V_REF 2.048
+#define V_REF 5.0
 #define DAC_FS 4095.0
 
 void DAC_write
 (
-  unsigned int channel,               // What register are we writing to
-  float        volts                  // What value are we setting it to
+  const unsigned int channel,             // What register are we writing to
+  const float        volts                // What value are we setting it to
 )
 {
-  unsigned char data[10];             // Bytes to send to the I2C
-  unsigned int  scaled_value;         // Value (12 bits) to the DAC
+  unsigned char data[3];                  // Bytes to send to the I2C
+  unsigned int  scaled_value;             // Value (12 bits) to the DAC
 
   scaled_value = ((int)(volts / V_REF * DAC_FS)) & 0xfff;  // Figure the bits to send
+  gpio_set_level(LDAC, 0);
 
-  if ( DLT(DLT_CRITICAL) )
+  if ( DLT(DLT_DIAG) )
   {
-    printf("DAC_write(channel:%d scale: %d)", channel, scaled_value);
+    printf("DAC_write(channel:%d Volts:%f scale:%d)", channel, volts, scaled_value);
   }
 
-  data[0] = DAC_WRITE + ((channel & 0x3) << 1) + 0; // Write, channel, update now
-  data[1] = 0x80                      // Internal 2.048 Volts
-                + 0x00                // Normal Power Down
-                + 0x00                // Gain x 1
+  data[0] = DAC_WRITE                     // Write
+                + ((channel & 0x3) << 1)  // Channel
+                + 0;                      // UDAC = 0  update now
+  data[1] = 0x00                          // External Supply
+                + 0x00                    // Normal Power Down
+                + 0x00                    // Gain x 1
                 + ((scaled_value >> 8) & 0x0f);// Top 4 bits of the setting
-  data[2] = scaled_value & 0xff;      // Bottom 4 bits of the setting
+  data[2] = scaled_value & 0xff;          // Bottom 8 bits of the setting
 
   i2c_write(DAC_ADDR, data, 3 );
-  gpio_set_level(LDAC, 0);
-  gpio_set_level(LDAC, 1);
+//  gpio_set_level(LDAC, 0);
+//  gpio_set_level(LDAC, 1);
 
  /* 
   *  All done, return;
@@ -94,23 +97,35 @@ void DAC_write
 void DAC_test(void)
 {
   float volts;
-  float lo, hi;
 
-  lo = json_vref_lo;
-  hi = json_vref_hi;
-
-  printf("\r\nRamping DACs 0 & 1 ");
+  printf("\r\nRamping DAC 0");
   volts = 0.0;
-  while (volts < 2.048)
+  while (volts < json_vref_lo )
   {
-    json_vref_lo = volts;
-    json_vref_hi = 2.048 - volts;
-    set_VREF();
+    DAC_write(0, volts);                 // Vref_LO ramps up
     volts += 0.0005;
+    if ( serial_available(ALL) )
+    {
+      break;
+    }
   }
+  DAC_write(0, json_vref_lo);
 
-  json_vref_lo = lo;
-  json_vref_hi = hi;
+  volts = 2.048;
+  while (volts > json_vref_hi )
+  {
+    DAC_write(1, volts);                 // Vref_LO ramps up
+    volts -= 0.0005;
+    if ( serial_available(ALL) )
+    {
+      break;
+    }
+  }
+  DAC_write(1, json_vref_hi);
+
+/*
+ *  Test Complete
+ */
   printf("\r\nDone\r\n");
   return;
 }
