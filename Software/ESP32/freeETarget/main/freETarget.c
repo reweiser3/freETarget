@@ -946,12 +946,12 @@ void send_keep_alive(void)
 
   int i;
   int target_count;                     // How many cycles we have passed
-  int timer_count[8];                  // Space for the 8 counters
+  int timer_count[8];                   // Space for the 8 counters
 
   target_count = 1;
 
   printf("\r\nPolled target shot test\r\n");
-  freeETimer_timer_pause();             // Kill the background timer interrupt
+  freeETarget_timer_pause();             // Kill the background timer interrupt
 
 /*
  * Stay here watching the counters

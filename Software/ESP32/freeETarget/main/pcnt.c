@@ -24,6 +24,7 @@
 
 #include "gpio_define.h"
 #include "pcnt.h"
+#include "timer.h"
 
 /*
  *  Working variables
@@ -230,8 +231,10 @@ void pcnt_clear(void)
  **************************************************************************/      
  void pcnt_test(void)
  {
-    int array[10][8];                       // Test result storage 
-    unsigned int i, j;
+  int array[10][8];                                 // Test result storage 
+  unsigned int i, j;
+
+  freeETarget_timer_pause();                         // Stop interrupts
 
 /*
  * Test 1, verify that the counters can be cleared
@@ -239,7 +242,7 @@ void pcnt_clear(void)
   printf("\r\nPCNT-1  Counters cleared and not running.  Should all be Zero");
   arm_timers();
   gpio_set_level(CLOCK_START, 0);
-  printf("\r\nis_running(): %02X", is_running());
+  printf("\r\nis_running: %02X", is_running());
   for (i=0; i != 10; i++)
   {
     for (j=0; j != 8; j++)
@@ -255,7 +258,7 @@ void pcnt_clear(void)
         printf("%s: %d  ", which_one[j], array[i][j]);
     }
   }
-  printf("\r\nis_running(): %02X  ", is_running());
+  printf("\r\nis_running: %02X  ", is_running());
 
 /*
  *  Verify that the counters can be started and stopped together 
@@ -310,6 +313,7 @@ void pcnt_clear(void)
  * Test Over
  */
   printf("\r\ndone");
+  freeETarget_timer_start();
   return;
 }
 

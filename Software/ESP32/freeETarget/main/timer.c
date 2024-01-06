@@ -100,13 +100,13 @@ void freeETarget_timer_init(void)
   return;
 }
 
-void freeETimer_timer_pause(void)                                        // Stop the timer
+void freeETarget_timer_pause(void)                                        // Stop the timer
 {
   timer_pause(TIMER_GROUP_0, TIMER_1);
   return;
 }
 
-void freeETimer_timer_start(void)                                        // Start the timer
+void freeETarget_timer_start(void)                                        // Start the timer
 {
   timer_start(TIMER_GROUP_0, TIMER_1);
   return;
