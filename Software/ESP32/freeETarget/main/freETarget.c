@@ -59,6 +59,8 @@ static volatile unsigned long  keep_alive;        // Keep alive timer
 static volatile unsigned long  tabata_timer;      // Free running state timer
        volatile unsigned long  power_save;        // Power save timer
 static volatile unsigned long  rapid_timer;       // Timer used for rapid fire ecents 
+                  
+unsigned long run_state = 0;            // Current operating state 
 
 const char* names[] = { "TARGET",                                                                                           //  0
                         "1",      "2",        "3",     "4",      "5",       "6",       "7",     "8",     "9",      "10",    //  1
@@ -82,6 +84,9 @@ const char    to_hex[] = "0123456789ABCDEF";      // Quick Hex to ASCII
 
 void freeETarget_init(void)
 {    
+
+  run_state = IN_STARTUP;
+
 /*
  *  Setup the serial port
  */
@@ -130,6 +135,8 @@ void freeETarget_init(void)
 /*
  * Start the tasks running
  */
+  run_state &= ~IN_STARTUP;               // Exit startup 
+
   return;
 }
 
@@ -155,30 +162,34 @@ unsigned int  location;               // Sensor location
 
 void freeETarget_target_loop(void* arg)
 {
+  run_state |= IN_OPERATION;          // In operation 
+
   while(1)
   {
 /*
  * Cycle through the state machine
  */
-    switch (state)
+    if ( (run_state & IN_TEST) != 0 )
     {
-      default:
-      case START:    // Start of the loop
-        power_save = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L;  //  Reset the timer
-        set_mode();
-        arm();
-        state = WAIT;
-        break;
+      switch (state)
+      {
+        default:
+        case START:    // Start of the loop
+          power_save = (unsigned long)json_power_save * (unsigned long)ONE_SECOND * 60L;  //  Reset the timer
+          set_mode();
+          arm();
+          state = WAIT;
+          break;
     
-      case WAIT:  
-        if ( wait() == REDUCE )
-        {
-          reduce();
-          state = START;
-        }
-        break;
+        case WAIT:  
+          if ( wait() == REDUCE )
+          {
+            reduce();
+            state = START;
+          }
+          break;
+      }
     }
-  
 /*
  * End of the loop. timeout till the next time
  */

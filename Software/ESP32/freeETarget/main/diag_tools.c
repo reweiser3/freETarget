@@ -58,6 +58,7 @@ void self_test
 {
   int   i;
 
+  run_state |= IN_TEST;             // Show the test is running 
 /*
  * Figure out what test to run
  */
@@ -218,6 +219,7 @@ void self_test
  /* 
   *  All done, return;
   */
+    run_state &= ~IN_TEST;          // Exit the test 
     return;
 }
 

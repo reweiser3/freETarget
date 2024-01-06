@@ -18,12 +18,16 @@
 
 #define REV_500    500   // ESP32
 
-#define INIT_DONE       0xabcd                    // Initialization complete signature
+#define INIT_DONE       0xabcd                    // NON-VOL Initialization complete signature
 #ifndef true
 #define true        (1==1)
 #define false       (0==1)
 #endif
 #define CLOCK_TEST   false
+
+#define IN_STARTUP    0x0001                      // The software is in initialization
+#define IN_OPERATION  0x0002                      // The software is operational
+#define IN_TEST       0x0004                      // A self test has been selected (Suspend operation)
 
 
 /*
@@ -119,4 +123,6 @@ extern unsigned int  is_trace;         // Tracing level(s)
 extern unsigned int  this_shot;        // Index into the shot array
 extern unsigned int  shot_number;
 extern volatile unsigned long power_save;       // Power down timer
+extern volatile unsigned int run_state;         // IPC states 
+
 #endif
