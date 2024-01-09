@@ -145,49 +145,52 @@ static bool IRAM_ATTR freeETarget_timer_isr_callback(void *args)
   BaseType_t high_task_awoken = pdFALSE;
   unsigned int pin;                             // Value read from the port
 
+  if ( run_state & IN_TEST )
+  {
 /*
  * Decide what to do if based on what inputs are present
  */
-  pin = is_running();                         // Read in the RUN bits
+    pin = is_running();                         // Read in the RUN bits
 
 /*
  * Read the timer hardware based on the ISR state
  */
-  switch (isr_state)
-  {
-    case PORT_STATE_IDLE:                       // Idle, Wait for something to show up
-      if ( pin != 0 )                           // Something has triggered
-      { 
-        isr_timer = MAX_WAIT_TIME;              // Start the wait timer
-        isr_state = PORT_STATE_WAIT;            // Got something wait for all of the sensors tro trigger
-      }
-      break;
+    switch (isr_state)
+    {
+      case PORT_STATE_IDLE:                       // Idle, Wait for something to show up
+        if ( pin != 0 )                           // Something has triggered
+        { 
+          isr_timer = MAX_WAIT_TIME;              // Start the wait timer
+          isr_state = PORT_STATE_WAIT;            // Got something wait for all of the sensors tro trigger
+        }
+        break;
           
-    case PORT_STATE_WAIT:                       // Something is present, wait for all of the inputs
-      if ( (pin == RUN_MASK)                    // We have all of the inputs
-          || (isr_timer == 0) )                 // or ran out of time.  Read the timers and restart
-       { 
-        aquire();                               // Read the counters
-        isr_timer = json_min_ring_time;         // Reset the timer
-        isr_state = PORT_STATE_DONE;            // and wait for the all clear
-      }
-      break;
+      case PORT_STATE_WAIT:                       // Something is present, wait for all of the inputs
+        if ( (pin == RUN_MASK)                    // We have all of the inputs
+            || (isr_timer == 0) )                 // or ran out of time.  Read the timers and restart
+         { 
+          aquire();                               // Read the counters
+          isr_timer = json_min_ring_time;         // Reset the timer
+          isr_state = PORT_STATE_DONE;            // and wait for the all clear
+        }
+        break;
       
-    case PORT_STATE_DONE:                       // Waiting for the ringing to stop
-      if ( pin != 0 )                           // Something got latched
-      {
-        isr_timer = json_min_ring_time;
-        stop_timers();                          // Reset and try later
-      }
-      else
-      {
-        if ( isr_timer == 0 )                   // Make sure there is no rigning
+      case PORT_STATE_DONE:                       // Waiting for the ringing to stop
+        if ( pin != 0 )                           // Something got latched
         {
-          arm_timers();                         // and arm for the next time
-          isr_state = PORT_STATE_IDLE;          // and go back to idle
-        } 
-      }
-      break;
+          isr_timer = json_min_ring_time;
+          stop_timers();                          // Reset and try later
+        }
+        else
+        {
+          if ( isr_timer == 0 )                   // Make sure there is no rigning
+          {
+            arm_timers();                         // and arm for the next time
+            isr_state = PORT_STATE_IDLE;          // and go back to idle
+          } 
+        }
+        break;
+    }
   }
 
 /*
@@ -247,11 +250,11 @@ void freeETarget_synchronous
  */
     if ( (cycle_count  %  BAND_500ms) == 0 )
     {
-//      commit_status_LEDs( toggle );
-//      toggle ^= 1;
-  //    multifunction_switch();
-    //  tabata_task();
-      ///rapid_fire_task();
+      commit_status_LEDs( toggle );
+      toggle ^= 1;
+      multifunction_switch();
+      tabata_task();
+      rapid_fire_task();
     }
 
 /*
@@ -259,8 +262,8 @@ void freeETarget_synchronous
  */
     if ( (cycle_count % BAND_1000ms) == 0 )
     {
-//      bye();                                           // Dim the lights  
-  //    send_keep_alive();
+      bye();                                           // Dim the lights  
+      send_keep_alive();
     }
 
 /*

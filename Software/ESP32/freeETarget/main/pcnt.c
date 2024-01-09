@@ -22,6 +22,7 @@
 #include "led_strip.h"
 #include "led_strip_types.h"
 
+#include "freETarget.h"
 #include "gpio_define.h"
 #include "pcnt.h"
 #include "timer.h"
@@ -228,92 +229,122 @@ void pcnt_clear(void)
  * 
  * 1 - 
  * 
- **************************************************************************/      
- void pcnt_test(void)
- {
+ **************************************************************************/     
+
+void pcnt_test
+(
+  int which_test
+)
+{
   int array[10][8];                                 // Test result storage 
   unsigned int i, j;
 
-  freeETarget_timer_pause();                         // Stop interrupts
-
+  switch ( which_test )
+  {
 /*
  * Test 1, verify that the counters can be cleared
  */
-  printf("\r\nPCNT-1  Counters cleared and not running.  Should all be Zero");
-  arm_timers();
-  gpio_set_level(CLOCK_START, 0);
-  printf("\r\nis_running: %02X", is_running());
-  for (i=0; i != 10; i++)
-  {
-    for (j=0; j != 8; j++)
-    {
-        array[i][j] = pcnt_read(j);
-    }
-  }
-  for (i=0; i != 10; i++)
-  {
-    printf("\r\n");
-    for (j=0; j != 8; j++)
-    {
-        printf("%s: %d  ", which_one[j], array[i][j]);
-    }
-  }
-  printf("\r\nis_running: %02X  ", is_running());
-
-/*
- *  Verify that the counters can be started and stopped together 
- */
-  printf("\r\n\r\nPCNT-2  Start/stop counters together. Should all be the same");
-  arm_timers();
-  trigger_timers();
-  stop_timers();
-  printf("\r\nis_running(): %02X", is_running());
-  for (i=0; i != 10; i++)
-  {
-    for (j=0; j != 8; j++)
-    {
-      array[i][j] = pcnt_read(j);
-    }
-  }
-  for (i=0; i != 10; i++)
-  {
-    printf("\r\n");
-    for (j=0; j != 8; j++)
-    {
-      printf("%s: %d  ", which_one[j], array[i][j]);
-    }
-  }
-  printf("\r\nis_running(): %02X\r\n", is_running());
-
-/*
- * Turn on the counters and verify that they increment in the right direction 
- */
-  printf("\r\n\r\nPCNT-3  Start counters and do not stop. Should increase left-right, top-bottom");
-  arm_timers();
-  trigger_timers();
-  printf("\r\nis_running(): %02X  ", is_running());
-  for (i=0; i != 10; i++)
-  {
-    for (j=0; j != 8; j++)
-    {
-      array[i][j] = pcnt_read(j);
-    }
-  }
-  for (i=0; i != 10; i++)
-  {
-    printf("\r\n");
-    for (j=0; j != 8; j++)
+    case 1:
+      printf("\r\nPCNT-1  Counters cleared and not running.  Low counters should all be 0. High Counters 11, 22, 33, 44");
+      arm_timers();                                 // Arm the timers
+      gpio_set_level(CLOCK_START, 0);               // Do not trigger the clock
+      printf("\r\nis_running: %02X", is_running());
+      for (i=0; i != 10; i++)
       {
-        printf("%s: %d  ", which_one[j], array[i][j]);
+        for (j=0; j != 8; j++)
+        {
+          array[i][j] = pcnt_read(j);
+        }
       }
+      for (i=0; i != 10; i++)
+      {
+        printf("\r\n");
+        for (j=0; j != 8; j++)
+        {
+          if ( j == 4 )
+          {
+            printf("    ");
+          }
+          printf("%s: %d   ", which_one[j], array[i][j]);
+        }
+      }
+      printf("\r\nis_running: %02X  ", is_running());
+    break;
+
+/*
+ *  Test 2 - Verify that the counters can be started and stopped together 
+ */
+    case 2:
+      printf("\r\n\r\nPCNT-2  Start/stop counters together. Should all be the same");
+      arm_timers();
+      trigger_timers();
+      vTaskDelay(1);
+      printf("\r\nis_running(): %02X", is_running());
+      stop_timers();
+      for (i=0; i != 10; i++)
+      {
+        for (j=0; j != 8; j++)
+        {
+          array[i][j] = pcnt_read(j);
+        }
+      }
+      for (i=0; i != 10; i++)
+      {
+        printf("\r\n");
+        for (j=0; j != 8; j++)
+        {
+          if ( j == 4 )
+          {
+            printf("      ");
+          }
+          printf("%s: %d   ", which_one[j], array[i][j]);
+        }
+      }
+      printf("\r\nis_running(): %02X\r\n", is_running());
+    break;
+/*
+ * Test 3 - Turn on the counters and verify that they increment in the right direction 
+ */
+    case 3:
+      printf("\r\n\r\nPCNT-3  Start counters and do not stop. Should increase left-right, top-bottom");
+      arm_timers();                         
+      trigger_timers();
+      printf("\r\nis_running(): %02X  ", is_running());
+      for (i=0; i != 10; i++)
+      {
+        for (j=0; j != 8; j++)
+        {
+          array[i][j] = pcnt_read(j);
+        }
+      }
+      for (i=0; i != 10; i++)
+      {
+        printf("\r\n");
+        for (j=0; j != 8; j++)
+        {
+          if ( j == 4 )
+          {
+            printf("    ");
+          }
+          printf("%s: %d  ", which_one[j], array[i][j]);
+        }
+      }
+      printf("\r\nis_running(): %02X  ", is_running());
+    break;
+
+/*
+ *  Test 4 - Stop the timers before going into servcie
+ */
+    case 4:
+      printf("\r\n\r\nPCNT-4  Turn off all timers");
+      stop_timers();
+      printf("\r\nis_running(): %02X  ", is_running());
+    break;
   }
-  printf("\r\nis_running(): %02X  ", is_running());
-  
 /*
  * Test Over
  */
   printf("\r\ndone");
-  freeETarget_timer_start();
   return;
 }
 
@@ -340,38 +371,34 @@ void pcnt_clear(void)
  * 
  **************************************************************************/
 #define PCNT_NORTH_HI (int*)(0x60017000 + 0x0030)         // PCNT unit 1 count
-#define PCNT_EAST_HI (int*)(0x60017000 + 0x0034)          // PCNT unit 2 count
+#define PCNT_EAST_HI  (int*)(0x60017000 + 0x0034)         // PCNT unit 2 count
 #define PCNT_SOUTH_HI (int*)(0x60017000 + 0x0038)         // PCNT unit 3 count
-#define PCNT_WEST_HI (int*)(0x60017000 + 0x003C)          // PCNT unit 4 count
+#define PCNT_WEST_HI  (int*)(0x60017000 + 0x003C)         // PCNT unit 4 count
 
 static bool IRAM_ATTR north_hi_pcnt_isr_callback(void *args)
 {
-  BaseType_t high_task_awoken = pdFALSE;
   north_pcnt_hi = *PCNT_NORTH_HI;
   gpio_intr_disable(RUN_NORTH_HI);
-  return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
+  return pdTRUE; // high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
 }
 
 static bool IRAM_ATTR east_hi_pcnt_isr_callback(void *args)
 {
-  BaseType_t high_task_awoken = pdFALSE;
   east_pcnt_hi = *PCNT_EAST_HI;
   gpio_intr_disable(RUN_EAST_HI);
-  return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
+  return pdTRUE; // return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
 }
 
 static bool IRAM_ATTR south_hi_pcnt_isr_callback(void *args)
 {
-  BaseType_t high_task_awoken = pdFALSE;
   south_pcnt_hi = *PCNT_SOUTH_HI;
   gpio_intr_disable(RUN_SOUTH_HI);
-  return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
+  return pdTRUE; // return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
 }
 
 static bool IRAM_ATTR west_hi_pcnt_isr_callback(void *args)
 {
-  BaseType_t high_task_awoken = pdFALSE;
   west_pcnt_hi = *PCNT_WEST_HI;
   gpio_intr_disable(RUN_WEST_HI);
-  return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
+  return pdTRUE; // return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
 }

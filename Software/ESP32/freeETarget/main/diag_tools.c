@@ -15,6 +15,7 @@
 #include "serial_io.h"
 #include "gpio_types.h"
 #include "driver\gpio.h"
+#include "ctype.h"
 
 #include "freETarget.h"
 #include "gpio.h"
@@ -49,8 +50,56 @@ const char* which_one[] = {"North_lo", "East_lo ", "South_lo", "West_lo ", "Nort
  *   
  *   This function is a large case statement with each element
  *   of the case statement 
+ * 
+ *   Supports a test mode (TEST:99) that emulates an old style Zapple monitor
+ *   
  ******************************************************************************/
 unsigned int tick;
+void zapple(unsigned int test)
+{ 
+  int run_test;                 // Running Semephore
+  char ch;                      // Input character
+
+  run_test = 1;
+
+  while (run_test != 0)
+  {
+    printf("\r\nTest >");
+    test = 0;
+
+    while (1)
+    {
+      if ( serial_available(CONSOLE) != 0 )
+      {
+        ch = serial_getch(CONSOLE);
+        ch = toupper(ch);
+        printf("%c", ch);
+        if ( ch != '\r' )
+        {
+            test = ((test * 10) + (ch -'0')) % 100;
+          }
+          if ( (ch == '\r') || (ch == '\n') )
+          {
+            self_test(test);
+            break;
+          }
+          if ( ch == 'X' )
+          {
+            run_test = 0;
+            break;
+          }
+        }
+        vTaskDelay(1);
+      }
+    }
+
+/*
+ *  GO back to normal operation
+ */
+  return;
+}
+
+
 void self_test
 (
   unsigned int test                 // What test to execute
@@ -58,7 +107,16 @@ void self_test
 {
   int   i;
 
+/*
+ *  Switch over to test mode 
+ */
   run_state |= IN_TEST;             // Show the test is running 
+  while ( (run_state & IN_OPERATION) == IN_OPERATION )
+  {
+    vTaskDelay(10);
+  }
+  freeETarget_timer_pause();        // Stop interrupts
+
 /*
  * Figure out what test to run
  */
@@ -84,8 +142,16 @@ void self_test
       printf("\r\n13 - Test WiFI as a station"); 
       printf("\r\n14 - Enable the WiFi Server");
       printf("\r\n15 - Loopback the TCPIP data");
+      printf("\r\n16 - Loopback AUX connector");
+      printf("\r\n17 - Turn the oscillator on and off");
+      printf("\r\n18 - Turn the RUN lines on and off");
+      printf("\r\n19 - pcnt(1) - Timers not running"); 
+      printf("\r\n20 - pcnt(2) - Timers start - stop together"); 
+      printf("\r\n21 - pcnt(3) - Timers free running"); 
+      printf("\r\n22 - pcnt(4) - Timers cleared"); 
+      printf("\r\n99 - Zapple Debug Monitor");
       printf("\r\n");
-      break;
+    break;
 
 /*
  * Test 1, Display GPIO inputs
@@ -144,7 +210,10 @@ void self_test
  * Test 7, PCNT test
  */
     case T_PCNT:
-      pcnt_test();
+      pcnt_test(1);
+      pcnt_test(2);
+      pcnt_test(3);
+      pcnt_test(4);
       break;
 
 /*
@@ -214,12 +283,53 @@ void self_test
       xTaskCreate(tcpip_accept_poll,       "tcpip_accept_poll",    4096, NULL, 4, NULL);
       WiFi_loopback_test();
       break; 
+
+/*
+ *  Test 17: Cycle the 10MHz clock input
+ */
+    case T_CYCLE_CLOCK:
+      printf("\r\nCycle 10MHz Osc 2:1 duty cycle\r\n");
+      while (serial_available(CONSOLE) == 0)
+      {
+        gpio_set_level(OSC_CONTROL, OSC_ON);       // Turn off the oscillator
+        vTaskDelay(ONE_SECOND/2);                  // The oscillator should be on for 1/2 second
+        gpio_set_level(OSC_CONTROL, OSC_OFF);      // Turn off the oscillator
+        vTaskDelay(ONE_SECOND/4);                  // The oscillator shold be off for 1/4 seocnd
+      }
+      break; 
+/*
+ *  Test 18: Turn the RUN lines on and off
+ */
+    case T_RUN_ALL:
+      printf("\r\nCycle RUN lines at 2:1 duty cycle\r\n");
+      while (serial_available(CONSOLE) == 0)
+      {
+        gpio_set_level(STOP_N, 1);                  // Let the clock go
+        gpio_set_level(CLOCK_START, 0);   
+        gpio_set_level(CLOCK_START, 1);   
+        gpio_set_level(CLOCK_START, 0);             // Strobe the RUN linwes
+        vTaskDelay(ONE_SECOND/2);                   // The RUN lines should be on for 1/2 second
+        gpio_set_level(STOP_N, 0);                  // Stop the clock
+        vTaskDelay(ONE_SECOND/4);                   // THe RUN lines shold be off for 1/4 second
+      }
+      break; 
+
+/*
+ *  Rest 19-22 - Single PCNT test
+ */
+    case T_PCNT_STOP:
+    case T_PCNT_SHORT:
+    case T_PCNT_FREE:
+    case T_PCNT_CLEAR:
+      pcnt_test(test - (T_PCNT_STOP - 1));
+      break;
   }
 
  /* 
   *  All done, return;
   */
-    run_state &= ~IN_TEST;          // Exit the test 
+    run_state &= ~IN_TEST;              // Exit the test 
+    freeETarget_timer_start();          // Start interrupts
     return;
 }
 

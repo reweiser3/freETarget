@@ -60,7 +60,7 @@ static volatile unsigned long  tabata_timer;      // Free running state timer
        volatile unsigned long  power_save;        // Power save timer
 static volatile unsigned long  rapid_timer;       // Timer used for rapid fire ecents 
                   
-unsigned long run_state = 0;            // Current operating state 
+volatile unsigned int run_state = 0;              // Current operating state 
 
 const char* names[] = { "TARGET",                                                                                           //  0
                         "1",      "2",        "3",     "4",      "5",       "6",       "7",     "8",     "9",      "10",    //  1
@@ -166,10 +166,14 @@ void freeETarget_target_loop(void* arg)
 
   while(1)
   {
+    if ( (run_state & IN_TEST) == IN_TEST)    // If in test, 
+    {
+      run_state &= ~ IN_OPERATION;           // Exit operation
+    }
 /*
  * Cycle through the state machine
  */
-    if ( (run_state & IN_TEST) != 0 )
+    else
     {
       switch (state)
       {

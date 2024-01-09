@@ -19,6 +19,7 @@ bool    POST_counters(void);                            // Verify the counter op
 void    POST_trip_point(void);                          // Display the set point
 void    set_trip_point(int x);                          // Calibrate the trip point
 bool    do_dlt(unsigned int level);                     // Diagnostics Log and Trace
+void    zapple(unsigned int test);                      // ZAPPLE console monitor
 
 #define T_HELP           0        // Help test
 #define T_DIGITAL        1        // Digital test
@@ -37,13 +38,19 @@ bool    do_dlt(unsigned int level);                     // Diagnostics Log and T
 #define T_WIFI_SERVER   14        // Enable the WiFI Server
 #define T_WIFI_STATION_LOOPBACK 15 // Send an receive over the WiFi conduit
 #define T_WIFI_AP_LOOPBACK 16     // Send an receive over the WiFi conduit
+#define T_CYCLE_CLOCK   17        // Turn the clock on and off
+#define T_RUN_ALL       18        // Toggle the RUN lines on and off 
+#define T_PCNT_STOP     19        // PCNT timers stopped
+#define T_PCNT_SHORT    20        // PCNT timers start-stop  
+#define T_PCNT_FREE     21        // PCNT timers free running
+#define T_PCNT_CLEAR    22        // PCNT timers cleared after running
 
 /*
  * LED status messages
  */
 
 #define LED_RESET         "   "             // Force them all off
-#define LED_READY         "G  "             // The shot is ready to go
+#define LED_READY         "g  "             // The shot is ready to go.  Blik to show we are alive
 #define LED_READY_OFF     " --"             // Turn off the READY light
 #define LED_TABATA_ON     "--G"             // Tabata is ready to go, leave the others alone
 #define LED_TABATA_OFF    "-- "             // Tabata is turned off, leave the others alone

@@ -113,6 +113,7 @@ void arm_timers(void)
   gpio_intr_enable(RUN_SOUTH_HI);
   gpio_intr_enable(RUN_WEST_HI);
   gpio_set_level(OSC_CONTROL, OSC_ON);
+  vTaskDelay(1);                                        // Let the oscillator start up
   gpio_set_level(STOP_N, 1);                  // Then enable it
   return;
 }
