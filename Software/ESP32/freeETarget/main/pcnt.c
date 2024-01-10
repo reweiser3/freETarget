@@ -380,27 +380,27 @@ void pcnt_test
 static bool IRAM_ATTR north_hi_pcnt_isr_callback(void *args)
 {
   north_pcnt_hi = *PCNT_NORTH_HI;
-  *GPIO_NORTH_HI = 0;               // Disable NORTH HI interrupts
-  return pdFALSE; // high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
+  *GPIO_NORTH_HI = 1;               // Disable NORTH HI interrupts
+  return pdFALSE; 
 }
 
 static bool IRAM_ATTR east_hi_pcnt_isr_callback(void *args)
 {
   east_pcnt_hi = *PCNT_EAST_HI;
-  *GPIO_EAST_HI = 0;               // Disable NORTH HI interrupts
-  return pdFALSE; // return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
+  *GPIO_EAST_HI = 1;               // Disable EAST HI interrupts
+  return pdFALSE;
 }
 
 static bool IRAM_ATTR south_hi_pcnt_isr_callback(void *args)
 {
   south_pcnt_hi = *PCNT_SOUTH_HI;
-  *GPIO_SOUTH_HI = 0;               // Disable NORTH HI interrupts
-  return pdFALSE; // return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
+  *GPIO_SOUTH_HI = 1;               // Disable SOUTH HI interrupts
+  return pdFALSE; 
 }
 
 static bool IRAM_ATTR west_hi_pcnt_isr_callback(void *args)
 {
   west_pcnt_hi = *PCNT_WEST_HI;
-  *GPIO_WEST_HI = 0;               // Disable NORTH HI interrupts
-  return pdFALSE; // return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
+  *GPIO_WEST_HI = 1;               // Disable WEST HI interrupts
+  return pdFALSE; 
 }
