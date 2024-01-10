@@ -11,6 +11,7 @@
  * See:
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/pcnt.html
  * https://www.espressif.com/sites/default/files/documentation/esp32-s3_technical_reference_manual_en.pdf#pcnt
+ * https://www.espressif.com/sites/default/files/documentation/esp32-s3_technical_reference_manual_en.pdf#pcnt
  * 
  ***************************************************************************/
 #include "stdbool.h"
@@ -365,40 +366,41 @@ void pcnt_test
  * time interval from when the signal crosses VREF_LO to VREF_HI and hence
  * to the start of the pulse.
  * 
- * Empirically, this has been found to be 5-6 clock cycles between each
- * interrupt.  Thus the XXX_HI counters should be decrimented by 5 before 
- * doing any calculations.
- * 
  **************************************************************************/
 #define PCNT_NORTH_HI (int*)(0x60017000 + 0x0030)         // PCNT unit 1 count
 #define PCNT_EAST_HI  (int*)(0x60017000 + 0x0034)         // PCNT unit 2 count
 #define PCNT_SOUTH_HI (int*)(0x60017000 + 0x0038)         // PCNT unit 3 count
 #define PCNT_WEST_HI  (int*)(0x60017000 + 0x003C)         // PCNT unit 4 count
 
+#define GPIO_NORTH_HI  (int*)(0x60004000 + 0x0028 + 0x4*RUN_NORTH_HI)    // GPIO attached to interrupt
+#define GPIO_EAST_HI   (int*)(0x60004000 + 0x0028 + 0x4*RUN_EAST_HI)
+#define GPIO_SOUTH_HI  (int*)(0x60004000 + 0x0028 + 0x4*RUN_SOUTH_HI)
+#define GPIO_WEST_HI   (int*)(0x60004000 + 0x0028 + 0x4*RUN_WEST_HI)
+
 static bool IRAM_ATTR north_hi_pcnt_isr_callback(void *args)
 {
   north_pcnt_hi = *PCNT_NORTH_HI;
-  gpio_intr_disable(RUN_NORTH_HI);
-  return pdTRUE; // high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
+  *GPIO_NORTH_HI = 0;               // Disable NORTH HI interrupts
+  return pdFALSE; // high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
 }
 
 static bool IRAM_ATTR east_hi_pcnt_isr_callback(void *args)
 {
   east_pcnt_hi = *PCNT_EAST_HI;
-  gpio_intr_disable(RUN_EAST_HI);
-  return pdTRUE; // return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
+  *GPIO_EAST_HI = 0;               // Disable NORTH HI interrupts
+  return pdFALSE; // return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
 }
 
 static bool IRAM_ATTR south_hi_pcnt_isr_callback(void *args)
 {
   south_pcnt_hi = *PCNT_SOUTH_HI;
-  gpio_intr_disable(RUN_SOUTH_HI);
-  return pdTRUE; // return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
+  *GPIO_SOUTH_HI = 0;               // Disable NORTH HI interrupts
+  return pdFALSE; // return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
 }
 
 static bool IRAM_ATTR west_hi_pcnt_isr_callback(void *args)
 {
   west_pcnt_hi = *PCNT_WEST_HI;
-  gpio_intr_disable(RUN_WEST_HI);
-  return pdTRUE; // return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
+  *GPIO_WEST_HI = 0;               // Disable NORTH HI interrupts
+  return pdFALSE; // return high_task_awoken == pdTRUE; // return whether we need to yield at the end of ISRne");
 }
