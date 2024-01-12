@@ -62,7 +62,6 @@ extern int    json_west_x;        // WestAdjustment
 extern int    json_west_y;
 extern int    json_spare_1;       // Not used
 extern int    json_name_id;       // Name Identifier
-extern int    json_1_ring_x10;    // Size of 1 ring in mmx10
 extern int    json_LED_PWM;       // PWM Setting (%)
 extern int    json_power_save;    // How long to run target before turning off LEDs
 extern int    json_send_miss;     // Sent the miss message when TRUE
@@ -103,5 +102,5 @@ extern int    json_token;         // Token ring setting
 extern int    json_multifunction2;// Multifunction Switch 2
 extern double json_vref_lo;       // Sensor Voltage Reference Low (V)
 extern double json_vref_hi;       // Sensor Voltage Reference High (V)
-
+extern int    json_pcnt_latency;  // pcnt interrupt latancy
 #endif

@@ -57,6 +57,7 @@ void restore_nonvol(void);                        // Copyt the nonvol back
 #define NONVOL_PAPER_ECO      "PAPER_ECO"      // Advance witness paper if the shot is less than paper_eco
 #define NONVOL_TARGET_TYPE    "TARGET_TYPE"    // Modify the target processing (0 == Regular single bull)
 #define NONVOL_PS_VERSION     "PS_VERSION"     // Persistent storage version
+#define NONVOL_PCNT_LATENCY   "PCNT_LATENCY"   // Correction applied to PCNT readings
 #define NONVOL_FOLLOW_THROUGH "FOLLOW_THROUGH" // Follow through timer
 #define NONVOL_KEEP_ALIVE     "KEEP_ALIVE"     // Send out a keep alive at a r
 #define NONVOL_FACE_STRIKE    "FACE_STRIKE"    // Number of cycles to accept a face strike

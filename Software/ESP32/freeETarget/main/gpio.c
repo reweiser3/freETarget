@@ -372,27 +372,55 @@ void commit_status_LEDs
  *
  * Force read each of the timers
  * 
+ * Compensation for rise time
+ * 
+ * 
+ * 
+ *                   *
+ *    vref_hi      * +   
+ *               *   + vref_hi - vref_lo
+ *             *     +
+ *    vref_lo *      +
+ *           *++++++++
+ *         *   pcnt_hi
+ *        *
+ *       * origin
+ * 
+ *                         vref_lo
+ * origin = pcnt_lo + ----------------  * pcnt_hi
+ *                    vref_hi - vref_lo
+ * 
+ * IMPORTANT
+ * 
+ * pcnt_hi is the time from the start of pcnt_lo starting
+ * until vref_hi is triggered
+ * 
+ * 
  *-----------------------------------------------------*/
 void read_timers
 (
-  int* timer_ptr
+  int timer[]
 )
 {
   unsigned int i;
-  unsigned int delta_t;             // Time difference between VREF_LO and VREF_HI
-  unsigned int adjust_t;            // Time adjustment applied to clock
+  double pcnt_hi;                               // Reading from high counter 
 
   for (i=0; i<=8; i++)
   {
-    *(timer_ptr + i) = pcnt_read(i);
+    timer[i] = pcnt_read(i);
   }
 
 #if ( COMPENSATE_RISE_TIME )
-  for (i=N; i <= W; i++)            // Add the rise time to the signal to get a better estimate
+  if ( (json_vref_hi - json_vref_lo) > 0 )
   {
-    delta_t = *(timer_ptr + i + 4);              // Time from VREF_LO to VREF_HI
-    adjust_t = delta_t * (json_vref_lo / (json_vref_hi - json_vref_lo));
-    *(timer_ptr + i) += adjust_t;
+    for (i=N; i <= W; i++)                        // Add the rise time to the signal to get a better estimate
+    {
+      pcnt_hi = timer[i+4] - json_pcnt_latency;   // PCNT HI   (reading - latentcy)
+      if ( pcnt_hi > 0 )
+      {
+        timer[i] = timer[i] + pcnt_hi * (json_vref_lo / (json_vref_hi - json_vref_lo));
+      }
+    }
   }
 #endif
 

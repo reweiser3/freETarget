@@ -33,13 +33,11 @@ static void handle_json(void);    // Breakdown the JSON and execute it
  */
 static char input_JSON[256];
 
+int     json_calibre_x10;           // Pellet Calibre
 int     json_dip_switch;            // DIP switch overwritten by JSON message
 double  json_sensor_dia = DIAMETER; // Sensor daiamter overwitten by JSON message
-int     json_sensor_angle;          // Angle sensors are rotated through
-int     json_paper_time = 0;        // Time paper motor is applied
 int     json_echo;                  // Test String 
 double  json_d_echo;                // Test String
-int     json_calibre_x10;           // Pellet Calibre
 int     json_north_x;               // North Adjustment
 int     json_north_y;
 int     json_east_x;                // East Adjustment
@@ -49,7 +47,6 @@ int     json_south_y;
 int     json_west_x;                // WestAdjustment
 int     json_west_y;
 int     json_name_id;               // Name identifier
-int     json_1_ring_x10;            // Size of the 1 ring in mm
 int     json_LED_PWM;               // LED control value 
 int     json_power_save;            // Power down time
 int     json_send_miss;             // Send a miss message
@@ -69,6 +66,8 @@ int     json_vset_PWM;              // Starting PWM value
 double  json_vset;                  // Desired VREF setting
 int     json_follow_through;        // Follow through delay
 int     json_keep_alive;            // Keep alive period
+int     json_sensor_angle;          // Angle sensors are rotated through
+int     json_paper_time = 0;        // Time paper motor is applied
 int     json_tabata_warn_on;        // Tabata warning time light on
 int     json_tabata_warn_off;       // Tabata warning time to shot
 int     json_face_strike;           // Number of cycles to accept a strike
@@ -85,7 +84,7 @@ double  json_doppler;               // Adjust for dopper inverse square
 int     json_token;                 // Token ring state
 double  json_vref_lo;               // Low Voltage DAC setting
 double  json_vref_hi;               // High Voltage DAC setting
-
+int     json_pcnt_latency;          // pcnt interrupt latency
        void show_echo(void);        // Display the current settings
 static void show_test(int v);       // Execute the self test once
 static void show_names(int v);
@@ -121,6 +120,7 @@ const json_message_t JSON[] = {
   {"\"NAME_ID\":",        &json_name_id,                     0,                IS_INT32,  &show_names,      NONVOL_NAME_ID,          0 },    // Give the board a name
   {"\"PAPER_ECO\":",      &json_paper_eco,                   0,                IS_INT32,  0,                NONVOL_PAPER_ECO,        0 },    // Ony advance the paper is in the black
   {"\"PAPER_TIME\":",     &json_paper_time,                  0,                IS_INT32,  0,                NONVOL_PAPER_TIME,     500 },    // Set the paper advance time
+  {"\"PCNT\":",           &json_pcnt_latency,                0,                IS_INT32,  0,                NONVOL_PCNT_LATENCY,    10 },    // Interrupt latency for PCNT adjustment
   {"\"POWER_SAVE\":",     &json_power_save,                  0,                IS_INT32,  0,                NONVOL_POWER_SAVE,      30 },    // Set the power saver time
   {"\"RAPID_COUNT\":",    &json_rapid_count,                 0,                IS_INT32,  0,                0,                       0 },    // Number of shots expected in series
   {"\"RAPID_ENABLE\":",   &json_rapid_enable,                0,                IS_INT32,  0,                0,                       0 },    // Enable the rapid fire fieature

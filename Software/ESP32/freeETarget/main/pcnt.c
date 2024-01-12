@@ -366,41 +366,36 @@ void pcnt_test
  * time interval from when the signal crosses VREF_LO to VREF_HI and hence
  * to the start of the pulse.
  * 
+ * During development this function has been simplified and it now only
+ * captures the timer values.  The disable interrupts has been removed
+ * because the signals are latched and a second interrupt will not occur
+ * 
  **************************************************************************/
 #define PCNT_NORTH_HI (int*)(0x60017000 + 0x0030)         // PCNT unit 1 count
 #define PCNT_EAST_HI  (int*)(0x60017000 + 0x0034)         // PCNT unit 2 count
 #define PCNT_SOUTH_HI (int*)(0x60017000 + 0x0038)         // PCNT unit 3 count
 #define PCNT_WEST_HI  (int*)(0x60017000 + 0x003C)         // PCNT unit 4 count
 
-#define GPIO_NORTH_HI  (int*)(0x60004000 + 0x0028 + 0x4*RUN_NORTH_HI)    // GPIO attached to interrupt
-#define GPIO_EAST_HI   (int*)(0x60004000 + 0x0028 + 0x4*RUN_EAST_HI)
-#define GPIO_SOUTH_HI  (int*)(0x60004000 + 0x0028 + 0x4*RUN_SOUTH_HI)
-#define GPIO_WEST_HI   (int*)(0x60004000 + 0x0028 + 0x4*RUN_WEST_HI)
-
 static bool IRAM_ATTR north_hi_pcnt_isr_callback(void *args)
 {
   north_pcnt_hi = *PCNT_NORTH_HI;
-  *GPIO_NORTH_HI = 1;               // Disable NORTH HI interrupts
   return pdFALSE; 
 }
 
 static bool IRAM_ATTR east_hi_pcnt_isr_callback(void *args)
 {
   east_pcnt_hi = *PCNT_EAST_HI;
-  *GPIO_EAST_HI = 1;               // Disable EAST HI interrupts
   return pdFALSE;
 }
 
 static bool IRAM_ATTR south_hi_pcnt_isr_callback(void *args)
 {
   south_pcnt_hi = *PCNT_SOUTH_HI;
-  *GPIO_SOUTH_HI = 1;               // Disable SOUTH HI interrupts
   return pdFALSE; 
 }
 
 static bool IRAM_ATTR west_hi_pcnt_isr_callback(void *args)
 {
   west_pcnt_hi = *PCNT_WEST_HI;
-  *GPIO_WEST_HI = 1;               // Disable WEST HI interrupts
   return pdFALSE; 
 }

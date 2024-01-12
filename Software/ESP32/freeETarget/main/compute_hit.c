@@ -592,18 +592,6 @@ void send_score
   serial_to_all(str, ALL);
 #endif
 
-#if ( S_SCORE )
-  if ( json_token == TOKEN_NONE )
-  {
-    coeff = 9.9 / (((double)json_1_ring_x10 + (double)json_calibre_x10) / 20.0d);
-    score = 10.9 - (coeff * radius);
-    z = 360 - (((int)angle - 90) % 360);
-    clock_face = (double)z / 30.0;
-    sprintf(str, ", \"score\": %d, "\"clock\":\"%d:%d, \"  ", score,(int)clock_face, (int)(60*(clock_face-((int)clock_face)))) ;
-    serial_to_all(str, ALL);
-  }
-#endif
-
 #if ( S_XY )
   sprintf(str, ",\"x\":%4.2f, \"y\":%4.2f ", x, y);
   serial_to_all(str, ALL);
