@@ -11,6 +11,7 @@
 #include "freertos/task.h"
 
 #include "freETarget.h"
+#include "gpio.h"
 #include "json.h"
 #include "timer.h"
 #include "serial_io.h"

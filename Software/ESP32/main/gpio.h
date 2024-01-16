@@ -62,9 +62,16 @@ void multifunction_display(void);                         // Display the MFS set
 #define PAPER_ON       1
 #define PAPER_OFF      0
 
+#if (BUILD_REVISION == REV_500)
 #define STOP_N          GPIO_NUM_47                 // Stop the RUN flipflops       
 #define CLOCK_START     GPIO_NUM_21                 // Trigger a test cycle
-#define OSC_CONTROL       GPIO_NUM_48                 // Enable / kill 10MHz Oscillator
+#define CLOCK_ON        GPIO_NUM_48                 // Enable / kill 10MHz Oscillator
+#endif 
+#if (BUILD_REVISION == REV_510)                     // 21 and 47 reversed on this rev
+#define STOP_N          GPIO_NUM_21                 // Stop the RUN flipflops       
+#define CLOCK_START     GPIO_NUM_47                 // Trigger a test cycle
+#define CLOCK_ON        GPIO_NUM_48                 // Enable / kill 10MHz Oscillator
+#endif
 #define OSC_ON          1                           // Enable the oscillator
 #define OSC_OFF         0                           // Tristate the oscillator
 #define LDAC            GPIO_NUM_42
@@ -105,7 +112,7 @@ void multifunction_display(void);                         // Display the MFS set
 #define FACE_SENSOR  19
 
 /*
- *  MFS Uset
+ *  MFS Use
  */
 #define POWER_TAP     0                   // DIP A/B used to wake up
 #define PAPER_FEED    1                   // DIP A/B used as a paper feed
@@ -121,12 +128,5 @@ void multifunction_display(void);                         // Display the MFS set
 #define NO_ACTION     0                   // DIP usual function
 #define RAPID_RED     1                   // Rapid Fire Red Output
 #define RAPID_GREEN   2                   // Rapid Fire Green Output
-
-#define J10_1      VCC
-#define J10_2       14                    // TX3
-#define J10_3       15                    // RX3
-#define J10_4       19                    // RX1
-#define J10_5       18                    // TX1
-#define J10_6      GND
 
 #endif

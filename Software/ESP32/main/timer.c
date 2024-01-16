@@ -16,6 +16,7 @@
 #include "stdbool.h"
 #include "driver\timer.h"
 #include "freETarget.h"
+#include "gpio.h"
 #include "diag_tools.h"
 #include "gpio_types.h"
 #include "json.h"

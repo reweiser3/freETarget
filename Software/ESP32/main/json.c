@@ -11,6 +11,7 @@
 #include "nonvol.h"
 
 #include "freETarget.h"
+#include "gpio.h"
 #include "diag_tools.h"
 #include "json.h"
 #include "ctype.h"

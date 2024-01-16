@@ -16,6 +16,7 @@
 #include "driver/gpio.h"
 
 #include "freETarget.h"
+#include "gpio.h"
 #include "diag_tools.h"
 #include "serial_io.h"
 
@@ -130,7 +131,8 @@ unsigned int serial_available
   bool tcpip       // TRUE if checking the TCPIP port
 )
 {
-  int n_available;
+  int n_available;              // How many characters are waiting?
+  static int was_available = 0; // How many characters were waiting last time?
   int length;
 
   n_available = 0;
@@ -159,6 +161,21 @@ unsigned int serial_available
       n_available += length;
     }
   }
+   
+/*
+ * Return the number of characters waiting 
+ */
+  if ( (n_available != 0) && (was_available == 0) )               // Something waiting,
+  {
+    set_status_LED(LED_SIO_PUSH);
+    set_status_LED(LED_RX);             // Turn on the Receive LED
+    was_available = n_available;  
+  }
+  if ( (n_available == 0) && (was_available != 0) )
+  {
+    set_status_LED(LED_SIO_POP);
+  }
+  was_available = n_available;
 
   return n_available;
 }
@@ -319,15 +336,15 @@ void serial_to_all
   bool  tcpip                     // Output to the TCPIP socket
 )
 {
-  unsigned int len;
+  unsigned int length;
 
 /*
  *  Figure out the string length
  */
-  len = 0;
-  while (str[len])
+  length = 0;
+  while (str[length])
   {
-    len++;
+    length++;
   }
 
 /*
@@ -340,17 +357,19 @@ void serial_to_all
   
   if ( aux )
   {
-    uart_write_bytes(uart_aux, (const char *) str, len);
+    uart_write_bytes(uart_aux, (const char *) str, length);
   }
   
   if ( tcpip )
   {
-    tcpip_app_2_queue(str, len);
+    tcpip_app_2_queue(str, length);
   }
 
 /*
  * All done
  */
+  set_status_LED(LED_SIO_PUSH);              // Flash the LED for a bit
+  set_status_LED(LED_TX);
   return;
 }
 

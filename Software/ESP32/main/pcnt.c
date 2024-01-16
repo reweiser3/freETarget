@@ -15,7 +15,6 @@
  * 
  ***************************************************************************/
 #include "stdbool.h"
-#include "diag_tools.h"
 #include "driver/pulse_cnt.h"
 #include "driver/gpio.h"
 #include "driver/timer.h"
@@ -24,9 +23,11 @@
 #include "led_strip_types.h"
 
 #include "freETarget.h"
+#include "gpio.h"
 #include "gpio_define.h"
 #include "pcnt.h"
 #include "timer.h"
+#include "diag_tools.h"
 
 /*
  *  Working variables

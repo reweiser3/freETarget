@@ -13,6 +13,7 @@
 #include "serial_io.h"
 
 #include "freETarget.h"
+#include "gpio.h"
 #include "json.h"
 #include "compute_hit.h"
 #include "diag_tools.h"
@@ -267,10 +268,12 @@ unsigned int compute_hit
  * Find the smallest non-zero value, this is the sensor furthest away from the sensor
  */
   smallest = s[N].count;
+  location = N;
   for (i=N+1; i <= W; i++)
   {
     if ( s[i].count < smallest )
     {
+      location = i;
       smallest = s[i].count;
     }
   }
@@ -551,7 +554,6 @@ void send_score
         token_poll();
       }
     }
-    set_status_LED(LED_WIFI_SEND);
   }
   
  /* 
@@ -628,7 +630,6 @@ void send_score
   if ( json_token != TOKEN_NONE )
   {
     token_give();                            // Give up the token ring
-    set_status_LED(LED_READY);
   }
   return;
 }
@@ -673,7 +674,6 @@ void send_miss
       { 
         token_poll();
       }
-      set_status_LED(LED_WIFI_SEND);
     }
   }
   
@@ -721,7 +721,6 @@ void send_miss
  * All done, go home
  */
   token_give();
-  set_status_LED(LED_READY);
   return;
 }
 

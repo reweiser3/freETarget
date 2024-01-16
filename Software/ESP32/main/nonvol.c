@@ -13,6 +13,7 @@
 #include "nvs.h"
 
 #include "freETarget.h"
+#include "gpio.h"
 #include "diag_tools.h"
 #include "json.h"
 #include "serial_io.h"

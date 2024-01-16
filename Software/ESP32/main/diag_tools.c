@@ -291,9 +291,9 @@ void self_test
       printf("\r\nCycle 10MHz Osc 2:1 duty cycle\r\n");
       while (serial_available(CONSOLE) == 0)
       {
-        gpio_set_level(OSC_CONTROL, OSC_ON);       // Turn off the oscillator
+        gpio_set_level(CLOCK_ON, OSC_ON);       // Turn off the oscillator
         vTaskDelay(ONE_SECOND/2);                  // The oscillator should be on for 1/2 second
-        gpio_set_level(OSC_CONTROL, OSC_OFF);      // Turn off the oscillator
+        gpio_set_level(CLOCK_ON, OSC_OFF);      // Turn off the oscillator
         vTaskDelay(ONE_SECOND/4);                  // The oscillator shold be off for 1/4 seocnd
       }
       break; 
@@ -396,7 +396,7 @@ bool POST_counters(void)
   count = 0;
   DLT(DLT_CRITICAL); 
   printf("Turn Clock OFF");
-  gpio_set_level(OSC_CONTROL, OSC_OFF);   // Turn off the oscillator
+  gpio_set_level(CLOCK_ON, OSC_OFF);   // Turn off the oscillator
   set_status_LED("W--");
   toggle = gpio_get_level(REF_CLK);
   for  (i=0; i != 1000; i++)               // Try 1000 times
@@ -429,7 +429,7 @@ bool POST_counters(void)
   count = 0;
   DLT(DLT_CRITICAL); 
   printf("Turn Clock ON");
-  gpio_set_level(OSC_CONTROL, OSC_ON);
+  gpio_set_level(CLOCK_ON, OSC_ON);
   toggle = gpio_get_level(REF_CLK);
   for  (i=0; i != 1000; i++)               // Try 1000 times
   {

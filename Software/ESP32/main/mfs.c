@@ -167,11 +167,11 @@ void multifunction_switch(void)
   set_status_LED("-  ");
   if ( DIP_SW_A )
   {
-    set_status_LED("--G");
+    set_status_LED("-G-");
   }
   if ( DIP_SW_B )
   {
-    set_status_LED("-G-");
+    set_status_LED("--G");
   }
   vTaskDelay(ONE_SECOND);
 
@@ -249,10 +249,7 @@ static void sw_state
 
   char s[128];                          // Holding string 
   
-  if ( DLT(DLT_CRITICAL) )
-  {
-    printf("Switch action: %d", action);
-  }
+  DZZ(DLT_CRITICAL, printf("Switch action: %d", action);)
 
   switch (action)
   {
@@ -266,7 +263,7 @@ static void sw_state
       json_power_save += 30;      
       sprintf(s, "\r\n{\"LED_PWM\": %d}\n\r", json_power_save);
       serial_to_all(s, ALL);  
-        break;
+      break;
         
     case PAPER_FEED:                      // The switch acts as paper feed control
       paper_on_off(true);                 // Turn on the paper drive

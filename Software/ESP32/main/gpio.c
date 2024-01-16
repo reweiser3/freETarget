@@ -37,6 +37,10 @@ typedef struct status_struct {
   int green;
   int red;   
   int blink;                              // TRUE if blinking enabled
+  int push_blue;                          // Pushed value
+  int push_green;
+  int push_red;
+  int push_blink;
   }  status_struct_t;
 
 /* 
@@ -106,13 +110,13 @@ void arm_timers(void)
 {
   gpio_set_level(CLOCK_START, 0);
   gpio_set_level(STOP_N, 0);                  // Reset the timer
-  gpio_set_level(OSC_CONTROL, OSC_OFF);       // Turn off the oscillator
+  gpio_set_level(CLOCK_ON, OSC_OFF);          // Turn off the oscillator
   pcnt_clear();
   gpio_intr_enable(RUN_NORTH_HI);             // Turn on the interrupts
   gpio_intr_enable(RUN_EAST_HI);
   gpio_intr_enable(RUN_SOUTH_HI);
   gpio_intr_enable(RUN_WEST_HI);
-  gpio_set_level(OSC_CONTROL, OSC_ON);
+  gpio_set_level(CLOCK_ON, OSC_ON);
   vTaskDelay(1);                                        // Let the oscillator start up
   gpio_set_level(STOP_N, 1);                  // Then enable it
   return;
@@ -124,7 +128,7 @@ void arm_timers(void)
  */
 void stop_timers(void)
 {
-  gpio_set_level(OSC_CONTROL, OSC_OFF);
+  gpio_set_level(CLOCK_ON, OSC_OFF);
   gpio_set_level(STOP_N, 0);      // Reset the timer
   return;
 }
@@ -191,7 +195,7 @@ unsigned int read_DIP(void)
  *-----------------------------------------------------*/
 #define RMT_LED_STRIP_RESOLUTION_HZ 10000000 // 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
 
-rmt_channel_handle_t led_chan = NULL;
+rmt_channel_handle_t led_channel = NULL;
 rmt_tx_channel_config_t tx_chan_config = {
     .clk_src           = RMT_CLK_SRC_DEFAULT, // select source clock
     .mem_block_symbols = 64, // increase the block size can make the LED less flickering
@@ -210,9 +214,9 @@ void status_LED_init
 )
 {
   tx_chan_config.gpio_num = led_gpio;
-  ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config, &led_chan));
+  ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config, &led_channel));
   ESP_ERROR_CHECK(rmt_new_led_strip_encoder(&encoder_config, &led_encoder));
-  ESP_ERROR_CHECK(rmt_enable(led_chan));
+  ESP_ERROR_CHECK(rmt_enable(led_channel));
   return;
 }
 
@@ -228,11 +232,15 @@ void status_LED_init
  *
  * The state of the LEDs can be turned on or off 
  * 
- * 'R' - Set the LED to Red'
+ * 'R' - Set the LED to Red
+ * 'r' - Blink the LED in red
  * '-' - Leave the LED alone
- *  
+ * '.' - Turn the LED off
+ * 'P' - Push the current state onto the stack
+ * 'p' - Pop the current state from the statck
+ *
  *-----------------------------------------------------*/
-#define   LED_ON 0x1F
+#define   LED_ON 0x03
 
 rmt_transmit_config_t tx_config = {
         .loop_count = 0, // no transfer loop
@@ -247,55 +255,81 @@ void set_status_LED
   )
 { 
   int i;
-
 /*
  * Decode the calling string into a list of pixels
  */
   i=0;
   while (*new_state != 0)
   {
-    if ( *new_state != '-' )
+    if ( *new_state != '-' )      // - Leave the setting alone
     {
-      status[i].blink = 0;
-      status[i].red = 0;
-      status[i].green = 0;
-      status[i].blue = 0;          // Turn off the LED
+      status[i].blink = 0;        // Default to blink off
       switch (*new_state)
       {
+        case '^':                           // Push current status if stack is empty
+          if ( status[i].blink != (-1)) 
+            status[i].push_blink = status[i].blink;
+          if ( status[i].blue  != (-1)) 
+            status[i].push_blue  = status[i].blue;
+          if ( status[i].green != (-1)) 
+            status[i].push_green = status[i].green;
+          if ( status[i].red   != (-1)) 
+            status[i].push_red   = status[i].red;
+          break;
+
+        case 'v':                            // Pop from stack to current
+          if ( status[i].push_blink != -1)
+            status[i].blink = status[i].push_blink;
+          if ( status[i].push_blue != -1)
+            status[i].blue  = status[i].push_blue;
+          if ( status[i].push_green != -1)
+            status[i].green = status[i].push_green;
+          if ( status[i].push_red != -1)
+            status[i].red   = status[i].push_red;
+          status[i].push_blink = -1;         // Empty the stack
+          status[i].push_blue  = -1;
+          status[i].push_green = -1;
+          status[i].push_red   = -1;
+          break;
+
         case 'r':                 // RED LED
           status[i].blink = 1;    // Turn on Blinking
         case 'R':
           status[i].red   = LED_ON;
           break;
 
-        case 'y':                 // RED LED
+        case 'y':                 // YELLOW LED
           status[i].blink = 1;    // Turn on Blinking
         case 'Y':
           status[i].red   = LED_ON/2;
           status[i].green = LED_ON/2;
           break;
 
-        case 'g':               // GREEN LED
+        case 'g':                 // GREEN LED
           status[i].blink = 1;    // Turn on Blinking
         case 'G':
           status[i].green = LED_ON;
           break;
 
-        case 'b':
+        case 'b':                 // BLUE LED
           status[i].blink = 1;
         case 'B':
           status[i].blue  = LED_ON;
           break;
 
         case 'w':
-          status[i].blink = 1;
+          status[i].blink = 1;    // WHITE LED
         case 'W':
           status[i].red   = LED_ON/3;
           status[i].green = LED_ON/3;
           status[i].blue  = LED_ON/3;
           break;
 
-        case ' ':             // The LEDs are already off
+        case ' ':                 // LEDs are all off
+          status[i].blink = 0;
+          status[i].red = 0;
+          status[i].green = 0;
+          status[i].blue = 0;    
           break;
       }
     }
@@ -312,7 +346,7 @@ void set_status_LED
 
 /*-----------------------------------------------------
  * 
- * @function: commit_status_LED
+ * @function: commit_status_LEDs
  * 
  * @brief:    Write the status LED settings to the hardware
  * 
@@ -350,7 +384,7 @@ void commit_status_LEDs
     }
   }
     
-  ESP_ERROR_CHECK(rmt_transmit(led_chan, led_encoder, led_strip_pixels, sizeof(led_strip_pixels), &tx_config));
+  rmt_transmit(led_channel, led_encoder, led_strip_pixels, sizeof(led_strip_pixels), &tx_config);
 
 /*
  * All done, return
@@ -382,12 +416,12 @@ void commit_status_LEDs
  *             *     +
  *    vref_lo *      +
  *           *++++++++
- *         *   pcnt_hi
+ *         *   pcnt_hi3
  *        *
  *       * origin
  * 
  *                         vref_lo
- * origin = pcnt_lo + ----------------  * pcnt_hi
+ * origin = pcnt_lo - ----------------  * pcnt_hi
  *                    vref_hi - vref_lo
  * 
  * IMPORTANT
@@ -410,8 +444,8 @@ void read_timers
     timer[i] = pcnt_read(i);
   }
 
-#if ( COMPENSATE_RISE_TIME )
-  if ( (json_vref_hi - json_vref_lo) > 0 )
+  if ( (json_pcnt_latency != 0)                   // Latecy has a valid setting
+          && ((json_vref_hi - json_vref_lo) > 0 ) ) // The voltage references are good
   {
     for (i=N; i <= W; i++)                        // Add the rise time to the signal to get a better estimate
     {
@@ -422,7 +456,6 @@ void read_timers
       }
     }
   }
-#endif
 
   return;
 }
@@ -465,10 +498,7 @@ volatile unsigned long paper_time;
 void drive_paper(void)
 {
 
-  if ( DLT(DLT_DIAG) )
-  {
-    printf("Advancing paper: %dms", json_paper_time);
-  }
+  DZZ(DLT_DIAG, printf("Advancing paper: %dms", json_paper_time);)
 
 /*
  * Drive the motor on and off for the number of cycles

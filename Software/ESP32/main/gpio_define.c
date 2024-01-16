@@ -25,10 +25,12 @@
 #include "adc_oneshot.h"
 #include "led_strip.h"
 #include "led_strip_types.h"
+
+#include "freETarget.h"
+#include "gpio.h"
 #include "i2c.h"
 #include "pwm.h"
 #include "pcnt.h"
-
 #include "diag_tools.h"
 #include "analog_io.h"
 #include "gpio_define.h"
@@ -191,7 +193,7 @@ gpio_struct_t gpio_table[] = {
     {"D",            GPIO_NUM_35, (void*)&dio35},    // Auxilary Input D
     {"BOOT",         GPIO_NUM_0,  NULL},             // Hold in BOOT
     {"STATUS",       GPIO_NUM_45, (void*)&led_strip_config},// Status LEDs
-    {"OSC_CONTROL",  GPIO_NUM_48, (void*)&dio48},    // Start / stop the 10MHz oscillator
+    {"CLK_ON*",      GPIO_NUM_48, (void*)&dio48},    // Start / stop the 10MHz oscillator
     {"CLK_START*",   GPIO_NUM_47, (void*)&dio47},    // Trigger the clocks for diagnostics
     {"STOP*",        GPIO_NUM_21, (void*)&dio21},    // Stop the RUN signals 
     {"SDA",          GPIO_NUM_14, (void*)&i2c},      // SDA
