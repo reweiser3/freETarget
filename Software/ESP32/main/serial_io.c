@@ -533,10 +533,9 @@ int tcpip_socket_2_queue
     length--;
     bytes_moved++;
     in_buffer.in = (in_buffer.in+1) % sizeof(in_buffer.queue);
-    if ( in_buffer.out == in_buffer.in )
+    if ( in_buffer.out == in_buffer.in )            // Reached the end
     {
-      DLT(DLT_CRITICAL);
-      printf("TCPIP input queue overrun\r\n");              // Reached the end
+      DLT(DLT_CRITICAL, printf("TCPIP input queue overrun\r\n");)  
       break;
     }
   }

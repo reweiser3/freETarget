@@ -249,7 +249,7 @@ static void sw_state
 
   char s[128];                          // Holding string 
   
-  DZZ(DLT_CRITICAL, printf("Switch action: %d", action);)
+  DLT(DLT_CRITICAL, printf("Switch action: %d", action);)
 
   switch (action)
   {

@@ -240,7 +240,7 @@ void status_LED_init
  * 'p' - Pop the current state from the statck
  *
  *-----------------------------------------------------*/
-#define   LED_ON 0x03
+#define   LED_ON 0x0F
 
 rmt_transmit_config_t tx_config = {
         .loop_count = 0, // no transfer loop
@@ -264,6 +264,10 @@ void set_status_LED
     if ( *new_state != '-' )      // - Leave the setting alone
     {
       status[i].blink = 0;        // Default to blink off
+      status[i].blink = 0;
+      status[i].red = 0;
+      status[i].green = 0;
+      status[i].blue = 0;    
       switch (*new_state)
       {
         case '^':                           // Push current status if stack is empty
@@ -498,7 +502,7 @@ volatile unsigned long paper_time;
 void drive_paper(void)
 {
 
-  DZZ(DLT_DIAG, printf("Advancing paper: %dms", json_paper_time);)
+  DLT(DLT_DIAG, printf("Advancing paper: %dms", json_paper_time);)
 
 /*
  * Drive the motor on and off for the number of cycles
@@ -580,10 +584,7 @@ void paper_on_off                               // Function to turn the motor on
  {
   face_strike++;      // Got a face strike
 
-  if ( DLT(DLT_CRITICAL) )
-  {
-    printf("\r\nface_ISR(): %d", face_strike);
-  }
+  DLT(DLT_DIAG,  printf("\r\nface_ISR(): %d", face_strike);)
 
   return;
  }
@@ -713,20 +714,22 @@ void digital_test(void)
  *----------------------------------------------------------------
  *
  *--------------------------------------------------------------*/
+static char* LED_list[] = {
+  "RRR", "GGG", "BBB", "YYY", "WWW", "RGB", "rgb", LED_READY, 0
+  };
+
 void status_LED_test(void)
 {
+  int i;
+
   printf("\r\nStatus LED test");
-  set_status_LED("R--");
-  vTaskDelay(ONE_SECOND);
-  set_status_LED("RG-");
-  vTaskDelay(ONE_SECOND);
-  set_status_LED("RGB");
-  vTaskDelay(ONE_SECOND);
-  set_status_LED("WWW");
-  vTaskDelay(ONE_SECOND);
-  set_status_LED("rwb");
-  vTaskDelay(5*ONE_SECOND);         // Blink for 5 seconds
-  set_status_LED(LED_READY);
+  i=0;
+  while ( LED_list[i] != 0 )
+  {
+    set_status_LED(LED_list[i]);
+    i++;
+    vTaskDelay(2*ONE_SECOND);
+  }
   printf("\r\nDone\r\n");
   return;
 }

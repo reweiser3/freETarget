@@ -108,8 +108,7 @@ void    zapple(unsigned int test);                      // ZAPPLE console monito
 /*
  * Tracing 
  */
-#define DZZ(level, z) if ( do_dlt(level)){z}
-#define DLT(level)      ( do_dlt(level) )
+#define DLT(level, z) if ( do_dlt(level)){z}
 #define DLT_NONE          0                       // No DLT messages displayed
 #define DLT_CRITICAL      0x80                    // Display messages that will compromise the target
 #define DLT_APPLICATION   0x01                    // Application level messages displayed

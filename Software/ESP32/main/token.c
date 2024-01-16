@@ -102,10 +102,7 @@ void token_init(void)
 
   timer_new(&token_tick,    5 * ONE_SECOND);                              // Token ring watchdog
 
-  if ( DLT(DLT_CRITICAL) ) 
-  {
-    printf("token_init()");  
-  }
+  DLT(DLT_CRITICAL, printf("token_init()"); )
   
 /*
  * Send out the token initializaation request
@@ -224,10 +221,7 @@ void token_poll(void)
     while ( serial_available(AUX) )
     {
       token = serial_getch(AUX);
-      if (DLT(DLT_INFO) )                             // and not in trace mode (DIAG jumper installed)
-      {
-        printf("Master Rx: 0x%2X  %d", token, token);
-      }
+      DLT(DLT_INFO, printf("Master Rx: 0x%2X  %d", token, token);)
 
       if ( token & TOKEN_BYTE )
       {
@@ -235,10 +229,7 @@ void token_poll(void)
         {
           case (TOKEN_ENUM_REQUEST):                          // A new device has requested an enum
             serial_putch((char)(TOKEN_BYTE | TOKEN_ENUM | (1 + 1)), ALL ); // Yes, start the enumeration at 2 
-            if (DLT(DLT_INFO) )                              // and not in trace mode (DIAG jumper installed)
-            {
-              printf("{\"TOKEN_ENUM\":%d }", (int)(token & TOKEN_RING));
-            }
+            DLT(DLT_INFO, printf("{\"TOKEN_ENUM\":%d }", (int)(token & TOKEN_RING));)
             break;
           
           case TOKEN_ENUM:                                    // An enumeration byte is passing around
@@ -295,10 +286,7 @@ void token_poll(void)
     while( serial_available(AUX) )
     {
       token = serial_getch(AUX);
-      if (DLT(DLT_INFO) )                                   // and not in trace mode (DIAG jumper installed)
-      {
-        printf("Slave Rx: 0x%02X %d", token, token);
-      }
+      DLT(DLT_INFO, printf("Slave Rx: 0x%02X %d", token, token);)
 
       if ( token & TOKEN_BYTE )
       {
@@ -376,10 +364,7 @@ int token_take(void)
     return 0;
   }
   
-  else if ( DLT(DLT_INFO) ) 
-  {
-    printf("token_take()");  
-  }
+  DLT(DLT_INFO, printf("token_take()"); )
 
 /*
  * Check to see if the token ring is alreay used
@@ -424,10 +409,7 @@ int token_give(void)
     return 0;
   }
   
-  else if ( DLT(DLT_INFO) ) 
-  {
-    printf("token_give()");  
-  }
+  DLT(DLT_INFO, printf("token_give()"); )
 
 /*
  * Check to see if the token ring is alreay used
