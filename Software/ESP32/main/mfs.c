@@ -1,8 +1,8 @@
 /*----------------------------------------------------------------
  * 
- * freETarget        
+ * mfs.c       
  * 
- * Software to run the Air-Rifle / Small Bore Electronic Target
+ * Manage the multifunction switches
  * 
  *-------------------------------------------------------------*/
 #include "driver/gpio.h"
@@ -19,6 +19,40 @@
 #include "serial_io.h"
 
 /*
+ *  Macros
+ */
+#define LONG_PRESS (ONE_SECOND)
+#define TAP_A   1
+#define TAP_B   2
+#define HOLD_A  3
+#define HOLD_B  4
+#define HOLD_AB 5
+
+#define HOLD1(x)    LO10((x))          // Low digit        xxxx2
+#define HOLD2(x)    HI10((x))          // High digit       xxx2x
+#define TAP1(x)     HLO10((x))         // High Low digit   xx2xx
+#define TAP2(x)     HHI10((x))         // High High digit  x2xxx
+#define HOLD12(x)   HHH10((x))         // Highest digit    2xxxx
+
+/*
+ *  MFS Use
+ */
+#define POWER_TAP     0                   // DIP A/B used to wake up
+#define PAPER_FEED    1                   // DIP A/B used as a paper feed
+#define LED_ADJUST    2                   // DIP A/B used to set LED brightness
+#define PAPER_SHOT    3                   // DIP A/B Advance paper one cycle
+#define PC_TEST       4                   // DIP A/B used to trigger fake shot
+#define ON_OFF        5                   // DIP A/B used to turn the target ON or OFF
+#define MFS_SPARE_6   6
+#define MFS_SPARE_7   7
+#define MFS_SPARE_8   8
+#define TARGET_TYPE   9                   // Sent target type with score
+
+#define NO_ACTION     0                   // DIP usual function
+#define RAPID_RED     1                   // Rapid Fire Red Output
+#define RAPID_GREEN   2                   // Rapid Fire Green Output
+
+/*
  * Function Prototypes 
  */
 static void send_fake_score(void);
@@ -27,7 +61,9 @@ static void sw_state(unsigned int action);      // Carry out the MFS function
 /*
  * Variables 
  */
-static unsigned int dip_mask;                   // Output to the DIP port if selected
+static unsigned int dip_mask;      // Output to the DIP port if selected
+static int switch_A = 0;
+static int switch_B = 0;           // Count how long the switch has been closed
 
 /*-----------------------------------------------------
  * 
@@ -121,102 +157,123 @@ static unsigned int dip_mask;                   // Output to the DIP port if sel
  * Both switches pressed, Toggle the Tabata State
  * Either switch set for target type switch
  *-----------------------------------------------------*/
-                           
-void multifunction_switch(void)
- {
-    unsigned int  action;               // Action to happen
+void multifunction_switch_tick(void)
+{
+  if ( DIP_SW_A )
+  {
+    switch_A++;            // Add 1 every time the switch is closed
+    if ( switch_A < LONG_PRESS )
+    {
+      set_status_LED("-G-");
+    }
+    else
+    {
+      set_status_LED("-W-");
+    }
+  }
 
+  if ( DIP_SW_B )
+  {
+    switch_B++;
+    if ( switch_B < LONG_PRESS )
+    {
+      set_status_LED("--G");
+    }
+    else
+    {
+      set_status_LED("--W");
+    }
+  }
+/*
+ *  Return to the scheduler 
+ */
+  return;
+}
+
+void multifunction_switch(void)
+{
+  int action;
+
+/*
+ * Do nothing if the switches are closed
+ */
+  if ( (DIP_SW_A) || (DIP_SW_B) )
+  {
+    return;
+  }
+printf("here");
 /*
  * Figure out what switches are pressed
  */
-   action = 0;                         // No switches pressed
-   if ( DIP_SW_A )
-   {
-     action += 1;                     // Remember how we got here
-   }
-   if ( DIP_SW_B )
-   {
-     action += 2;
-   }
-
+  action = 0;                         // No switches pressed
+  if (switch_A != 0) 
+  {
+    action = TAP_A;
+    if ( switch_A >= LONG_PRESS  )
+    {
+      action = HOLD_A;
+    }
+  }
+  if (switch_B != 0) 
+  {
+    action = TAP_B;
+    if ( switch_B >= LONG_PRESS  )
+    {
+      action = HOLD_B;
+    }
+  }
+  if ( (switch_A != 0) && (switch_B != 0 ) )
+  {
+    action = HOLD_AB;
+  }
+   
 /*
  * Special case of a target type, ALWAYS process this switch even if it is closed
  */
    if ( HOLD1(json_multifunction) == TARGET_TYPE ) 
    {
      sw_state(HOLD1(json_multifunction));
-     action &= ~1;
-     action += 4;
    }
    else if ( HOLD2(json_multifunction) == TARGET_TYPE ) 
    {
      sw_state(HOLD2(json_multifunction));
-     action &= ~2;
-     action += 8;
    }
 
-   if ( action == 0 )                 // Nothing to do
-   {
-     return;
-   }
-   
-/*
- * Delay for one second to detect a tap
- * Check to see if the switch has been pressed for the first time
- */
-  set_status_LED("-  ");
-  if ( DIP_SW_A )
-  {
-    set_status_LED("-G-");
-  }
-  if ( DIP_SW_B )
-  {
-    set_status_LED("--G");
-  }
-  vTaskDelay(ONE_SECOND);
 
-  if ( (!DIP_SW_A)
-        && (!DIP_SW_B) )             // Both switches are open? (tap)
-   {
-      if ( action & 1 )
-      {
-        sw_state(TAP1(json_multifunction));
-      }
-      if ( action & 2 )
-      {
-        sw_state(TAP2(json_multifunction));
-      }
-   }
-   
 /*
- * Look for the special case of both switches pressed
+ *  Decode taps and holds and execute the switch selection
  */
-  if ( (DIP_SW_A) && (DIP_SW_B) )         // Both pressed?
+  DLT(DLT_DIAG, printf("Switch state: %d", action);)
+  switch (action)
   {
-    sw_state(HOLD12(json_multifunction));
-  }
-      
-/*
- * Single button pressed manage the target based on the configuration
- */
-  else
-  {
-    if ( DIP_SW_A )
-    {
+    case TAP_A:
+      sw_state(TAP1(json_multifunction));
+      break;
+
+    case TAP_B:
+      sw_state(TAP2(json_multifunction));
+      break;
+
+    case HOLD_A:
       sw_state(HOLD1(json_multifunction));
-    }
-    if ( DIP_SW_B )
-    {
+      break;
+
+    case HOLD_B:
       sw_state(HOLD2(json_multifunction));
-    }
+      break;
+
+    case HOLD_AB:
+      sw_state(HOLD12(json_multifunction));
+      break;
   }
   
 /*
  * All done, return the GPIO state
  */
-  multifunction_wait_open();      // Wait here for the switches to be open
-
-  set_status_LED(LED_READY);
+  multifunction_wait_open();
+  switch_A = 0;
+  switch_B = 0;                 // Reset the timers
+  set_status_LED("-  ");
   return;
 }
 
@@ -249,7 +306,7 @@ static void sw_state
 
   char s[128];                          // Holding string 
   
-  DLT(DLT_CRITICAL, printf("Switch action: %d", action);)
+  DLT(DLT_DIAG, printf("Switch action: %d", action);)
 
   switch (action)
   {

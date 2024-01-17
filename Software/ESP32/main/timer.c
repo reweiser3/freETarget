@@ -232,27 +232,34 @@ void freeETarget_synchronous
 
   while (1)
   {
-/*
- *  10 ms band
+/* 
+ *  Update the timers
  */
-//    token_cycle();
     for (i=0; i != N_TIMERS; i++)  // Refresh the timers
     {
       if ( (timers[i] != 0)
         && ( *timers[i] != 0 ) )
       {
         (*timers[i])--;
+        DLT(DLT_DIAG, printf("Timer: %lu", *timers[i]);)
       }
     }
+
+/*
+ *  10 ms band
+ */
+    token_cycle();
+    multifunction_switch_tick();        // Keep track of the switch duration
+    multifunction_switch();             // Do something with the switch when open
+    drive_paper_tick();
 
 /*
  *  500 ms band
  */
     if ( (cycle_count  %  BAND_500ms) == 0 )
     {
-      commit_status_LEDs( toggle );
       toggle ^= 1;
-      multifunction_switch();
+      commit_status_LEDs( toggle );
       tabata_task();
       rapid_fire_task();
     }

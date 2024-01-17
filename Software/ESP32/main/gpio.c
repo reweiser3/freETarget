@@ -489,19 +489,11 @@ void read_timers
  * Step Count = 0
  * Step Time = 0
  * Paper Time = Motor ON time
- *
- * Stepper
- * Paper Time = 0
- * Step Count = X
- * Step Time = Step On time
  * 
  *-----------------------------------------------------*/
-
-volatile unsigned long paper_time;
-
+static volatile unsigned long paper_time;
 void drive_paper(void)
 {
-
   DLT(DLT_DIAG, printf("Advancing paper: %dms", json_paper_time);)
 
 /*
@@ -510,9 +502,18 @@ void drive_paper(void)
  */
   timer_new(&paper_time, json_paper_time);  // Create the timer
   paper_on_off(true);                       // Motor ON
-  while ( paper_time != 0 )
+
+ /*
+  * All done, return
+  */
+  return;
+ }
+
+void drive_paper_tick(void)
+{
+  if ( paper_time != 0 )
   {
-    vTaskDelay(1);
+    return;
   }
   paper_on_off(false);                      // Motor OFF
 

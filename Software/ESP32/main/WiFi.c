@@ -559,7 +559,7 @@ void tcpip_accept_poll(void* parameters)
    int sock;
    int i;
 
-   DLT(DLT_CRITICAL, printf("tcp_accept_poll()\r\n");)
+   DLT(DLT_CRITICAL, printf("tcp_accept_poll()");)
    
 /*
  * Start the server
