@@ -1,0 +1,53 @@
+@page "/"
+@using FreeETargetMaui.Services
+@inject TargetService Target
+
+<h1>FreeE Target (MAUI)</h1>
+
+<div class="mb-3">
+    <input @bind="portName" placeholder="Serial Port" />
+    <button @onclick="Connect">Connect</button>
+    <button @onclick="Disconnect">Disconnect</button>
+</div>
+
+<svg id="target" width="300" height="300" style="background:#eee;border:1px solid black">
+    <circle cx="150" cy="150" r="140" stroke="black" fill="white" />
+    @foreach(var s in shots)
+    {
+        <circle cx="@(150 + s.X * scale)" cy="@(150 - s.Y * scale)" r="4" fill="red" />
+    }
+</svg>
+
+@code {
+    private string portName = "COM3";
+    private const double scale = 10; // pixels per mm
+    private List<Shot> shots = new();
+
+    protected override void OnInitialized()
+    {
+        Target.ShotReceived += OnShot;
+    }
+
+    private void OnShot(Shot shot)
+    {
+        shots.Add(shot);
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void Connect()
+    {
+        try
+        {
+            Target.Connect(portName);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    private void Disconnect()
+    {
+        Target.Disconnect();
+    }
+}
