@@ -48,17 +48,7 @@ namespace TargetSimulator
         {
             InitializeComponent();
 
-            getAvailablePorts();
-
-            foreach (string port in ports)
-            {
-                comboBox1.Items.Add(port);
-                Console.WriteLine(port);
-                if (ports[0] != null)
-                {
-                    comboBox1.SelectedItem = ports[0];
-                }
-            }
+            refreshAvailablePorts();
             
             // Initialize UI controls with default values
             InitializeShooterSettingsControls();
@@ -78,6 +68,7 @@ namespace TargetSimulator
             chkBreathingEnabled.CheckedChanged += chkBreathingEnabled_CheckedChanged;
             btnApplySettings.Click += btnApplySettings_Click;
             btnResetToDefault.Click += btnResetToDefault_Click;
+            btnRefreshPorts.Click += btnRefreshPorts_Click;
         }
         
         private void InitializeShooterSettingsControls()
@@ -99,10 +90,47 @@ namespace TargetSimulator
             lblMissChance.Text = $"Miss: {missChance:P1}";
         }
 
-
-        void getAvailablePorts()
+        void refreshAvailablePorts()
         {
+            // Store the previously selected port if any
+            string previousPort = comboBox1.SelectedItem?.ToString() ?? String.Empty;
+            
+            // Clear the combo box and get fresh port names
+            comboBox1.Items.Clear();
             ports = SerialPort.GetPortNames();
+            
+            if (ports.Length == 0)
+            {
+                // No ports available
+                statusText.Text = "No COM ports detected";
+                txtOutput.AppendText($"{DateTime.Now}: No COM ports available\r\n");
+                return;
+            }
+            
+            // Add the new ports to the combo box
+            foreach (string port in ports)
+            {
+                comboBox1.Items.Add(port);
+                Console.WriteLine(port);
+            }
+            
+            // Attempt to reselect the previously selected port
+            if (!String.IsNullOrEmpty(previousPort) && comboBox1.Items.Contains(previousPort))
+            {
+                comboBox1.SelectedItem = previousPort;
+            }
+            else if (comboBox1.Items.Count > 0)
+            {
+                comboBox1.SelectedIndex = 0; // Select the first port
+            }
+            
+            txtOutput.AppendText($"{DateTime.Now}: Detected {ports.Length} COM ports\r\n");
+        }
+
+        private void btnRefreshPorts_Click(object sender, EventArgs e)
+        {
+            refreshAvailablePorts();
+            statusText.Text = "Port list refreshed";
         }
 
         private void btnConnect_Click(object sender, EventArgs e)
@@ -110,36 +138,92 @@ namespace TargetSimulator
             Console.WriteLine("Range " + range);
             if (isConnected == false)
             {
-                string selectedPort = comboBox1.GetItemText(comboBox1.SelectedItem);
-                serialPort1.PortName = selectedPort;
-                serialPort1.BaudRate = Settings.Default.BaudRate; 
-                serialPort1.WriteTimeout = 500;
-                serialPort1.Open();
-                btnConnect.Text = "Disconnect";
-                isConnected = true;
-                btnTimer.Enabled = true;
-                btnShot.Enabled = true;
+                try
+                {
+                    string selectedPort = comboBox1.GetItemText(comboBox1.SelectedItem);
+                    if (string.IsNullOrEmpty(selectedPort))
+                    {
+                        statusText.Text = "Error: No COM port selected";
+                        MessageBox.Show("Please select a COM port from the dropdown list.", "COM Port Required", 
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    
+                    serialPort1.PortName = selectedPort;
+                    serialPort1.BaudRate = Settings.Default.BaudRate; 
+                    serialPort1.WriteTimeout = 1000; // Increase timeout to 1 second
+                    serialPort1.ReadTimeout = 1000;  // Add read timeout
+                    serialPort1.Handshake = Handshake.None;
+                    serialPort1.Parity = Parity.None;
+                    serialPort1.DataBits = 8;
+                    serialPort1.StopBits = StopBits.One;
+                    
+                    // Display connection parameters for troubleshooting
+                    txtOutput.AppendText($"{DateTime.Now}: Attempting to connect to {selectedPort} with BaudRate={serialPort1.BaudRate}\r\n");
+                    
+                    serialPort1.Open();
+                    btnConnect.Text = "Disconnect";
+                    isConnected = true;
+                    btnTimer.Enabled = true;
+                    btnShot.Enabled = true;
 
-                btnBottom.Enabled = true;
-                btnCenter.Enabled = true;
-                btnHalfway.Enabled = true;
-                btnLeft.Enabled = true;
-                btnRight.Enabled = true;
-                btnTop.Enabled = true;
-                btnTopRight.Enabled = true;
-                btnShoot.Enabled = true;
-                btnImport.Enabled = true;
-                btnImportLog.Enabled = true;
-                btnMiss.Enabled = true;
+                    btnBottom.Enabled = true;
+                    btnCenter.Enabled = true;
+                    btnHalfway.Enabled = true;
+                    btnLeft.Enabled = true;
+                    btnRight.Enabled = true;
+                    btnTop.Enabled = true;
+                    btnTopRight.Enabled = true;
+                    btnShoot.Enabled = true;
+                    btnImport.Enabled = true;
+                    btnImportLog.Enabled = true;
+                    btnMiss.Enabled = true;
 
-                statusText.Text = "Connected";
-                count = 1;
+                    statusText.Text = "Connected to " + selectedPort;
+                    count = 1;
 
-                serialPort1.Write("freETarget Simulator" + Environment.NewLine);
-
-
-            } else {
-                serialPort1.Close();
+                    // Send initial connection message
+                    txtOutput.AppendText($"{DateTime.Now}: Connected successfully to {selectedPort}\r\n");
+                    serialPort1.WriteLine("freETarget Simulator" + Environment.NewLine);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    statusText.Text = "Error: Port in use by another application";
+                    MessageBox.Show("The selected COM port is in use by another application. " +
+                        "Close any other applications using this port and try again.", 
+                        "Port In Use", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                catch (IOException)
+                {
+                    statusText.Text = "Error: Port does not exist";
+                    MessageBox.Show("The selected COM port does not exist or is no longer available. " +
+                        "Refresh the port list and try again.", "Port Not Available", 
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                catch (ArgumentException ex)
+                {
+                    statusText.Text = "Error: Invalid port settings";
+                    MessageBox.Show($"Invalid port settings: {ex.Message}", 
+                        "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                catch (Exception ex)
+                {
+                    statusText.Text = "Connection error: " + ex.Message;
+                    MessageBox.Show($"Error connecting to port: {ex.Message}", 
+                        "Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            } 
+            else 
+            {
+                try
+                {
+                    serialPort1.Close();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error closing port: " + ex.Message);
+                }
+                
                 btnConnect.Text = "Connect";
                 isConnected = false;
                 timer1.Enabled = false;
@@ -299,6 +383,13 @@ namespace TargetSimulator
 
         void generateAndSend(decimal xPos, decimal yPos)
         {
+            if (!isConnected || serialPort1 == null || !serialPort1.IsOpen)
+            {
+                statusText.Text = "Error: Not connected to port";
+                timer1.Enabled = false;
+                btnTimer.Text = "Start Timer";
+                return;
+            }
 
             decimal radius = (decimal)pitagora(xPos, yPos);
             decimal angle = (decimal)findDegree((float)yPos, (float)xPos);
@@ -314,10 +405,27 @@ namespace TargetSimulator
             try
             {
                 serialPort1.WriteLine(command);
-            }catch(TimeoutException ex)
+            }
+            catch(TimeoutException ex)
             {
                 statusText.Text = "Error writing to port: (" + count + ") " + ex.Message;
                 Console.WriteLine("ERROR: ("+ count +") " + ex.Message);
+                timer1.Enabled = false;
+                btnTimer.Text = "Start Timer";
+            }
+            catch (InvalidOperationException ex)
+            {
+                statusText.Text = "Serial port error: " + ex.Message;
+                Console.WriteLine("ERROR: Port closed unexpectedly: " + ex.Message);
+                timer1.Enabled = false;
+                btnTimer.Text = "Start Timer";
+                isConnected = false;
+                btnConnect.Text = "Connect";
+            }
+            catch (Exception ex)
+            {
+                statusText.Text = "Error: " + ex.Message;
+                Console.WriteLine("ERROR: General error: " + ex.Message);
                 timer1.Enabled = false;
                 btnTimer.Text = "Start Timer";
             }
@@ -326,6 +434,14 @@ namespace TargetSimulator
         }
 
         void generateMissAndSend() {
+            if (!isConnected || serialPort1 == null || !serialPort1.IsOpen)
+            {
+                statusText.Text = "Error: Not connected to port";
+                timer1.Enabled = false;
+                btnTimer.Text = "Start Timer";
+                return;
+            }
+
             string command = "{\"shot\":0, \"miss\": 1,\"name\":\"BOSS\", \"x\": 0, \"y\": 0}" + Environment.NewLine;
 
 
@@ -334,13 +450,30 @@ namespace TargetSimulator
 
             try {
                 serialPort1.WriteLine(command);
-            } catch (TimeoutException ex) {
+            }
+            catch(TimeoutException ex)
+            {
                 statusText.Text = "Error writing to port: (" + count + ") " + ex.Message;
-                Console.WriteLine("ERROR: (" + count + ") " + ex.Message);
+                Console.WriteLine("ERROR: ("+ count +") " + ex.Message);
                 timer1.Enabled = false;
                 btnTimer.Text = "Start Timer";
             }
-
+            catch (InvalidOperationException ex)
+            {
+                statusText.Text = "Serial port error: " + ex.Message;
+                Console.WriteLine("ERROR: Port closed unexpectedly: " + ex.Message);
+                timer1.Enabled = false;
+                btnTimer.Text = "Start Timer";
+                isConnected = false;
+                btnConnect.Text = "Connect";
+            }
+            catch (Exception ex)
+            {
+                statusText.Text = "Error: " + ex.Message;
+                Console.WriteLine("ERROR: General error: " + ex.Message);
+                timer1.Enabled = false;
+                btnTimer.Text = "Start Timer";
+            }
         }
 
         public float findDegree(float x, float y)
@@ -359,6 +492,14 @@ namespace TargetSimulator
         {
             if (timer1.Enabled==false)
             {
+                // First check if still connected
+                if (!isConnected || serialPort1 == null || !serialPort1.IsOpen)
+                {
+                    MessageBox.Show("The simulator is not connected to a serial port. Please connect first.", 
+                        "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                
                 // Reset simulation variables when starting a new session
                 breathingPhase = 0;
                 consecutiveShots = 0;
@@ -385,6 +526,14 @@ namespace TargetSimulator
 
         private void btnShot_Click(object sender, EventArgs e)
         {
+            // First check if still connected
+            if (!isConnected || serialPort1 == null || !serialPort1.IsOpen)
+            {
+                MessageBox.Show("The simulator is not connected to a serial port. Please connect first.", 
+                    "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            
             var rand = new Random();
             decimal xPos = rand.Next(-range, range) / 10m;
             decimal yPos = rand.Next(-range, range) / 10m;
@@ -442,7 +591,14 @@ namespace TargetSimulator
 
         private void bthShoot_Click(object sender, EventArgs e)
         {
-
+            // First check if still connected
+            if (!isConnected || serialPort1 == null || !serialPort1.IsOpen)
+            {
+                MessageBox.Show("The simulator is not connected to a serial port. Please connect first.", 
+                    "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            
             try
             {
                 decimal xPos = Decimal.Parse(txtX.Text, CultureInfo.InvariantCulture);
@@ -451,10 +607,20 @@ namespace TargetSimulator
             }catch(Exception ex)
             {
                 Console.WriteLine("Parse error: " + ex.Message);
+                MessageBox.Show("Invalid X or Y coordinates. Please enter valid decimal numbers.", 
+                    "Input Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
         private void btnImport_Click(object sender, EventArgs e) {
+            // First check if still connected
+            if (!isConnected || serialPort1 == null || !serialPort1.IsOpen)
+            {
+                MessageBox.Show("The simulator is not connected to a serial port. Please connect first.", 
+                    "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            
             openFileDialog.Filter = "TargetScan App file|*.csv";
             DialogResult r = openFileDialog.ShowDialog();
             if ( r == DialogResult.OK) {
@@ -487,6 +653,14 @@ namespace TargetSimulator
         }
 
         private void btnImportLog_Click(object sender, EventArgs e) {
+            // First check if still connected
+            if (!isConnected || serialPort1 == null || !serialPort1.IsOpen)
+            {
+                MessageBox.Show("The simulator is not connected to a serial port. Please connect first.", 
+                    "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            
             openFileDialog.Filter = "Cleaned log file|*.logc";
             DialogResult r = openFileDialog.ShowDialog();
             if (r == DialogResult.OK) {
@@ -518,6 +692,14 @@ namespace TargetSimulator
         }
 
         private void btnMiss_Click(object sender, EventArgs e) {
+            // First check if still connected
+            if (!isConnected || serialPort1 == null || !serialPort1.IsOpen)
+            {
+                MessageBox.Show("The simulator is not connected to a serial port. Please connect first.", 
+                    "Not Connected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            
             generateMissAndSend();
         }
         

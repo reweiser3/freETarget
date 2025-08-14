@@ -71,6 +71,7 @@
             this.lblBreathingStrength = new System.Windows.Forms.Label();
             this.lblShooterSkill = new System.Windows.Forms.Label();
             this.lblMissChance = new System.Windows.Forms.Label();
+            this.btnRefreshPorts = new System.Windows.Forms.Button();
             this.status.SuspendLayout();
             this.grpShooterSettings.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trkMissChance)).BeginInit();
@@ -85,7 +86,7 @@
             this.comboBox1.FormattingEnabled = true;
             this.comboBox1.Location = new System.Drawing.Point(12, 12);
             this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(121, 21);
+            this.comboBox1.Size = new System.Drawing.Size(90, 21);
             this.comboBox1.TabIndex = 0;
             // 
             // btnConnect
@@ -96,6 +97,7 @@
             this.btnConnect.TabIndex = 1;
             this.btnConnect.Text = "Connect";
             this.btnConnect.UseVisualStyleBackColor = true;
+            this.btnConnect.Click += new System.EventHandler(this.btnConnect_Click);
             // 
             // txtOutput
             // 
@@ -124,6 +126,7 @@
             this.btnShot.Text = "Take a Shot";
             this.toolTip.SetToolTip(this.btnShot, "Takes a random shot");
             this.btnShot.UseVisualStyleBackColor = true;
+            this.btnShot.Click += new System.EventHandler(this.btnShot_Click);
             // 
             // btnTimer
             // 
@@ -135,6 +138,7 @@
             this.btnTimer.Text = "Start Timer";
             this.toolTip.SetToolTip(this.btnTimer, "Generate random shots in a quick succesion");
             this.btnTimer.UseVisualStyleBackColor = true;
+            this.btnTimer.Click += new System.EventHandler(this.btnTimer_Click);
             // 
             // status
             // 
@@ -161,6 +165,7 @@
             this.btnCenter.TabIndex = 6;
             this.btnCenter.Text = "Center";
             this.btnCenter.UseVisualStyleBackColor = true;
+            this.btnCenter.Click += new System.EventHandler(this.btnCenter_Click);
             // 
             // btnLeft
             // 
@@ -171,6 +176,7 @@
             this.btnLeft.TabIndex = 7;
             this.btnLeft.Text = "Left";
             this.btnLeft.UseVisualStyleBackColor = true;
+            this.btnLeft.Click += new System.EventHandler(this.btnLeft_Click);
             // 
             // btnTop
             // 
@@ -181,6 +187,7 @@
             this.btnTop.TabIndex = 8;
             this.btnTop.Text = "Top";
             this.btnTop.UseVisualStyleBackColor = true;
+            this.btnTop.Click += new System.EventHandler(this.btnTop_Click);
             // 
             // btnTopRight
             // 
@@ -191,6 +198,7 @@
             this.btnTopRight.TabIndex = 9;
             this.btnTopRight.Text = "TopRight";
             this.btnTopRight.UseVisualStyleBackColor = true;
+            this.btnTopRight.Click += new System.EventHandler(this.btnTopRight_Click);
             // 
             // btnBottom
             // 
@@ -201,6 +209,7 @@
             this.btnBottom.TabIndex = 10;
             this.btnBottom.Text = "Bottom";
             this.btnBottom.UseVisualStyleBackColor = true;
+            this.btnBottom.Click += new System.EventHandler(this.btnBottom_Click);
             // 
             // btnRight
             // 
@@ -211,6 +220,7 @@
             this.btnRight.TabIndex = 11;
             this.btnRight.Text = "Right";
             this.btnRight.UseVisualStyleBackColor = true;
+            this.btnRight.Click += new System.EventHandler(this.btnRight_Click);
             // 
             // btnHalfway
             // 
@@ -221,6 +231,7 @@
             this.btnHalfway.TabIndex = 12;
             this.btnHalfway.Text = "Halfway";
             this.btnHalfway.UseVisualStyleBackColor = true;
+            this.btnHalfway.Click += new System.EventHandler(this.btnHalfway_Click);
             // 
             // txtX
             // 
@@ -246,6 +257,7 @@
             this.btnShoot.Text = "Shoot";
             this.toolTip.SetToolTip(this.btnShoot, "Takes a shot at the X,Y coordinates");
             this.btnShoot.UseVisualStyleBackColor = true;
+            this.btnShoot.Click += new System.EventHandler(this.bthShoot_Click);
             // 
             // label1
             // 
@@ -275,6 +287,7 @@
             this.btnImport.Text = "Import TS...";
             this.toolTip.SetToolTip(this.btnImport, "Imports a TargetScan App CVS exported file");
             this.btnImport.UseVisualStyleBackColor = true;
+            this.btnImport.Click += new System.EventHandler(this.btnImport_Click);
             // 
             // openFileDialog
             // 
@@ -289,6 +302,7 @@
             this.chkChamp.TabIndex = 19;
             this.chkChamp.Text = "Good scores";
             this.chkChamp.UseVisualStyleBackColor = true;
+            this.chkChamp.CheckedChanged += new System.EventHandler(this.chkChamp_CheckedChanged);
             // 
             // btnImportLog
             // 
@@ -299,6 +313,7 @@
             this.btnImportLog.TabIndex = 20;
             this.btnImportLog.Text = "Import log...";
             this.btnImportLog.UseVisualStyleBackColor = true;
+            this.btnImportLog.Click += new System.EventHandler(this.btnImportLog_Click);
             // 
             // btnMiss
             // 
@@ -309,6 +324,7 @@
             this.btnMiss.TabIndex = 21;
             this.btnMiss.Text = "Miss";
             this.btnMiss.UseVisualStyleBackColor = true;
+            this.btnMiss.Click += new System.EventHandler(this.btnMiss_Click);
             // 
             // grpShooterSettings
             // 
@@ -489,11 +505,23 @@
             this.lblMissChance.TabIndex = 0;
             this.lblMissChance.Text = "Miss Chance:";
             // 
+            // btnRefreshPorts
+            // 
+            this.btnRefreshPorts.Location = new System.Drawing.Point(108, 10);
+            this.btnRefreshPorts.Name = "btnRefreshPorts";
+            this.btnRefreshPorts.Size = new System.Drawing.Size(25, 23);
+            this.btnRefreshPorts.TabIndex = 23;
+            this.btnRefreshPorts.Text = "↻";
+            this.toolTip.SetToolTip(this.btnRefreshPorts, "Refresh COM Ports List");
+            this.btnRefreshPorts.UseVisualStyleBackColor = true;
+            this.btnRefreshPorts.Click += new System.EventHandler(this.btnRefreshPorts_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(787, 653);
+            this.Controls.Add(this.btnRefreshPorts);
             this.Controls.Add(this.grpShooterSettings);
             this.Controls.Add(this.btnMiss);
             this.Controls.Add(this.btnImportLog);
@@ -577,6 +605,7 @@
         private System.Windows.Forms.Label lblBreathingStrength;
         private System.Windows.Forms.Label lblShooterSkill;
         private System.Windows.Forms.Label lblMissChance;
+        private System.Windows.Forms.Button btnRefreshPorts;
     }
 }
 
