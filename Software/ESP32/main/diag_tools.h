@@ -42,6 +42,7 @@ void test_build_fake_shots(void);                         // Generate a list of 
 
 #define LED_OFF                "     "  // Turn off all of the LEDs
 #define LED_HELLO_WORLD        "RWB--"  // Hello World
+#define LED_DLROW_OLLOH        "BWR--"  // Hello World Backwards
 #define LED_GOOD               "G----"  // The software has started but not in shot mode
 #define LED_PASS               "GGG---" //
 #define LED_FATAL              "RRR--"  // A fatal error prevents operation
@@ -119,9 +120,9 @@ void test_build_fake_shots(void);                         // Generate a list of 
 #define DLT_OTA           0x0100 // Log OTA requests
 #define DLT_HEARTBEAT     0x0200 // Kick out the time to see if we are alive
 
-/*
- *  Enable compile level tracing
- */
+                                 /*
+                                  *  Enable compile level tracing
+                                  */
 // #define TRACE_APPLICATION
 // #define TRACE_COMMUNICATION
 // #define TRACE_DIAG

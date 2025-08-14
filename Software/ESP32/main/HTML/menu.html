@@ -2,224 +2,117 @@
 <html>
 
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FreeETargetMenu</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+
+  <style>
+    html {
+      font-family: Helvetica;
+      display: inline-block;
+      margin: 0px auto;
+      text-align: center;
+    }
+  </style>
+
+  <style>
+    .gwd-select-ISSF_TARGET {
+      position: relative;
+      top: 0px;
+      left: 0px;
+      width: 170px;
+      font-family: "Arial";
+      font-size: 16px;
+      height: 46px;
+      border-radius: 6px;
+      background-color: aqua;
+    }
+
+    .gwd-select-ISSF_TARGET:hover {
+      background-color: pink;
+    }
+
+
+    .gwd-select-EVENT {
+      position: relative;
+      top: 0px;
+      left: 0px;
+      width: 100px;
+      font-family: "Arial";
+      font-size: 16px;
+      height: 46px;
+      border-radius: 6px;
+    }
+
+    .gwd-button-START {
+      position: relative;
+      top: 10px;
+      left: 0px;
+      width: 100px;
+      font-family: "Arial";
+      font-size: 16px;
+      height: 46px;
+      border-radius: 9px;
+      background-color: #00FF00;
+    }
+
+    .gwd-button-START:hover {
+      background-color: pink;
+    }
+
+    .gwd-button-START:active {
+      background-color: #00FF00;
+      transform: translateY(3px);
+    }
+
+    .gwd-button-STOP {
+      position: relative;
+      top: 20px;
+      left: 0px;
+      width: 100px;
+      font-family: "Arial";
+      font-size: 16px;
+      height: 46px;
+      border-radius: 9px;
+      background-color: red;
+    }
+
+    .gwd-button-STOP:hover {
+      background-color: pink;
+    }
+
+    .gwd-button-STOP:active {
+      background-color: red;
+      transform: translateY(3px);
+    }
+  </style>
 </head>
-<style>
-  .container .btn1 {
-    position: absolute;
-    top: 90px;
-    left: 100px;
-    width: 50px;
-    heigth: 50px;
-    background-color: aqua;
-    border-radius: 3px;
-    border: 1px solid #000000;
-
-    .text {
-      font-weight: 600;
-      font-size: 20px;
-      width: 200px;
-    }
-
-  }
-
-  .container .btn1:hover {
-    background-color: pink;
-  }
-
-  .container .btn1:active {
-    background-color: yellow;
-    transform: translateY(3px);
-  }
-
-
-  .container .btn2 {
-    position: absolute;
-    top: 90px;
-    left: 200px;
-    width: 50px;
-    heigth: 50px;
-    background-color: #32CD32;
-    border-radius: 3px;
-    border: 1px solid #000000;
-  }
-
-  .container .btn2:hover {
-    background-color: pink;
-  }
-
-  .container .btn2:active {
-    background-color: yellow;
-    transform: translateY(3px);
-  }
-
-  .container .btn3 {
-    position: absolute;
-    top: 90px;
-    left: 300px;
-    width: 50px;
-    heigth: 50px;
-    background-color: red;
-    border-radius: 3px;
-    border: 1px solid #000000;
-  }
-
-  .container .btn3:hover {
-    background-color: pink;
-  }
-
-  .container .btn3:active {
-    background-color: yellow;
-    transform: translateY(3px);
-  }
-
-  .container .btn4 {
-    position: absolute;
-    top: 90px;
-    left: 400px;
-    width: 50px;
-    heigth: 50px;
-    background-color: light blue;
-    border-radius: 3px;
-    border: 1px solid #000000;
-  }
-
-  .container .btn4:hover {
-    background-color: pink;
-  }
-
-  .container .btn4:active {
-    background-color: yellow;
-    transform: translateY(3px);
-  }
-
-
-
-  .container .btn5 {
-    position: absolute;
-    top: 130px;
-    left: 100px;
-    width: 50px;
-    heigth: 50px;
-    background-color: aqua;
-    border-radius: 3px;
-    border: 1px solid #000000;
-
-    .text {
-      font-weight: 600;
-      font-size: 20px;
-      width: 200px;
-    }
-
-  }
-
-  .container .btn5:hover {
-    background-color: pink;
-  }
-
-  .container .btn5:active {
-    background-color: yellow;
-    transform: translateY(3px);
-  }
-
-
-  .container .btn6 {
-    position: absolute;
-    top: 130px;
-    left: 200px;
-    width: 50px;
-    heigth: 50px;
-    background-color: #32CD32;
-    border-radius: 3px;
-    border: 1px solid #000000;
-  }
-
-  .container .btn6:hover {
-    background-color: pink;
-  }
-
-  .container .btn6:active {
-    background-color: yellow;
-    transform: translateY(3px);
-  }
-
-  .container .btn7 {
-    position: absolute;
-    top: 130px;
-    left: 300px;
-    width: 50px;
-    heigth: 50px;
-    background-color: red;
-    border-radius: 3px;
-    border: 1px solid #000000;
-  }
-
-  .container .btn7:hover {
-    background-color: pink;
-  }
-
-  .container .btn7:active {
-    background-color: yellow;
-    transform: translateY(3px);
-  }
-
-  .container .btn8 {
-    position: absolute;
-    top: 130px;
-    left: 400px;
-    width: 50px;
-    heigth: 50px;
-    background-color: light blue;
-    border-radius: 3px;
-    border: 1px solid #000000;
-  }
-
-  .container .btn8:hover {
-    background-color: pink;
-  }
-
-  .container .btn8:active {
-    background-color: yellow;
-    transform: translateY(3px);
-  }
-</style>
 
 <body>
+  <h1>FreeETarget Menu</h1>
+  <h2>Target Selection</h2>
 
-  <h1>FreeETarget menu</h1>
+  <form name="event" action="/menu" method="get">
 
-  <div class="container">
-    <a href="/menu?start"><button class="btn1" onclick"href=\"/menu\">START</button></a>
-  </div>
+    <select name="ISSF" id="ISSF" class="gwd-select-ISSF_TARGET">
+      <option value="Air Pistol" ^A>ISSF 10m Air Pistol</option>
+      <option value="Air Rifle" ^B>ISSF 10m Air Rifle</option>
+      <option value="50m Pistol" ^C>ISSF 50m Pistol</option>
+      <option value="50m Rifle" ^D>ISSF 50m Rifle</option>
+    </select>
 
-  <div class="container">
-    <a href="/menu?stop"><button class="btn2" onclick"href=\"/menu\">STOP</button></a>
-  </div>
+    <p> .</p>
+    <h2>ISSF Event Selection</h2>
 
-  <div class="container">
-    <a href="/menu?stop"><button class="btn3" onclick"href=\"/menu\">SPARE</button></a>
-  </div>
+    <select name="Event" id="Event" class="gwd-select-EVENT">
+      <option value="Sight" ^E>SIGHT</option>
+      <option value="Match" ^F>MATCH</option>
+    </select>
+    <h2>Control Menu</h2>
 
-  <div class="container">
-    <a href="/menu"><button class="btn4" onclick"href=\"/menu\">4</button></a>
-  </div>
+    <input type="submit" class="gwd-button-START" id="START" value="START">
 
-  <div class="container">
-    <a href="/menu"><button class="btn5" onclick"href=\"/menu\">5</button></a>
-  </div>
-
-  <div class="container">
-    <a href="/menu"><button class="btn6" onclick"href=\"/menu\">6</button></a>
-  </div>
-
-  <div class="container">
-    <a href="/menu"><button class="btn7" onclick"href=\"/menu\">7</button></a>
-  </div>
-
-  <div class="container">
-    <a href="/menu"><button class="btn8" onclick"href=\"/menu\">8</button></a>
-  </div>
-
+  </form>
+  <a href="/menu?stop"><button class="gwd-button-STOP" onclick"href=\"/menu\">STOP</button></a>
 </body>
 
 </html>
