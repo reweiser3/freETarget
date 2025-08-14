@@ -57,7 +57,27 @@
             this.chkChamp = new System.Windows.Forms.CheckBox();
             this.btnImportLog = new System.Windows.Forms.Button();
             this.btnMiss = new System.Windows.Forms.Button();
+            this.grpShooterSettings = new System.Windows.Forms.GroupBox();
+            this.btnResetToDefault = new System.Windows.Forms.Button();
+            this.btnApplySettings = new System.Windows.Forms.Button();
+            this.chkBreathingEnabled = new System.Windows.Forms.CheckBox();
+            this.numXOffset = new System.Windows.Forms.NumericUpDown();
+            this.numYOffset = new System.Windows.Forms.NumericUpDown();
+            this.lblXOffset = new System.Windows.Forms.Label();
+            this.lblYOffset = new System.Windows.Forms.Label();
+            this.trkShooterSkill = new System.Windows.Forms.TrackBar();
+            this.trkBreathingStrength = new System.Windows.Forms.TrackBar();
+            this.trkMissChance = new System.Windows.Forms.TrackBar();
+            this.lblBreathingStrength = new System.Windows.Forms.Label();
+            this.lblShooterSkill = new System.Windows.Forms.Label();
+            this.lblMissChance = new System.Windows.Forms.Label();
             this.status.SuspendLayout();
+            this.grpShooterSettings.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.trkMissChance)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trkBreathingStrength)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trkShooterSkill)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numYOffset)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numXOffset)).BeginInit();
             this.SuspendLayout();
             // 
             // comboBox1
@@ -76,18 +96,17 @@
             this.btnConnect.TabIndex = 1;
             this.btnConnect.Text = "Connect";
             this.btnConnect.UseVisualStyleBackColor = true;
-            this.btnConnect.Click += new System.EventHandler(this.btnConnect_Click);
             // 
             // txtOutput
             // 
             this.txtOutput.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtOutput.Location = new System.Drawing.Point(12, 95);
+            this.txtOutput.Location = new System.Drawing.Point(12, 207);
             this.txtOutput.Multiline = true;
             this.txtOutput.Name = "txtOutput";
             this.txtOutput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtOutput.Size = new System.Drawing.Size(565, 424);
+            this.txtOutput.Size = new System.Drawing.Size(763, 424);
             this.txtOutput.TabIndex = 2;
             this.txtOutput.WordWrap = false;
             // 
@@ -105,7 +124,6 @@
             this.btnShot.Text = "Take a Shot";
             this.toolTip.SetToolTip(this.btnShot, "Takes a random shot");
             this.btnShot.UseVisualStyleBackColor = true;
-            this.btnShot.Click += new System.EventHandler(this.btnShot_Click);
             // 
             // btnTimer
             // 
@@ -117,15 +135,14 @@
             this.btnTimer.Text = "Start Timer";
             this.toolTip.SetToolTip(this.btnTimer, "Generate random shots in a quick succesion");
             this.btnTimer.UseVisualStyleBackColor = true;
-            this.btnTimer.Click += new System.EventHandler(this.btnTimer_Click);
             // 
             // status
             // 
             this.status.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.statusText});
-            this.status.Location = new System.Drawing.Point(0, 519);
+            this.status.Location = new System.Drawing.Point(0, 631);
             this.status.Name = "status";
-            this.status.Size = new System.Drawing.Size(589, 22);
+            this.status.Size = new System.Drawing.Size(787, 22);
             this.status.TabIndex = 5;
             this.status.Text = "Ready";
             // 
@@ -144,7 +161,6 @@
             this.btnCenter.TabIndex = 6;
             this.btnCenter.Text = "Center";
             this.btnCenter.UseVisualStyleBackColor = true;
-            this.btnCenter.Click += new System.EventHandler(this.btnCenter_Click);
             // 
             // btnLeft
             // 
@@ -155,7 +171,6 @@
             this.btnLeft.TabIndex = 7;
             this.btnLeft.Text = "Left";
             this.btnLeft.UseVisualStyleBackColor = true;
-            this.btnLeft.Click += new System.EventHandler(this.btnLeft_Click);
             // 
             // btnTop
             // 
@@ -166,7 +181,6 @@
             this.btnTop.TabIndex = 8;
             this.btnTop.Text = "Top";
             this.btnTop.UseVisualStyleBackColor = true;
-            this.btnTop.Click += new System.EventHandler(this.btnTop_Click);
             // 
             // btnTopRight
             // 
@@ -177,7 +191,6 @@
             this.btnTopRight.TabIndex = 9;
             this.btnTopRight.Text = "TopRight";
             this.btnTopRight.UseVisualStyleBackColor = true;
-            this.btnTopRight.Click += new System.EventHandler(this.btnTopRight_Click);
             // 
             // btnBottom
             // 
@@ -188,7 +201,6 @@
             this.btnBottom.TabIndex = 10;
             this.btnBottom.Text = "Bottom";
             this.btnBottom.UseVisualStyleBackColor = true;
-            this.btnBottom.Click += new System.EventHandler(this.btnBottom_Click);
             // 
             // btnRight
             // 
@@ -199,7 +211,6 @@
             this.btnRight.TabIndex = 11;
             this.btnRight.Text = "Right";
             this.btnRight.UseVisualStyleBackColor = true;
-            this.btnRight.Click += new System.EventHandler(this.btnRight_Click);
             // 
             // btnHalfway
             // 
@@ -210,7 +221,6 @@
             this.btnHalfway.TabIndex = 12;
             this.btnHalfway.Text = "Halfway";
             this.btnHalfway.UseVisualStyleBackColor = true;
-            this.btnHalfway.Click += new System.EventHandler(this.btnHalfway_Click);
             // 
             // txtX
             // 
@@ -236,7 +246,6 @@
             this.btnShoot.Text = "Shoot";
             this.toolTip.SetToolTip(this.btnShoot, "Takes a shot at the X,Y coordinates");
             this.btnShoot.UseVisualStyleBackColor = true;
-            this.btnShoot.Click += new System.EventHandler(this.bthShoot_Click);
             // 
             // label1
             // 
@@ -266,7 +275,6 @@
             this.btnImport.Text = "Import TS...";
             this.toolTip.SetToolTip(this.btnImport, "Imports a TargetScan App CVS exported file");
             this.btnImport.UseVisualStyleBackColor = true;
-            this.btnImport.Click += new System.EventHandler(this.btnImport_Click);
             // 
             // openFileDialog
             // 
@@ -281,7 +289,6 @@
             this.chkChamp.TabIndex = 19;
             this.chkChamp.Text = "Good scores";
             this.chkChamp.UseVisualStyleBackColor = true;
-            this.chkChamp.CheckedChanged += new System.EventHandler(this.chkChamp_CheckedChanged);
             // 
             // btnImportLog
             // 
@@ -292,7 +299,6 @@
             this.btnImportLog.TabIndex = 20;
             this.btnImportLog.Text = "Import log...";
             this.btnImportLog.UseVisualStyleBackColor = true;
-            this.btnImportLog.Click += new System.EventHandler(this.btnImportLog_Click);
             // 
             // btnMiss
             // 
@@ -303,13 +309,192 @@
             this.btnMiss.TabIndex = 21;
             this.btnMiss.Text = "Miss";
             this.btnMiss.UseVisualStyleBackColor = true;
-            this.btnMiss.Click += new System.EventHandler(this.btnMiss_Click);
+            // 
+            // grpShooterSettings
+            // 
+            this.grpShooterSettings.Controls.Add(this.btnResetToDefault);
+            this.grpShooterSettings.Controls.Add(this.btnApplySettings);
+            this.grpShooterSettings.Controls.Add(this.chkBreathingEnabled);
+            this.grpShooterSettings.Controls.Add(this.numXOffset);
+            this.grpShooterSettings.Controls.Add(this.numYOffset);
+            this.grpShooterSettings.Controls.Add(this.lblXOffset);
+            this.grpShooterSettings.Controls.Add(this.lblYOffset);
+            this.grpShooterSettings.Controls.Add(this.trkShooterSkill);
+            this.grpShooterSettings.Controls.Add(this.trkBreathingStrength);
+            this.grpShooterSettings.Controls.Add(this.trkMissChance);
+            this.grpShooterSettings.Controls.Add(this.lblBreathingStrength);
+            this.grpShooterSettings.Controls.Add(this.lblShooterSkill);
+            this.grpShooterSettings.Controls.Add(this.lblMissChance);
+            this.grpShooterSettings.Location = new System.Drawing.Point(12, 95);
+            this.grpShooterSettings.Name = "grpShooterSettings";
+            this.grpShooterSettings.Size = new System.Drawing.Size(763, 106);
+            this.grpShooterSettings.TabIndex = 22;
+            this.grpShooterSettings.TabStop = false;
+            this.grpShooterSettings.Text = "Shooter Settings";
+            // 
+            // btnResetToDefault
+            // 
+            this.btnResetToDefault.Location = new System.Drawing.Point(501, 56);
+            this.btnResetToDefault.Name = "btnResetToDefault";
+            this.btnResetToDefault.Size = new System.Drawing.Size(123, 30);
+            this.btnResetToDefault.TabIndex = 12;
+            this.btnResetToDefault.Text = "Reset to Default";
+            this.toolTip.SetToolTip(this.btnResetToDefault, "Reset all shooting parameters to default values");
+            this.btnResetToDefault.UseVisualStyleBackColor = true;
+            // 
+            // btnApplySettings
+            // 
+            this.btnApplySettings.Location = new System.Drawing.Point(501, 19);
+            this.btnApplySettings.Name = "btnApplySettings";
+            this.btnApplySettings.Size = new System.Drawing.Size(123, 31);
+            this.btnApplySettings.TabIndex = 11;
+            this.btnApplySettings.Text = "Apply Settings";
+            this.toolTip.SetToolTip(this.btnApplySettings, "Apply shooter settings immediately");
+            this.btnApplySettings.UseVisualStyleBackColor = true;
+            // 
+            // chkBreathingEnabled
+            // 
+            this.chkBreathingEnabled.AutoSize = true;
+            this.chkBreathingEnabled.Checked = true;
+            this.chkBreathingEnabled.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkBreathingEnabled.Location = new System.Drawing.Point(356, 69);
+            this.chkBreathingEnabled.Name = "chkBreathingEnabled";
+            this.chkBreathingEnabled.Size = new System.Drawing.Size(114, 17);
+            this.chkBreathingEnabled.TabIndex = 10;
+            this.chkBreathingEnabled.Text = "Breathing Enabled";
+            this.toolTip.SetToolTip(this.chkBreathingEnabled, "Enable breathing effect on shots");
+            this.chkBreathingEnabled.UseVisualStyleBackColor = true;
+            // 
+            // numXOffset
+            // 
+            this.numXOffset.DecimalPlaces = 1;
+            this.numXOffset.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            65536});
+            this.numXOffset.Location = new System.Drawing.Point(407, 20);
+            this.numXOffset.Maximum = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            this.numXOffset.Minimum = new decimal(new int[] {
+            5,
+            0,
+            0,
+            -2147483648});
+            this.numXOffset.Name = "numXOffset";
+            this.numXOffset.Size = new System.Drawing.Size(76, 20);
+            this.numXOffset.TabIndex = 9;
+            this.toolTip.SetToolTip(this.numXOffset, "Shooter\'s natural horizontal aim offset");
+            // 
+            // numYOffset
+            // 
+            this.numYOffset.DecimalPlaces = 1;
+            this.numYOffset.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            65536});
+            this.numYOffset.Location = new System.Drawing.Point(407, 46);
+            this.numYOffset.Maximum = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            this.numYOffset.Minimum = new decimal(new int[] {
+            5,
+            0,
+            0,
+            -2147483648});
+            this.numYOffset.Name = "numYOffset";
+            this.numYOffset.Size = new System.Drawing.Size(76, 20);
+            this.numYOffset.TabIndex = 8;
+            this.toolTip.SetToolTip(this.numYOffset, "Shooter\'s natural vertical aim offset");
+            // 
+            // lblXOffset
+            // 
+            this.lblXOffset.AutoSize = true;
+            this.lblXOffset.Location = new System.Drawing.Point(353, 22);
+            this.lblXOffset.Name = "lblXOffset";
+            this.lblXOffset.Size = new System.Drawing.Size(48, 13);
+            this.lblXOffset.TabIndex = 7;
+            this.lblXOffset.Text = "X Offset:";
+            // 
+            // lblYOffset
+            // 
+            this.lblYOffset.AutoSize = true;
+            this.lblYOffset.Location = new System.Drawing.Point(353, 48);
+            this.lblYOffset.Name = "lblYOffset";
+            this.lblYOffset.Size = new System.Drawing.Size(48, 13);
+            this.lblYOffset.TabIndex = 6;
+            this.lblYOffset.Text = "Y Offset:";
+            // 
+            // trkShooterSkill
+            // 
+            this.trkShooterSkill.Location = new System.Drawing.Point(116, 41);
+            this.trkShooterSkill.Maximum = 100;
+            this.trkShooterSkill.Minimum = 10;
+            this.trkShooterSkill.Name = "trkShooterSkill";
+            this.trkShooterSkill.Size = new System.Drawing.Size(174, 45);
+            this.trkShooterSkill.TabIndex = 5;
+            this.toolTip.SetToolTip(this.trkShooterSkill, "Higher skill = tighter grouping");
+            this.trkShooterSkill.Value = 80;
+            // 
+            // trkBreathingStrength
+            // 
+            this.trkBreathingStrength.Location = new System.Drawing.Point(116, 62);
+            this.trkBreathingStrength.Maximum = 100;
+            this.trkBreathingStrength.Name = "trkBreathingStrength";
+            this.trkBreathingStrength.Size = new System.Drawing.Size(174, 45);
+            this.trkBreathingStrength.TabIndex = 4;
+            this.toolTip.SetToolTip(this.trkBreathingStrength, "How much breathing affects shot placement");
+            this.trkBreathingStrength.Value = 30;
+            // 
+            // trkMissChance
+            // 
+            this.trkMissChance.Location = new System.Drawing.Point(116, 19);
+            this.trkMissChance.Maximum = 20;
+            this.trkMissChance.Name = "trkMissChance";
+            this.trkMissChance.Size = new System.Drawing.Size(174, 45);
+            this.trkMissChance.TabIndex = 3;
+            this.toolTip.SetToolTip(this.trkMissChance, "Probability of a complete miss (0-2%)");
+            this.trkMissChance.Value = 1;
+            // 
+            // lblBreathingStrength
+            // 
+            this.lblBreathingStrength.AutoSize = true;
+            this.lblBreathingStrength.Location = new System.Drawing.Point(10, 69);
+            this.lblBreathingStrength.Name = "lblBreathingStrength";
+            this.lblBreathingStrength.Size = new System.Drawing.Size(100, 13);
+            this.lblBreathingStrength.TabIndex = 2;
+            this.lblBreathingStrength.Text = "Breathing Strength:";
+            // 
+            // lblShooterSkill
+            // 
+            this.lblShooterSkill.AutoSize = true;
+            this.lblShooterSkill.Location = new System.Drawing.Point(10, 48);
+            this.lblShooterSkill.Name = "lblShooterSkill";
+            this.lblShooterSkill.Size = new System.Drawing.Size(69, 13);
+            this.lblShooterSkill.TabIndex = 1;
+            this.lblShooterSkill.Text = "Shooter Skill:";
+            // 
+            // lblMissChance
+            // 
+            this.lblMissChance.AutoSize = true;
+            this.lblMissChance.Location = new System.Drawing.Point(10, 26);
+            this.lblMissChance.Name = "lblMissChance";
+            this.lblMissChance.Size = new System.Drawing.Size(72, 13);
+            this.lblMissChance.TabIndex = 0;
+            this.lblMissChance.Text = "Miss Chance:";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(589, 541);
+            this.ClientSize = new System.Drawing.Size(787, 653);
+            this.Controls.Add(this.grpShooterSettings);
             this.Controls.Add(this.btnMiss);
             this.Controls.Add(this.btnImportLog);
             this.Controls.Add(this.chkChamp);
@@ -337,6 +522,13 @@
             this.Text = "Target Simulator";
             this.status.ResumeLayout(false);
             this.status.PerformLayout();
+            this.grpShooterSettings.ResumeLayout(false);
+            this.grpShooterSettings.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.trkMissChance)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trkBreathingStrength)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trkShooterSkill)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numYOffset)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numXOffset)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -371,6 +563,20 @@
         private System.Windows.Forms.CheckBox chkChamp;
         private System.Windows.Forms.Button btnImportLog;
         private System.Windows.Forms.Button btnMiss;
+        private System.Windows.Forms.GroupBox grpShooterSettings;
+        private System.Windows.Forms.Button btnResetToDefault;
+        private System.Windows.Forms.Button btnApplySettings;
+        private System.Windows.Forms.CheckBox chkBreathingEnabled;
+        private System.Windows.Forms.NumericUpDown numXOffset;
+        private System.Windows.Forms.NumericUpDown numYOffset;
+        private System.Windows.Forms.Label lblXOffset;
+        private System.Windows.Forms.Label lblYOffset;
+        private System.Windows.Forms.TrackBar trkShooterSkill;
+        private System.Windows.Forms.TrackBar trkBreathingStrength;
+        private System.Windows.Forms.TrackBar trkMissChance;
+        private System.Windows.Forms.Label lblBreathingStrength;
+        private System.Windows.Forms.Label lblShooterSkill;
+        private System.Windows.Forms.Label lblMissChance;
     }
 }
 
