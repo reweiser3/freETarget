@@ -32,7 +32,7 @@ void enable_face_interrupt();                              // Turn on the face s
 void disable_face_interrupt(void);                         // Turn off the face strike interrupt
 
 void digital_test(void);                                   // Execute the digital test
-void DCmotor_on_off(bool on, unsigned long duration);      // Turn the motor on or off
+void DCmotor_on_off(bool on, time_count_t duration);       // Turn the motor on or off
 int  is_paper_on();                                        // Return the current running state
 void rapid_green(unsigned int state);                      // Drive the GREEN light
 void rapid_red(unsigned int state);                        // Drive the RED light
@@ -90,7 +90,7 @@ extern volatile unsigned int step_count; // Number of steps before stopping
 #define CLOCK_START GPIO_NUM_21                                            // Trigger a test cycle
 #define OSC_CONTROL GPIO_NUM_48                                            // Enable / kill 10MHz Oscillator
 #endif
-#if ( (BUILD_REV == REV_510) || (BUILD_REV == REV_520) )
+#if ( (BUILD_REV == REV_510) || (BUILD_REV == REV_520) || (BUILD_REV == REV_600) )
 #define STOP_N      GPIO_NUM_21                                            // Stop the RUN flipflops
 #define CLOCK_START GPIO_NUM_47                                            // Trigger a test cycle
 #define OSC_CONTROL GPIO_NUM_48                                            // Enable / kill 10MHz Oscillator

@@ -1,3 +1,21 @@
-{ "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108"}
+{ "WIFI_SSID": "googlefiber",  "WIFI_PWD": "kansas6108", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING"}
+{ "WIFI_SSID": "FET-WIFI",  "WIFI_PWD": "Mar1noni$", "NAME_ID": 100, "NAME_TEXT":"ENGINEERING"}
+{ "WIFI_SSID": "FET-WIFI",  "WIFI_PWD": "Mar1noni$", "NAME_ID": 101}
+{ "WIFI_SSID": "",  "WIFI_PWD": "", "NAME_ID": 101}
 { "NAME_ID": 99, "NAME_TEXT":"ALLAN"}
+{ "NAME_ID": 101}
 HTTP Trace {"TRACE":128}
+{"RESET":0}
+{"INIT":0}
+
+{ "WIFI_SSID": "stand-de-tir-2G",  "WIFI_PWD": "", "NAME_ID": 1, "WIFI_IP":"192.168.109.81", "NAME_TEXT":""}
+{ "WIFI_SSID": "stand-de-tir-2G",  "WIFI_PWD": "", "NAME_ID": 2, "WIFI_IP":"192.168.109.82", "NAME_TEXT":""}
+{ "WIFI_SSID": "stand-de-tir-2G",  "WIFI_PWD": "", "NAME_ID": 3, "WIFI_IP":"192.168.109.83", "NAME_TEXT":""}
+{ "WIFI_SSID": "stand-de-tir-2G",  "WIFI_PWD": "", "NAME_ID": 4, "WIFI_IP":"192.168.109.84", "NAME_TEXT":""}
+{ "WIFI_SSID": "",  "WIFI_PWD": "", "NAME_ID": 4}
+{ "PAPER_TIME":250, "PAPER_ECO":30, "PAPER_SHOT":4}
+{ "PAPER_TIME":250, "PAPER_ECO":40, "PAPER_SHOT":2}
+{ "PAPER_TIME":125, "PAPER_ECO":40, "PAPER_SHOT":4}
+{ "AUTH_CODE":1234,  "AUTH_CODE":4321}
+{ "AUTH_CODE":1234, "AUTH_CODE":0, "ECHO":0 }
+{ "TRACE":16, "TRACE":32, "TRACE":64, "TEST":142}

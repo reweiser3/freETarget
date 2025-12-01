@@ -14,6 +14,7 @@
 #include "led_strip_types.h"
 
 #include "freETarget.h"
+#include "board_assembly.h"
 #include "compute_hit.h"
 #include "diag_tools.h"
 #include "gpio.h"
@@ -53,10 +54,11 @@ status_struct_t status[3] = {
     {0, 0, 0, 0},
     {0, 0, 0, 0}
 };
-int                   paper_state; // Drive is ON or OFF
-time_count_t          paper_time;  // How long the paper will be on for
-volatile unsigned int step_count;  // How many step counts do we need?
-volatile unsigned int step_time;   // Interval to next step
+int                   paper_state;   // Drive is ON or OFF
+time_count_t          paper_time;    // How long the paper will be on for
+volatile unsigned int step_count;    // How many step counts do we need?
+volatile unsigned int step_time;     // Interval to next step
+static bool           motor_running; // TRUE if the motor is running (for diagnostics)
 
 /*-----------------------------------------------------
  *
@@ -91,12 +93,14 @@ unsigned int is_running(void)
     {
       return_value |= s[i].low_sense.run_mask;
     }
-    if ( gpio_get_level(s[i].high_sense.sensor_GPIO) != 0 )
+    if ( PCNT_HIGH_GPIO & board_mask )
     {
-      return_value |= s[i].high_sense.run_mask;
+      if ( gpio_get_level(s[i].high_sense.sensor_GPIO) != 0 )
+      {
+        return_value |= s[i].high_sense.run_mask;
+      }
     }
   }
-
   /*
    *  Return the run mask
    */
@@ -125,8 +129,9 @@ void arm_timers(void)
   gpio_set_level(CLOCK_START, CLOCK_TRIGGER_OFF);
   gpio_set_level(STOP_N, RUN_OFF);      // Reset the timer
   gpio_set_level(OSC_CONTROL, OSC_OFF); // Turn off the oscillator
+
   pcnt_clear();
-  if ( json_pcnt_latency != 0 )
+  if ( (PCNT_HIGH_GPIO & board_mask) && json_pcnt_latency != 0 )
   {
     gpio_intr_enable(RUN_NORTH_HI);     // Turn on the interrupts
     gpio_intr_enable(RUN_EAST_HI);
@@ -492,15 +497,18 @@ void read_timers(int timer[])
     timer[i] = pcnt_read(i);
   }
 
-  if ( (json_pcnt_latency != 0)                   // Latecy has a valid setting
-       && ((json_vref_hi - json_vref_lo) > 0) )   // The voltage references are good
+  /*
+   *  Read the high counters if they are available and enabled
+   */
+  if ( (PCNT_HIGH_GPIO & board_mask) && (json_pcnt_latency != 0) // Latecy has a valid setting
+       && ((json_vref_hi - json_vref_lo) > 0) )                  // The voltage references are good
   {
-    for ( i = N; i <= W; i++ )                    // Add the rise time to the signal to get a better estimate
+    for ( i = N; i <= W; i++ )                                   // Add the rise time to the signal to get a better estimate
     {
-      pcnt_hi = timer[i + 4] - json_pcnt_latency; // PCNT HI   (reading - latentcy)
-      if ( pcnt_hi > PCNT_NOT_TRIGGERED )         // Check to make sure the high timer was triggered by a shot
-      {                                           // and not dinged from the pellet trap
-        pcnt_hi = 0;                              // Not triggered by a shot
+      pcnt_hi = timer[i + 4] - json_pcnt_latency;                // PCNT HI   (reading - latentcy)
+      if ( pcnt_hi > PCNT_NOT_TRIGGERED )                        // Check to make sure the high timer was triggered by a shot
+      {                                                          // and not dinged from the pellet trap
+        pcnt_hi = 0;                                             // Not triggered by a shot
       }
       if ( pcnt_hi > 0 )
       {
@@ -561,10 +569,11 @@ void paper_start(void)
   /*
    *  DC Motor, turn on the FET to start the motor
    */
-  if ( IS_DC_WITNESS ) // DC motor,
+  if ( IS_DC_WITNESS )    // DC motor,
   {
-    DLT(DLT_DIAG, SEND(ALL, sprintf(_xs, "DC motor start: %d ms", json_paper_time);))
+    DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "DC motor start: %d ms", json_paper_time);))
     DCmotor_on_off(true, json_paper_time);
+    motor_running = true; // Used for diagnostics
   }
 
   /*
@@ -601,14 +610,18 @@ void paper_start(void)
  *-----------------------------------------------------*/
 void paper_drive_tick(void)
 {
-
   /*
    * Drive the DC motor
    */
   if ( IS_DC_WITNESS )
   {
-    if ( paper_time == 0 )
+    if ( paper_time <= 0 )
     {
+      if ( motor_running == true )
+      {
+        motor_running = false;
+        DLT(DLT_DEBUG, SEND(ALL, sprintf(_xs, "DC motor stopped");))
+      }
       paper_stop(); // Motor OFF
     }
   }
@@ -620,7 +633,7 @@ void paper_drive_tick(void)
   {
     if ( step_count != 0 )   // In motion
     {
-      if ( paper_time == 0 ) // Timer for next pulse?
+      if ( paper_time <= 0 ) // Timer for next pulse?
       {
         stepper_pulse();     // Motor toggle
       }
@@ -696,8 +709,8 @@ void paper_stop(void)
  * DCmotor_on_off(false, 0)
  *
  *-----------------------------------------------------*/
-void DCmotor_on_off(bool          on,      // on == true, turn on motor drive
-                    unsigned long duration // How long will it be on for in ms?
+void DCmotor_on_off(bool         on,      // on == true, turn on motor drive
+                    time_count_t duration // How long will it be on for in ms?
 )
 {
   /*
@@ -913,11 +926,39 @@ void rapid_green(unsigned int state      // New state for the GREEN light
  *-----------------------------------------------------*/
 void digital_test(void)
 {
+  SEND(ALL, sprintf(_xs, "\r\nDigital Inputs:");)
   /*
    * Read in the fixed digital inputs
    */
-  SEND(ALL, sprintf(_xs, "\r\nTime: %lds", run_time_seconds());)
-  SEND(ALL, sprintf(_xs, "\r\nDIP: 0x%02X", read_DIP());)
+  while ( 1 )
+  {
+    if ( serial_available(ALL) != 0 )
+    {
+      break;
+    }
+    vTaskDelay(ONE_SECOND);
+    SEND(ALL, sprintf(_xs, "\r\nTime: %lds", run_time_seconds());)
+    SEND(ALL, sprintf(_xs, "  DIP_A: %01X", !gpio_get_level(DIP_A));) // DIP A
+    SEND(ALL, sprintf(_xs, "  DIP_B: %01X", !gpio_get_level(DIP_B));) // DIP B
+    SEND(ALL, sprintf(_xs, "  DIP_C: %01X", !gpio_get_level(DIP_C));) // DIP C
+    SEND(ALL, sprintf(_xs, "  DIP_D: %01X", !gpio_get_level(DIP_D));) // DIP D
+
+    SEND(ALL, sprintf(_xs, "  N_LO: %01X", !gpio_get_level(RUN_NORTH_LO));)
+    SEND(ALL, sprintf(_xs, "  E_LO: %01X", !gpio_get_level(RUN_EAST_LO));)
+    SEND(ALL, sprintf(_xs, "  S_LO: %01X", !gpio_get_level(RUN_SOUTH_LO));)
+    SEND(ALL, sprintf(_xs, "  W_LO: %01X", !gpio_get_level(RUN_WEST_LO));)
+
+    if ( PCNT_HIGH_GPIO & board_mask ) // If the high GPIOs are enabled
+    {
+      SEND(ALL, sprintf(_xs, "  N_HI: %01X", !gpio_get_level(RUN_NORTH_HI));)
+      SEND(ALL, sprintf(_xs, "  E_HI: %01X", !gpio_get_level(RUN_EAST_HI));)
+      SEND(ALL, sprintf(_xs, "  S_HI: %01X", !gpio_get_level(RUN_SOUTH_HI));)
+      SEND(ALL, sprintf(_xs, "  W_HI: %01X", !gpio_get_level(RUN_WEST_HI));)
+    }
+
+    vTaskDelay(ONE_SECOND); // Wait for 1/2 second before reading again
+  }
+
   SEND(ALL, sprintf(_xs, _DONE_);)
 
   return;
@@ -941,19 +982,19 @@ void status_LED_test(void)
     SEND(ALL, sprintf(_xs, "\r\nMFS_C or MFS_D not configured for output\r\n");)
   }
 
-  timer_delay(2 * ONE_SECOND);
+  vTaskDelay(2 * ONE_SECOND);
   set_status_LED("RRRRR");
-  timer_delay(2 * ONE_SECOND);
+  vTaskDelay(2 * ONE_SECOND);
   set_status_LED("GGGGG");
-  timer_delay(ONE_SECOND);
+  vTaskDelay(ONE_SECOND);
   set_status_LED("BBBRG");
-  timer_delay(ONE_SECOND);
+  vTaskDelay(ONE_SECOND);
   set_status_LED("WWWGR");
-  timer_delay(ONE_SECOND);
+  vTaskDelay(ONE_SECOND);
   set_status_LED("RGBRG");
-  timer_delay(ONE_SECOND);
+  vTaskDelay(ONE_SECOND);
   set_status_LED("rgbrg");
-  timer_delay(5 * ONE_SECOND); // Blink for 5 seconds
+  vTaskDelay(5 * ONE_SECOND); // Blink for 5 seconds
   set_status_LED(LED_READY);
   SEND(ALL, sprintf(_xs, _DONE_);)
   return;
@@ -996,10 +1037,10 @@ void paper_test(void)
   {
     SEND(ALL, sprintf(_xs, "  %d+", (i + 1));)
     DCmotor_on_off(true, ONE_SECOND / 2);
-    timer_delay(ONE_SECOND / 2);
+    vTaskDelay(ONE_SECOND / 2);
     SEND(ALL, sprintf(_xs, "-");)
     DCmotor_on_off(false, 0);
-    timer_delay(ONE_SECOND / 2);
+    vTaskDelay(ONE_SECOND / 2);
   }
 
   SEND(ALL, sprintf(_xs, _DONE_);)

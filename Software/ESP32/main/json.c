@@ -9,10 +9,12 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "string.h"
+#include <sys/param.h>
+#include "esp_ota_ops.h"
 
 #define JSON_C // This is the JSON file
-#define JSON_C // This is the JSON file
 #include "freETarget.h"
+#include "board_assembly.h"
 #include "helpers.h"
 #include "analog_io.h"
 #include "ctype.h"
@@ -63,7 +65,7 @@ const json_message_t JSON[] = {
     {SHOW + LOCK, "\"FOLLOW_THROUGH\":",  &json_follow_through,        IS_INT32,                 0,                  NONVOL_FOLLOW_THROUGH,   0,          0 },
     {HIDE + LOCK, "\"INIT\"",             0,                           IS_VOID,                  &init_nonvol,       0,                       0,          0 },
     {SHOW + LOCK, "\"KEEP_ALIVE\":",      &json_keep_alive,            IS_INT32,                 0,                  NONVOL_KEEP_ALIVE,       120,        0 },
-    {HIDE + LOCK, "\"LED_BRIGHT\":",      &json_LED_PWM,               IS_INT32,                 &set_LED_PWM_now,   NONVOL_LED_PWM,          50,         0 },
+    {SHOW + LOCK, "\"LED_BRIGHT\":",      &json_LED_PWM,               IS_INT32,                 &set_LED_PWM_now,   NONVOL_LED_PWM,          50,         0 },
     {HIDE,        "\"MFS?",               0,                           IS_VOID,                  &mfs_show,          0,                       0,          0 },
     {SHOW + LOCK, "\"MFS_TAP_1\":",       &json_mfs_tap_1,             IS_MFS,                   0,                  NONVOL_MFS_TAP_A,        PAPER_SHOT, 2 },
     {SHOW + LOCK, "\"MFS_TAP_2\":",       &json_mfs_tap_2,             IS_MFS,                   0,                  NONVOL_MFS_TAP_B,        TARGET_ON,  2 },
@@ -431,16 +433,22 @@ static void handle_json(void)
 
 void show_echo(void)
 {
-  int           i, j;
-  char          str_c[32]; // String holding buffers
-  mfs_action_t *mfs_ptr;
-  unsigned int  dip;
-  char         *ABCD[] = {"A", "B", "C", "D"};
+  int                    i, j;
+  char                   str_c[32]; // String holding buffers
+  mfs_action_t          *mfs_ptr;
+  unsigned int           dip;
+  char                  *ABCD[]            = {"A", "B", "C", "D"};
+  const esp_partition_t *running_partition = esp_ota_get_running_partition();
+  esp_app_desc_t         running_app_info;
+
+  SEND(ALL, sprintf(_xs, "\r\n{\r\n");)
+  target_name(str_c);
+  SEND(ALL, sprintf(_xs, "\"NAME\":              \"%s\",\r\n", str_c);)
 
   /*
    * Loop through all of the JSON tokens
    */
-  SEND(ALL, sprintf(_xs, "\r\n{\r\n");)
+
   serial_to_all(NULL, EVEN_ODD_BEGIN);
   i = 0;
   while ( JSON[i].token != 0 )             // Still more to go?
@@ -491,11 +499,9 @@ void show_echo(void)
   /*
    * Finish up with the special cases
    */
-  serial_to_all(NULL, EVEN_ODD_END);                                                   // End the even odd line
+  serial_to_all(_xs, EVEN_ODD_END);                                                    // End the even odd line
   SEND(ALL, sprintf(_xs, "\r\n*** STATUS ***\r\n");)
   serial_to_all(NULL, EVEN_ODD_BEGIN);                                                 // Start over again
-  target_name(str_c);
-  SEND(ALL, sprintf(_xs, "\"NAME\":              \"%s\",", str_c);)
   SEND(ALL, sprintf(_xs, "\"SN\":                %d", json_serial_number);)
   SEND(ALL, sprintf(_xs, "\"TRACE\":             %d,", is_trace);)                     //
   SEND(ALL, sprintf(_xs, "\"RUN_STATE\":         %d,", run_state);)                    // Internal running state is enabled
@@ -504,7 +510,6 @@ void show_echo(void)
   SEND(ALL, sprintf(_xs, "\"TIME_TO_SLEEP\":     %4.2f,", (float)power_save / (float)(ONE_SECOND * 60));) // How long until we sleep
   SEND(ALL, sprintf(_xs, "\"TEMPERATURE\":       %4.2f,", temperature_C());)                              // Temperature in degrees C
   SEND(ALL, sprintf(_xs, "\"RELATIVE_HUMIDITY\": %4.2f,", humidity_RH());)
-  SEND(ALL, sprintf(_xs, "\"SPEED_OF_SOUND\":    %4.2f,", speed_of_sound(temperature_C(), humidity_RH()));)
   SEND(ALL, sprintf(_xs, "\"TIMER_COUNT\":       %d,",
                     (int)(SHOT_TIME * OSCILLATOR_MHZ));) // Maximum number of clock cycles to record shot (target dependent)
   SEND(ALL, sprintf(_xs, "\"V12\":               %4.2f,", v12_supply());) // 12 Volt LED supply
@@ -546,8 +551,10 @@ void show_echo(void)
   strcat(_xs, "\"");
   serial_to_all(_xs, ALL);
 
-  SEND(ALL, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);)        // Current software version
-  SEND(ALL, sprintf(_xs, "\"LOCKED\":           %s \"", yes_no[json_is_locked]);) // The JSON is locked
+  SEND(ALL, sprintf(_xs, "\"VERSION\":          %s, ", SOFTWARE_VERSION);)         // Current software version
+  esp_ota_get_partition_description(running_partition, &running_app_info);
+  SEND(ALL, sprintf(_xs, "\"OTA BUILD\":        %s, ", running_app_info.version);) // Current OTA identifier
+  SEND(ALL, sprintf(_xs, "\"LOCKED\":           %s \"", no_yes[json_lock != 0]);)  // The JSON is locked
 
 #if ( INCLUDE_OTA_ECHO )
   OTA_get_versions(running_app_version, new_app_version);
@@ -558,12 +565,12 @@ void show_echo(void)
   nvs_get_i32(my_handle, NONVOL_PS_VERSION, &j);
   SEND(ALL, sprintf(_xs, "\"PS_VERSION\":        %d,", j);)                          // Current persistent storage version
   SEND(ALL, sprintf(_xs, "\"BD_REV\":            %4.2f ", (float)revision() / 100);) // Current board version
-  SEND(ALL, sprintf(_xs, "}\r\n");)
 
   /*
    *  All done, return
    */
-  serial_to_all(NULL, EVEN_ODD_END); // End the even odd line
+  serial_to_all(_xs, EVEN_ODD_END); // End the even odd line
+  SEND(ALL, sprintf(_xs, "}\r\n");)
 
   return;
 }
@@ -606,8 +613,9 @@ static void show_names(int v)
   }
   else
   {
-    SEND(ALL, sprintf(_xs, "%d: \"uassigned\", \r\n", JSON_NAME_TEXT);)          // Look for a user defined name
-    SEND(ALL, sprintf(_xs, "%d: \"uassigned\", \r\n", JSON_NAME_CLIENT);)        // Look for a user defined name
+    SEND(ALL, sprintf(_xs, "%d: \"FET-UserDefined\", \r\n", JSON_NAME_TEXT);)    // Look for a user defined name
+    SEND(ALL, sprintf(_xs, "%d: \"Userdefined\", \r\n", JSON_NAME_CLIENT);)      // Look for a user defined name
+    SEND(ALL, sprintf(_xs, "%d: \"FET-serialNumber\", \r\n", JSON_NAME_SN);)     // Use the serial number as the name
   }
 
   /*
@@ -728,11 +736,18 @@ static void lock_target(unsigned int password) // Password entered by the user
   /*
    * First, test to see if there is a non-zero lock code?
    */
-  if ( json_is_locked == 0 )
+  if ( json_lock == 0 )
   {
     json_lock = password;                          // Set the lock code
     nvs_set_i32(my_handle, NONVOL_LOCK, password); // Save the lock code
-    json_is_locked = 1;
+    return;
+  }
+
+  if ( json_lock == password )                     // Password does not match
+  {
+    json_lock = 0;                                 // Unlock the target
+    SEND(ALL, sprintf(_xs, "Target Unlocked\r\n");)
+    return;
   }
 
   /*
@@ -763,13 +778,17 @@ static void unlock_target(unsigned int password) // Password entered by the user
    */
   if ( json_lock == password )
   {
-    json_is_locked = 0; // Unlock the target
+    json_lock = 0; // Unlock the target
     SEND(ALL, sprintf(_xs, "Configuration unlocked\r\n");)
+    return;
   }
-  else
+
+  if ( json_lock == 0 )
   {
-    json_is_locked = 1; // Lock the target
-    SEND(ALL, sprintf(_xs, "Invalid configuration lock code\r\n");)
+    json_lock = password;                          // Lock the target
+    nvs_set_i32(my_handle, NONVOL_LOCK, password); // Save the lock code
+    SEND(ALL, sprintf(_xs, "Configuration locked\r\n");)
+    return;
   }
 
   /*
@@ -812,7 +831,7 @@ static bool good_input(unsigned int conversion, // What kind of input is it?
     return false;
   }
 
-  if ( json_is_locked == 0 )                    // The JSON is not locked
+  if ( json_lock == 0 )                         // The JSON is not locked
   {
     return true;
   }

@@ -144,18 +144,13 @@ void read_nonvol(void)
   }
 
   /*
-   *  Handle the special case of the lock code
+   * Special case of broken sensor diameter
    */
-  nvs_get_i32(my_handle, NONVOL_LOCK, &json_lock); // Read in the lock code
+  if ( json_sensor_dia < 0.1 ) // Sensor diameter is broken
+  {
+    json_sensor_dia = 230;     // Set to the default
+  }
 
-  if ( json_lock == 0 )
-  {
-    json_is_locked = 0;                            // Unlocked
-  }
-  else
-  {
-    json_is_locked = 1;                            // Locked
-  }
   /*
    * All done, begin the program
    */
@@ -341,7 +336,8 @@ void init_nonvol(int verify) // Verification code entered by user
     return;
   }
 
-  factory_nonvol(false); // Reset to facgtory defaults but do not run the factory test
+  SEND(ALL, sprintf(_xs, "\r\nReset Serial Number\r\n");)
+  factory_nonvol(prompt_for_confirm()); // Reset to factory defaults and prompt for serial number
 
   /*
    * All done, return
@@ -424,10 +420,12 @@ void update_nonvol(unsigned int current_version) // Version present in persisten
     {
       strcpy(json_ota_url, OTA_URL);                        // Copy the OTA URL to the nonvol
       nvs_set_str(my_handle, NONVOL_OTA_URL, json_ota_url); // Store the URL in the nonvol
+      version = 12;                                         // Skip to version 12
     }
     if ( version == 12 )
     {
       nvs_set_i32(my_handle, NONVOL_LOCK, 0);               // Disable the lock code
+      version = 13;
     }
   }
 

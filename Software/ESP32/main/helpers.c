@@ -25,6 +25,7 @@
 #include "gpio_define.h"
 #include "diag_tools.h"
 #include "analog_io.h"
+#include "wifi.h"
 
 #define SHOT_TIME_TO_SECONDS(x) ((float)(x)) / 1000000.0
 
@@ -57,7 +58,7 @@ const char *names[] = {"TARGET",                                                
                        "1",      "2",      "3",       "4",      "5",       "6",       "7",      "8",     "9",      "10", //  1
                        "DOC",    "DOPEY",  "HAPPY",   "GRUMPY", "BASHFUL", "SNEEZEY", "SLEEPY",                          // 11
                        "RUDOLF", "DONNER", "BLITZEN", "DASHER", "PRANCER", "VIXEN",   "COMET",  "CUPID", "DUNDER",       // 18
-                       "ODIN",   "WODEN",  "THOR",    "BALDAR",                                                          // 26
+                       "ODIN",   "WODEN",  "THOR",    "BALDAR", "TEST",                                                  // 26
                        0};
 
 void target_name(char *name_space)
@@ -75,7 +76,15 @@ void target_name(char *name_space)
         sprintf(name_space, "%s", json_name_text);          // Name - MyTargetName
         break;
 
+      case JSON_NAME_SN:
+        sprintf(name_space, "FET-%d", json_serial_number);  // Name - serial Number
+        break;
+
       default:
+        if ( (json_name_id < 0) || (json_name_id > 26) )    // Check for limits
+        {
+          json_name_id = 0;
+        }
         sprintf(name_space, "FET-%s", names[json_name_id]); // Name - FET-TARGET, FET-2, etc.
         break;
     }
@@ -252,6 +261,7 @@ bool prompt_for_confirm(void)
     }
   }
 }
+
 /*----------------------------------------------------------------
  *
  * @function: hello
@@ -267,13 +277,17 @@ bool prompt_for_confirm(void)
  *--------------------------------------------------------------*/
 void hello(void)
 {
+  char str[SHORT_TEXT];
+
   /*
    * Woken up again.  Turn things back on
    */
-  SEND(ALL, sprintf(_xs, "{\"Hello_World\":0}");)
+  target_name(str);
+  SEND(ALL, sprintf(_xs, "{\"%s\"0, \"NAME\":\"%s\"}", _HELLO_, str);)
+
   set_status_LED(LED_READY);
   set_LED_PWM_now(json_LED_PWM);
-  ft_timer_new(&power_save, json_power_save * (unsigned long)ONE_SECOND * 60L);
+  ft_timer_new(&power_save, json_power_save * (time_count_t)ONE_SECOND * 60L);
   run_state &= ~IN_SLEEP; // Out of sleep and back in operation
   run_state |= IN_OPERATION;
   return;
@@ -297,14 +311,14 @@ void send_keep_alive(void)
 {
   static int keep_alive_count = 0;
   static int keep_alive       = 0;
+  char       str[SHORT_TEXT];
 
-  if ( (json_keep_alive != 0) && (keep_alive == 0) ) // Time in seconds
+  if ( (json_keep_alive != 0) && (keep_alive <= 0) ) // Time in seconds
   {
-    sprintf(_xs, "{\"KEEP_ALIVE\":%d}", keep_alive_count++);
-    serial_to_all(_xs, TCPIP);
-    ft_timer_new(&keep_alive, (unsigned long)json_keep_alive * ONE_SECOND);
+    target_name(str);
+    SEND(TCPIP, sprintf(_xs, "{\"KEEP_ALIVE\":%d, \"NAME\":\"%s\"}", keep_alive_count++, str);)
+    ft_timer_new(&keep_alive, (time_count_t)json_keep_alive * ONE_SECOND);
   }
-
   return;
 }
 /*----------------------------------------------------------------
@@ -340,6 +354,7 @@ void bye_tick(void)
 void bye(unsigned int force_bye) // Set to true to force a shutdown
 {
   static int bye_state = BYE_BYE;
+  char       str[SHORT_TEXT];
 
   /*
    * The BYE function does not work if we are a token ring.
@@ -358,9 +373,8 @@ void bye(unsigned int force_bye) // Set to true to force a shutdown
   switch ( bye_state )
   {
     case BYE_BYE:                          // Say Good Night Gracie!
-      SEND(ALL, sprintf(_xs, "{\"GOOD_BYE\":0}");)
-      json_tabata_enable = false;          // Turn off any automatic cycles
-      json_rapid_enable  = false;
+      target_name(str);
+      SEND(ALL, sprintf(_xs, "{\"%s\":0, \"NAME\":\"%s\"}", _BYE_, str);)
       set_LED_PWM(0);                      // Going to sleep
       set_status_LED(LED_BYE);
       serial_flush(ALL);                   // Purge the com port
@@ -415,10 +429,10 @@ void echo_serial(int duration, // Duration in clock ticks
                  int out_ports // Where to ouput to
 )
 {
-  unsigned char          ch;
-  volatile unsigned long test_time;
+  unsigned char ch;
+  time_count_t  test_time;
 
-  ft_timer_new(&test_time, (unsigned long)duration);
+  ft_timer_new(&test_time, (time_count_t)duration);
 
   /*
    * Loop and echo the characters
@@ -482,62 +496,70 @@ void build_json_score(shot_record_t *shot, // Pointer to shot record
         break;
 
       case SCORE_RIGHT_BRACE:
-        sprintf(str, "}");                             // End the closing bracket
+        if ( is_trace & DLT_SCORE )
+        {
+          sprintf(str, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d }", shot->timer_count[N], shot->timer_count[E], shot->timer_count[S],
+                  shot->timer_count[W]);                     // Hardware values
+        }
+        else
+        {
+          sprintf(str, "}");                                 // End the closing bracket
+        }
         break;
 
       case SCORE_NEW_LINE:                             // Add a newline
         sprintf(str, "\n");
         break;
 
-      case SCORE_TEST:                                 // Prime for HTTP
-        sprintf(str, "\"shot\":%d, \"x\":%d, \"y\":%d, \"r\":0, \"a\":0,\"target\":%d", ts, tx, ty, http_target_type());
+      case SCORE_TEST:                                       // Prime for HTTP
+        sprintf(str, "\"%s\":%d, \"x\":%d, \"y\":%d, \"r\":0, \"a\":0,\"target\":%d", _SHOT_, ts, tx, ty, http_target_type());
         ts++;
         tx = (tx + 5) % 103;
-        ty = (ty + 7) % 103;                           // Test values to show that the function works
+        ty = (ty + 7) % 103;                                 // Test values to show that the function works
         break;
 
-      case SCORE_PRIME:                                // Prime for HTTP
-        sprintf(str, "\"shot\":0, \"x\":0, \"y\":0, \"r\":0, \"a\":0,\"target\":%d", http_target_type());
+      case SCORE_PRIME:                                      // Prime for HTTP
+        sprintf(str, "\"%s\":0, \"x\":0, \"y\":0, \"r\":0, \"a\":0,\"target\":%d", _SHOT_, http_target_type());
         break;
 
-      case SCORE_SHOT:                                 // Shot number
-        sprintf(str, "\"shot\":%d", (shot->shot) + 1); // The client wants shots to start at 1
+      case SCORE_SHOT:                                       // Shot number
+        sprintf(str, "\"%s\":%d", _SHOT_, (shot->shot) + 1); // The client wants shots to start at 1
         break;
 
-      case SCORE_MISS:                                 // Miss
+      case SCORE_MISS:                                       // Miss
         sprintf(str, ", \"miss\":%d", shot->miss);
         break;
 
-      case SCORE_SESSION:                              // Session type
+      case SCORE_SESSION:                                    // Session type
         sprintf(str, ", \"session_type\":%d", shot->session_type);
         break;
 
-      case SCORE_TIME:                                 // Time
+      case SCORE_TIME:                                       // Time
         sprintf(str, ", \"time\":%ld, \"time_to_go\":%ld", shot->shot_time, time_to_go);
         break;
 
-      case SCORE_ELAPSED:                              // Time since shooting began
+      case SCORE_ELAPSED:                                    // Time since shooting began
         sprintf(str, ", \"elapsed_time\":%lds", run_time_seconds());
         break;
 
-      case SCORE_XY:                                   // X
+      case SCORE_XY:                                         // X
         sprintf(str, ", \"x\":%4.2f, \"y\":%4.2f", shot->x_mm, shot->y_mm);
         break;
 
-      case SCORE_POLAR:                                // Polar
+      case SCORE_POLAR:                                      // Polar
         sprintf(str, ", \"r\":%6.2f, \"a\":%6.2f", shot->radius, shot->angle);
         break;
 
-      case SCORE_HARDWARE:                             // Hardware
+      case SCORE_HARDWARE:                                   // Hardware
         sprintf(str, ", \"n\":%d, \"e\":%d, \"s\":%d, \"w\":%d", (int)shot->timer_count[N + 0], (int)shot->timer_count[E + 0],
                 (int)shot->timer_count[S + 0], (int)shot->timer_count[W + 0]);
         break;
 
-      case SCORE_TARGET:                               // Target type
+      case SCORE_TARGET:                                     // Target type
         sprintf(str, ", \"target\":%d ", http_target_type());
         break;
 
-      case SCORE_EVENT:                                // Event data
+      case SCORE_EVENT:                                      // Event data
         sprintf(str, ", \"athelete\":\"%s\", \"event\":\"%s\", \"target_name\":\"%s\"", json_athlete, json_event, json_target_name);
         break;
 
@@ -766,5 +788,49 @@ void to_binary(unsigned int x, // Number to convert
   }
   s[j] = 0;  // Terminate the string
 
+  return;
+}
+
+/*----------------------------------------------------------------
+ *
+ * @function: watchdog
+ *
+ * @brief:    Monitor the target health
+ *
+ * @return:   Nothing
+ *
+ *----------------------------------------------------------------
+ *
+ * Monitor the health of the target and take action if something
+ * is wrong
+ *
+ *--------------------------------------------------------------*/
+void watchdog(void)
+{
+  char        str_c[SHORT_TEXT];
+  static bool wifi_was_connected = false;
+
+  /*
+   *  Check to see if we have a connection to the WiFi
+   */
+  if ( json_wifi_ssid[0] != 0 )                 // We are a station
+  {
+    if ( wifi_was_connected == false )          // Was not connected
+    {
+      if ( WiFi_my_IP_address(str_c) == false ) // Find our IP address
+      {
+        set_status_LED(LED_WIFI_FAULT);
+        WiFi_init();                            // Try to reconnect
+      }
+      else
+      {
+        wifi_was_connected = true;              // We are connected
+      }
+    }
+  }
+
+  /*
+   *  All done
+   */
   return;
 }

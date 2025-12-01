@@ -21,24 +21,28 @@ void POST_trip_point(void);                               // Display the set poi
 void set_trip_point(int x);                               // Calibrate the trip point
 bool do_dlt(unsigned int level);                          // Diagnostics Log and Trace
 bool factory_test(void);                                  // Test the hardware in production
+bool sensor_test(void);                                   // Test only the sensors in production
+bool do_factory_test(bool test_run);                      // Carry out the factory test
 void set_diag_LED(char *new_LEDs, unsigned int duration); // Display the LED failure code
 bool check_12V(void);                                     // Check the 12 volt supply
 void heartbeat(void);                                     // Send out regular status messages
 void test_build_fake_shots(void);                         // Generate a list of shots
+void generate_fake_shot(void);                            // Generate a string of shots
 
 /*
  *  Definitions
  */
+#define BUILD_BOARD_BRINGUP 1
 
 /*
  * LED status messages
  *
  */
-//                       R              // RDY indicates operating status
-//                        X             // X indicates communications status
-//                         Y            // Y indicates feature status
-//                          C           // Optional C output
-//                           D          // Optional D ouput
+//                              R       // RDY indicates operating status
+//                               X      // X indicates communications status
+//                                Y     // Y indicates feature status
+//                                 C    // Optional C output
+//                                  D   // Optional D ouput
 
 #define LED_OFF                "     "  // Turn off all of the LEDs
 #define LED_HELLO_WORLD        "RWB--"  // Hello World
@@ -63,6 +67,7 @@ void test_build_fake_shots(void);                         // Generate a list of 
 #define LED_WIFI_STATION_CN "-G---"     // The WiFI is in station mode and connected
 #define LED_WIFI_ACCESS     "-b---"     // The WiFi is in access mode and not connected
 #define LED_WIFI_ACCESS_CN  "-B---"     // The WiFI is in access mode and connected
+#define LED_WIFI_FAULT      "-R---"     // The WiFi has a fault
 
 #define LED_NO_12V           "--R--"    // The 12 Volt supply is not present
 #define LED_LOW_12V          "--Y--"    // 12 Volt supply out of spec
@@ -123,14 +128,14 @@ void test_build_fake_shots(void);                         // Generate a list of 
                                  /*
                                   *  Enable compile level tracing
                                   */
-// #define TRACE_APPLICATION
-// #define TRACE_COMMUNICATION
-// #define TRACE_DIAG
-// #define TRACE_DEBUG
-// #define TRACE_SCORE
-// #define TRACE_HTTP
-// #define TRACE_OTA
-// #define TRACE_HEARTBEAT
+#define TRACE_APPLICATION   (0 == 1)
+#define TRACE_COMMUNICATION (0 == 1)
+#define TRACE_DIAGNOSTICS   (0 == 1)
+#define TRACE_DEBUG         (0 == 1)
+#define TRACE_SCORE         (0 == 1)
+#define TRACE_HTTP          (0 == 1)
+#define TRACE_OTA           (0 == 1)
+#define TRACE_HEARTBEAT     (0 == 1)
 
 // clang-format off
 #define DLT(level, z) if ( do_dlt(level) )  { z }

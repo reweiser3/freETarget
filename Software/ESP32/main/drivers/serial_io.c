@@ -458,7 +458,7 @@ void serial_to_all(char *str,        // String to output
 
   if ( (ports & EVEN_ODD_END) != 0 ) // End concatination
   {
-    even_odd_mode = false;
+    even_odd_mode = false;           // And send out the last
     return;
   }
 
@@ -797,7 +797,7 @@ void serial_port_test(void)
 
     while ( serial_available(AUX) == 0 )
     {
-      timer_delay(1);           // Wait for it to come back
+      vTaskDelay(1);            // Wait for it to come back
       if ( test_time == 0 )
       {
         SEND(ALL, sprintf(_xs, "\r\nTest failed, no input from AUX\r\n");)
